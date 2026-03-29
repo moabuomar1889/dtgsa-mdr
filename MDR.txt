@@ -1,0 +1,27 @@
+the system is web and mobile 
+the system is to manage projects Project Document Index (PDI)and MDR 
+1- creat project name as per project name in google drive 
+2- every project should have settings as per client 
+3- every projct should have dashboard and seprate PDI and MDR 
+4- each project have displins ( HSE - QC - Constrution - Project Control -Project Management ) as per attached photo and this should be dynamic overall system and every client should have their own displne each dipline in each project should have 3 sigutures when making the cover sheet ( Prepared by - Riviewed by - Approved by )
+5- Clinets settings and displne should be overall system and we can change it over all system or per project 
+6- Docmunet control team in my company will creat PDI for each project and then will press send notification and this will sent email to client document control to give us the documents number related to client and the client DC will open the link and sign in and then will fill the numbers and save and after that he can download it in excel 
+6.1 - after that the system will creat the Cover sheet as below 
+7- then we will start MDR procedure > Each Displine in my company will choose a document name that reigsted in intial PDI or MDR and upload Docmuent and after upload will have the full document with the cover sheet and then the uploader can sign on prepared by 
+8- Cover sheet will have multiable informations ( i will provide it to you later but i prefer to be word file or PDF will auto fill fields some of it will be filled automaticly by system and some will be filled by DC ) also each document will have 2 covers sheets one from DTG and one FROM client and both should be attached to the document by our system autimaticly . 
+9- then there will be flow the document will go to riverer then to the approver if rejected by reviwer or approver it will back again to the prepared by to edit it 
+10- then the DTGSA DC team will got notification that there is a document ready to submit and he should check the covers data is correct and he should accept the covers then send the email to the client ( clients email and email body should be add in project seetings ) 
+11- System will creat transimatal page ( i will provide teh design ) transmital page should have some data will be added to the proejct settings and when sending email , DC team can choose multible files to send and their total size should not exceed 25 MB also i can adjust the size limit in system setting 
+so the transmittal will have list of all documents that will be sent to the client . 
+
+12- then DTGSA DC team will recive transmital from client contains the replay for the docuemnt and the replay will be one of this ( Code 1 Code 2 Code 3 Code 4 Code 5 ) 
+Code-1 Rejected - Resubmit for Review - DC will go to mdr and assign that there is a replay and he will choose the code of replay and he will shoose the location on drive to save the document and then he will choose to make revision or new document number . 
+Code-2 Rejected with Comments - Resubmit for Review - Same as code 1 
+Code-3 Comments as Noted - Resubmit for Review - Same as code 1 
+Code-4 No Comments - No Further Submittal Unless Document is Revised Same as code 1  but there is no further action becasue its approved 
+Code-5 For Information Only - choose the code status and no further action needed . 
+
+after that there will be notifiactions go to the each displine and prepared by and reviwer and approver to informe them about the document status 
+
+each displine should have dashboard for the tasks he should follow up 
+
