@@ -1,0 +1,1074 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ScopeLevel {
+  Global
+  Client
+  Project
+}
+
+enum NumberingSequenceScope {
+  GLOBAL
+  PER_PROJECT
+  PER_DISCIPLINE
+  PER_DOC_TYPE
+  CUSTOM_KEY
+}
+
+enum NumberingTokenType {
+  Literal
+  ClientCode
+  ProjectCode
+  DisciplineCode
+  DocumentTypeCode
+  ReleasePurposeCode
+  Sequence
+  Revision
+  CustomField
+}
+
+enum PdiStatus {
+  Draft
+  SentToClient
+  ClientNumberPending
+  ClientNumberReceived
+  ConvertedToMdr
+  Archived
+}
+
+enum WorkflowStatus {
+  Draft
+  Uploaded
+  PendingReview
+  ReviewRejected
+  PendingApproval
+  ApprovalRejected
+  ReadyForDcCheck
+  DcReturnedForCorrection
+  ReadyToSubmit
+  SubmittedToClient
+}
+
+enum RevisionStatus {
+  Original
+  RevisionInProgress
+  Resubmitted
+  Superseded
+  Closed
+}
+
+enum ClientReplyState {
+  WaitingClientReply
+  ReplyReceived
+  RevisionRequired
+  NoFurtherSubmittal
+  InformationOnly
+}
+
+enum WorkflowStepType {
+  Prepared
+  Reviewed
+  Approved
+  DcCheck
+}
+
+enum WorkflowStepStatus {
+  Pending
+  Approved
+  Rejected
+  Skipped
+}
+
+enum WorkflowActionType {
+  Created
+  Uploaded
+  SubmittedForReview
+  ReviewApproved
+  ReviewRejected
+  SubmittedForApproval
+  ApprovalApproved
+  ApprovalRejected
+  ReturnedForCorrection
+  DcValidated
+  SubmittedToClient
+  ClientReplyRecorded
+  RevisionTriggered
+  Locked
+  Unlocked
+}
+
+enum CoverSheetKind {
+  DTGSA_COVER
+  CLIENT_COVER
+}
+
+enum DocumentFileType {
+  SOURCE
+  DTG_COVER
+  CLIENT_COVER
+  MERGED
+  TRANSMITTAL
+  CLIENT_REPLY
+  REJECTED
+  REVISION_SOURCE
+  PREVIEW
+}
+
+enum GeneratedDocumentKind {
+  DTGSA_COVER_PDF
+  CLIENT_COVER_PDF
+  MERGED_PDF
+  TRANSMITTAL_PDF
+  PREVIEW_PDF
+}
+
+enum TransmittalStatus {
+  Draft
+  ReadyToSend
+  Sent
+  Cancelled
+}
+
+enum ClientReplyNextAction {
+  REVISION_REQUIRED
+  NEW_DOCUMENT_NUMBER_REQUIRED
+  NO_FURTHER_ACTION
+}
+
+enum DriveFolderType {
+  ROOT
+  DOCUMENT_CONTROL
+  PDI
+  MDR
+  SUBMITTED
+  RECEIVED
+  REJECTED
+  TRANSMITTALS
+  REVISIONS
+}
+
+enum NotificationChannel {
+  InApp
+  Email
+}
+
+enum NotificationStatus {
+  Pending
+  Sent
+  Read
+  Failed
+}
+
+enum AuditSeverity {
+  Info
+  Warning
+  Critical
+}
+
+enum SystemSeverity {
+  Info
+  Warning
+  Error
+  Critical
+}
+
+enum DisciplineAssignmentType {
+  PreparedBy
+  ReviewedBy
+  ApprovedBy
+}
+
+enum StorageProvider {
+  Supabase
+  GoogleDrive
+  Temporary
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  group       String
+  key         String   @unique
+  description String?
+  value       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([group])
+}
+
+model User {
+  id                    String                        @id @default(cuid())
+  authUserId            String?                       @unique
+  email                 String                        @unique
+  fullName              String
+  jobTitle              String?
+  timezone              String                        @default("Asia/Riyadh")
+  isActive              Boolean                       @default(true)
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+  deletedAt             DateTime?
+  signatureProfile      SignatureProfile?
+  userRoles             UserRole[]
+  projectRoles          UserProjectRole[]
+  disciplineAssignments ProjectDisciplineAssignment[]
+  signatureEvents       SignatureEvent[]
+  notifications         Notification[]
+  auditLogs             AuditLog[]                    @relation("AuditActor")
+  systemLogs            SystemLog[]                   @relation("SystemActor")
+
+  @@index([isActive])
+}
+
+model Role {
+  id              String            @id @default(cuid())
+  code            String            @unique
+  name            String
+  description     String?
+  isSystem        Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  userRoles       UserRole[]
+  projectRoles    UserProjectRole[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id              String           @id @default(cuid())
+  code            String           @unique
+  name            String
+  group           String
+  description     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
+
+  @@index([group])
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+}
+
+model UserProjectRole {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId, roleId])
+  @@index([projectId, roleId])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model SignatureProfile {
+  id                String           @id @default(cuid())
+  userId            String           @unique
+  signatureFilePath String?
+  initialsFilePath  String?
+  storageBucket     String?
+  mimeType          String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signatureEvents   SignatureEvent[]
+}
+
+model SignatureEvent {
+  id                      String            @id @default(cuid())
+  userId                  String
+  signatureProfileId      String?
+  userDisplayNameSnapshot String
+  roleSnapshot            String
+  targetEntityType        String
+  targetEntityId          String
+  workflowStepType        WorkflowStepType
+  signatureImagePath      String?
+  initialsImagePath       String?
+  signedAt                DateTime          @default(now())
+  timezone                String
+  signatureHash           String
+  auditLogId              String?           @unique
+  user                    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signatureProfile        SignatureProfile? @relation(fields: [signatureProfileId], references: [id], onDelete: SetNull)
+  auditLog                AuditLog?         @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
+  workflowStep            WorkflowStep?
+
+  @@index([targetEntityType, targetEntityId])
+  @@index([signedAt])
+}
+
+model Client {
+  id                   String                 @id @default(cuid())
+  code                 String                 @unique
+  name                 String
+  description          String?
+  defaultTimezone      String?
+  isActive             Boolean                @default(true)
+  createdByUserId      String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  deletedAt            DateTime?
+  contacts             ClientContact[]
+  setting              ClientSetting?
+  projects             Project[]
+  clientDisciplines    ClientDiscipline[]
+  documentTypes        DocumentTypeCategory[]
+  releasePurposes      ReleasePurpose[]
+  reviewCodes          ReviewCode[]
+  numberingRules       NumberingRule[]
+  coverSheetTemplates  CoverSheetTemplate[]
+  transmittalTemplates TransmittalTemplate[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  systemLogs           SystemLog[]
+
+  @@index([isActive])
+  @@index([name])
+}
+
+model ClientContact {
+  id        String    @id @default(cuid())
+  clientId  String
+  fullName  String
+  email     String
+  phone     String?
+  jobTitle  String?
+  isPrimary Boolean   @default(false)
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  client    Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, isPrimary])
+  @@index([email])
+}
+
+model ClientSetting {
+  id                      String   @id @default(cuid())
+  clientId                String   @unique
+  defaultUploadMaxMb      Int?
+  defaultTransmittalMaxMb Int?
+  settings                Json?
+  workflowDefaults        Json?
+  emailTemplates          Json?
+  templateSettings        Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  client                  Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Project {
+  id                   String                 @id @default(cuid())
+  clientId             String
+  code                 String
+  name                 String
+  driveProjectName     String?
+  contractNumber       String?
+  description          String?
+  timezone             String?
+  isActive             Boolean                @default(true)
+  createdByUserId      String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  deletedAt            DateTime?
+  client               Client                 @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  contacts             ProjectContact[]
+  setting              ProjectSetting?
+  pdiRegister          PdiRegister?
+  projectDisciplines   ProjectDiscipline[]
+  projectRoles         UserProjectRole[]
+  documentTypes        DocumentTypeCategory[]
+  releasePurposes      ReleasePurpose[]
+  reviewCodes          ReviewCode[]
+  numberingRules       NumberingRule[]
+  coverSheetTemplates  CoverSheetTemplate[]
+  transmittalTemplates TransmittalTemplate[]
+  mdrDocuments         MdrDocument[]
+  transmittals         Transmittal[]
+  clientReplies        ClientReply[]
+  driveMappings        DriveMapping[]
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  systemLogs           SystemLog[]
+  pdiItems             PdiItem[]
+
+  @@unique([clientId, code])
+  @@index([name])
+  @@index([isActive])
+}
+
+model ProjectContact {
+  id        String    @id @default(cuid())
+  projectId String
+  fullName  String
+  email     String
+  phone     String?
+  jobTitle  String?
+  isPrimary Boolean   @default(false)
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, isPrimary])
+}
+
+model ProjectSetting {
+  id                             String   @id @default(cuid())
+  projectId                      String   @unique
+  inheritClientSettings          Boolean  @default(true)
+  uploadMaxMbOverride            Int?
+  transmittalMaxTotalMbOverride  Int?
+  rejectedFileIdentifierStrategy String   @default("DTGSA_DOCUMENT_NUMBER")
+  settings                       Json?
+  workflowDefaults               Json?
+  templateOverrides              Json?
+  approvalMatrix                 Json?
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+  project                        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Discipline {
+  id                 String              @id @default(cuid())
+  code               String              @unique
+  name               String
+  description        String?
+  metadata           Json?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  clientDisciplines  ClientDiscipline[]
+  projectDisciplines ProjectDiscipline[]
+  pdiItems           PdiItem[]
+  mdrDocuments       MdrDocument[]
+
+  @@index([name])
+}
+
+model ClientDiscipline {
+  id           String              @id @default(cuid())
+  clientId     String
+  disciplineId String
+  codeOverride String?
+  nameOverride String?
+  isActive     Boolean             @default(true)
+  metadata     Json?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  client       Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  discipline   Discipline          @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  projectLinks ProjectDiscipline[]
+
+  @@unique([clientId, disciplineId])
+  @@index([clientId, isActive])
+}
+
+model ProjectDiscipline {
+  id                 String                        @id @default(cuid())
+  projectId          String
+  disciplineId       String
+  clientDisciplineId String?
+  codeOverride       String?
+  nameOverride       String?
+  isActive           Boolean                       @default(true)
+  metadata           Json?
+  createdAt          DateTime                      @default(now())
+  updatedAt          DateTime                      @updatedAt
+  project            Project                       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  discipline         Discipline                    @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  clientDiscipline   ClientDiscipline?             @relation(fields: [clientDisciplineId], references: [id], onDelete: SetNull)
+  assignments        ProjectDisciplineAssignment[]
+
+  @@unique([projectId, disciplineId])
+  @@index([projectId, isActive])
+}
+
+model ProjectDisciplineAssignment {
+  id                  String                   @id @default(cuid())
+  projectDisciplineId String
+  assignmentType      DisciplineAssignmentType
+  userId              String
+  createdAt           DateTime                 @default(now())
+  projectDiscipline   ProjectDiscipline        @relation(fields: [projectDisciplineId], references: [id], onDelete: Cascade)
+  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectDisciplineId, assignmentType])
+  @@index([userId])
+}
+
+model DocumentTypeCategory {
+  id           String        @id @default(cuid())
+  scopeLevel   ScopeLevel
+  scopeKey     String
+  clientId     String?
+  projectId    String?
+  code         String
+  name         String
+  description  String?
+  metadata     Json?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pdiItems     PdiItem[]
+  mdrDocuments MdrDocument[]
+
+  @@unique([scopeLevel, scopeKey, code])
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model ReleasePurpose {
+  id           String        @id @default(cuid())
+  scopeLevel   ScopeLevel
+  scopeKey     String
+  clientId     String?
+  projectId    String?
+  code         String
+  name         String
+  description  String?
+  metadata     Json?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  client       Client?       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project      Project?      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  pdiItems     PdiItem[]
+  mdrDocuments MdrDocument[]
+
+  @@unique([scopeLevel, scopeKey, code])
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model ReviewCode {
+  id                  String             @id @default(cuid())
+  scopeLevel          ScopeLevel
+  scopeKey            String
+  clientId            String?
+  projectId           String?
+  code                String
+  label               String
+  description         String?
+  requiresResubmittal Boolean            @default(false)
+  finalizesDocument   Boolean            @default(false)
+  informationalOnly   Boolean            @default(false)
+  displayOrder        Int                @default(0)
+  isDefault           Boolean            @default(false)
+  isActive            Boolean            @default(true)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  client              Client?            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project             Project?           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  currentForDocuments MdrDocument[]      @relation("DocumentCurrentReviewCode")
+  revisionReviewCodes DocumentRevision[] @relation("RevisionReviewCode")
+  clientReplies       ClientReply[]      @relation("ClientReplyReviewCode")
+
+  @@unique([scopeLevel, scopeKey, code])
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model NumberingRule {
+  id            String                 @id @default(cuid())
+  scopeLevel    ScopeLevel
+  scopeKey      String
+  clientId      String?
+  projectId     String?
+  name          String
+  description   String?
+  formatString  String
+  sequenceScope NumberingSequenceScope
+  padding       Int                    @default(4)
+  separator     String                 @default("-")
+  isDefault     Boolean                @default(false)
+  isActive      Boolean                @default(true)
+  metadata      Json?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  client        Client?                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project       Project?               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tokens        NumberingRuleToken[]
+  sequences     NumberingSequence[]
+  pdiItems      PdiItem[]
+
+  @@unique([scopeLevel, scopeKey, name])
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model NumberingRuleToken {
+  id            String             @id @default(cuid())
+  ruleId        String
+  order         Int
+  tokenType     NumberingTokenType
+  key           String
+  label         String?
+  valueTemplate String?
+  padding       Int?
+  separator     String?
+  isOptional    Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  rule          NumberingRule      @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleId, order])
+}
+
+model NumberingSequence {
+  id           String        @id @default(cuid())
+  ruleId       String
+  scopeKey     String
+  currentValue Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  rule         NumberingRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleId, scopeKey])
+}
+
+model PdiRegister {
+  id          String    @id @default(cuid())
+  projectId   String    @unique
+  title       String    @default("Project Document Index")
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items       PdiItem[]
+}
+
+model PdiItem {
+  id                     String                @id @default(cuid())
+  registerId             String
+  projectId              String
+  disciplineId           String
+  documentTypeCategoryId String?
+  releasePurposeId       String?
+  numberingRuleId        String?
+  dtgsaDocumentNumber    String
+  clientDocumentNumber   String?
+  title                  String
+  tags                   String[]              @default([])
+  revision               String                @default("00")
+  status                 PdiStatus             @default(Draft)
+  remarks                String?
+  createdByUserId        String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  deletedAt              DateTime?
+  register               PdiRegister           @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  project                Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  discipline             Discipline            @relation(fields: [disciplineId], references: [id], onDelete: Restrict)
+  documentTypeCategory   DocumentTypeCategory? @relation(fields: [documentTypeCategoryId], references: [id], onDelete: SetNull)
+  releasePurpose         ReleasePurpose?       @relation(fields: [releasePurposeId], references: [id], onDelete: SetNull)
+  numberingRule          NumberingRule?        @relation(fields: [numberingRuleId], references: [id], onDelete: SetNull)
+  mdrDocument            MdrDocument?          @relation("MdrDocumentSourcePdi")
+
+  @@unique([projectId, dtgsaDocumentNumber])
+  @@index([projectId, status])
+}
+
+model MdrDocument {
+  id                      String                @id @default(cuid())
+  projectId               String
+  disciplineId            String
+  documentTypeCategoryId  String?
+  releasePurposeId        String?
+  sourcePdiItemId         String?               @unique
+  dtgsaDocumentNumber     String
+  clientDocumentNumber    String?
+  title                   String
+  remarks                 String?
+  currentWorkflowStatus   WorkflowStatus        @default(Draft)
+  currentClientReplyState ClientReplyState      @default(WaitingClientReply)
+  currentReviewCodeId     String?
+  currentRevisionId       String?               @unique
+  isClosed                Boolean               @default(false)
+  lockedAt                DateTime?
+  createdByUserId         String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  deletedAt               DateTime?
+  project                 Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  discipline              Discipline            @relation(fields: [disciplineId], references: [id], onDelete: Restrict)
+  documentTypeCategory    DocumentTypeCategory? @relation(fields: [documentTypeCategoryId], references: [id], onDelete: SetNull)
+  releasePurpose          ReleasePurpose?       @relation(fields: [releasePurposeId], references: [id], onDelete: SetNull)
+  sourcePdiItem           PdiItem?              @relation("MdrDocumentSourcePdi", fields: [sourcePdiItemId], references: [id], onDelete: SetNull)
+  currentReviewCode       ReviewCode?           @relation("DocumentCurrentReviewCode", fields: [currentReviewCodeId], references: [id], onDelete: SetNull)
+  revisions               DocumentRevision[]    @relation("DocumentRevisions")
+  currentRevision         DocumentRevision?     @relation("CurrentDocumentRevision", fields: [currentRevisionId], references: [id], onDelete: SetNull)
+  clientReplies           ClientReply[]
+
+  @@unique([projectId, dtgsaDocumentNumber])
+  @@index([projectId, currentWorkflowStatus])
+  @@index([projectId, currentClientReplyState])
+}
+
+model DocumentRevision {
+  id                  String              @id @default(cuid())
+  documentId          String
+  revisionLabel       String
+  revisionIndex       Int
+  workflowStatus      WorkflowStatus      @default(Draft)
+  revisionStatus      RevisionStatus      @default(Original)
+  clientReplyState    ClientReplyState    @default(WaitingClientReply)
+  reviewCodeId        String?
+  parentRevisionId    String?
+  sourceClientReplyId String?
+  reasonForRevision   String?
+  isCurrent           Boolean             @default(false)
+  submittedToClientAt DateTime?
+  closedAt            DateTime?
+  lockedAt            DateTime?
+  createdByUserId     String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  deletedAt           DateTime?
+  document            MdrDocument         @relation("DocumentRevisions", fields: [documentId], references: [id], onDelete: Cascade)
+  currentForDocument  MdrDocument?        @relation("CurrentDocumentRevision")
+  reviewCode          ReviewCode?         @relation("RevisionReviewCode", fields: [reviewCodeId], references: [id], onDelete: SetNull)
+  parentRevision      DocumentRevision?   @relation("RevisionLineage", fields: [parentRevisionId], references: [id], onDelete: SetNull)
+  childRevisions      DocumentRevision[]  @relation("RevisionLineage")
+  sourceClientReply   ClientReply?        @relation("ReplyTriggeredRevisions", fields: [sourceClientReplyId], references: [id], onDelete: SetNull)
+  clientReplies       ClientReply[]       @relation("SubmittedRevisionReply")
+  files               DocumentFile[]
+  workflowSteps       WorkflowStep[]
+  workflowActions     WorkflowAction[]
+  generatedDocuments  GeneratedDocument[]
+  transmittalItems    TransmittalItem[]
+
+  @@unique([documentId, revisionLabel])
+  @@index([documentId, isCurrent])
+  @@index([workflowStatus, revisionStatus])
+}
+
+model DocumentFile {
+  id                  String            @id @default(cuid())
+  documentRevisionId  String
+  projectId           String
+  type                DocumentFileType
+  storageProvider     StorageProvider
+  fileName            String
+  mimeType            String?
+  fileSizeBytes       Int               @default(0)
+  storageBucket       String?
+  storagePath         String?
+  googleDriveFileId   String?
+  googleDriveFolderId String?
+  checksum            String?
+  uploadedByUserId    String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  deletedAt           DateTime?
+  revision            DocumentRevision  @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)
+  transmittalItems    TransmittalItem[]
+
+  @@index([documentRevisionId, type])
+  @@index([projectId, type])
+}
+
+model WorkflowStep {
+  id                 String             @id @default(cuid())
+  documentRevisionId String
+  stepType           WorkflowStepType
+  stepOrder          Int
+  status             WorkflowStepStatus @default(Pending)
+  assignedUserId     String?
+  actedByUserId      String?
+  actedAt            DateTime?
+  comments           String?
+  signatureEventId   String?            @unique
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  revision           DocumentRevision   @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)
+  signatureEvent     SignatureEvent?    @relation(fields: [signatureEventId], references: [id], onDelete: SetNull)
+  actions            WorkflowAction[]
+
+  @@unique([documentRevisionId, stepType])
+  @@index([assignedUserId, status])
+}
+
+model WorkflowAction {
+  id                 String             @id @default(cuid())
+  documentRevisionId String
+  workflowStepId     String?
+  actionType         WorkflowActionType
+  actorUserId        String?
+  fromStatus         WorkflowStatus?
+  toStatus           WorkflowStatus?
+  comments           String?
+  metadata           Json?
+  createdAt          DateTime           @default(now())
+  revision           DocumentRevision   @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)
+  workflowStep       WorkflowStep?      @relation(fields: [workflowStepId], references: [id], onDelete: SetNull)
+
+  @@index([documentRevisionId, createdAt])
+}
+
+model CoverSheetTemplate {
+  id                String          @id @default(cuid())
+  kind              CoverSheetKind
+  clientId          String?
+  projectId         String?
+  name              String
+  description       String?
+  fileName          String
+  storageProvider   StorageProvider @default(Supabase)
+  storageBucket     String?
+  storagePath       String?
+  googleDriveFileId String?
+  version           Int             @default(1)
+  isDefault         Boolean         @default(false)
+  isActive          Boolean         @default(true)
+  placeholderSchema Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+  client            Client?         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project           Project?        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, kind, isActive])
+  @@index([projectId, kind, isActive])
+}
+
+model TransmittalTemplate {
+  id                String          @id @default(cuid())
+  clientId          String?
+  projectId         String?
+  name              String
+  description       String?
+  fileName          String
+  storageProvider   StorageProvider @default(Supabase)
+  storageBucket     String?
+  storagePath       String?
+  googleDriveFileId String?
+  version           Int             @default(1)
+  isDefault         Boolean         @default(false)
+  isActive          Boolean         @default(true)
+  placeholderSchema Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+  client            Client?         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project           Project?        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, isActive])
+  @@index([projectId, isActive])
+}
+
+model GeneratedDocument {
+  id                 String                @id @default(cuid())
+  documentRevisionId String?
+  transmittalId      String?
+  clientReplyId      String?
+  kind               GeneratedDocumentKind
+  fileName           String
+  storageProvider    StorageProvider       @default(Supabase)
+  storageBucket      String?
+  storagePath        String?
+  googleDriveFileId  String?
+  generatedByUserId  String?
+  createdAt          DateTime              @default(now())
+  revision           DocumentRevision?     @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)
+  transmittal        Transmittal?          @relation(fields: [transmittalId], references: [id], onDelete: Cascade)
+  clientReply        ClientReply?          @relation(fields: [clientReplyId], references: [id], onDelete: Cascade)
+
+  @@index([documentRevisionId, kind])
+  @@index([transmittalId, kind])
+  @@index([clientReplyId, kind])
+}
+
+model Transmittal {
+  id                   String              @id @default(cuid())
+  projectId            String
+  transmittalNumber    String
+  subject              String
+  purpose              String?
+  fromText             String?
+  toText               String?
+  ccText               String?
+  attention            String?
+  messageBody          String?
+  respondByDate        DateTime?
+  sentAt               DateTime?
+  totalAttachmentBytes Int                 @default(0)
+  status               TransmittalStatus   @default(Draft)
+  createdByUserId      String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  deletedAt            DateTime?
+  project              Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items                TransmittalItem[]
+  generatedDocuments   GeneratedDocument[]
+  clientReplies        ClientReply[]
+
+  @@unique([projectId, transmittalNumber])
+  @@index([projectId, status])
+}
+
+model TransmittalItem {
+  id                 String           @id @default(cuid())
+  transmittalId      String
+  documentRevisionId String
+  documentFileId     String?
+  itemOrder          Int              @default(0)
+  createdAt          DateTime         @default(now())
+  transmittal        Transmittal      @relation(fields: [transmittalId], references: [id], onDelete: Cascade)
+  documentRevision   DocumentRevision @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)
+  documentFile       DocumentFile?    @relation(fields: [documentFileId], references: [id], onDelete: SetNull)
+
+  @@unique([transmittalId, documentRevisionId])
+  @@index([documentFileId])
+}
+
+model ClientReply {
+  id                    String                @id @default(cuid())
+  projectId             String
+  documentId            String
+  documentRevisionId    String?
+  transmittalId         String?
+  reviewCodeId          String
+  replyState            ClientReplyState      @default(ReplyReceived)
+  nextAction            ClientReplyNextAction
+  replyDate             DateTime              @default(now())
+  comments              String?
+  driveTargetFolderType DriveFolderType?
+  driveFileName         String?
+  driveFileId           String?
+  createdByUserId       String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  deletedAt             DateTime?
+  project               Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  document              MdrDocument           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  submittedRevision     DocumentRevision?     @relation("SubmittedRevisionReply", fields: [documentRevisionId], references: [id], onDelete: SetNull)
+  transmittal           Transmittal?          @relation(fields: [transmittalId], references: [id], onDelete: SetNull)
+  reviewCode            ReviewCode            @relation("ClientReplyReviewCode", fields: [reviewCodeId], references: [id], onDelete: Restrict)
+  triggeredRevisions    DocumentRevision[]    @relation("ReplyTriggeredRevisions")
+  generatedDocuments    GeneratedDocument[]
+
+  @@index([projectId, replyDate])
+  @@index([documentId, replyDate])
+}
+
+model DriveMapping {
+  id             String          @id @default(cuid())
+  projectId      String
+  folderType     DriveFolderType
+  folderId       String
+  folderName     String?
+  parentFolderId String?
+  isActive       Boolean         @default(true)
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, folderType])
+  @@unique([projectId, folderId])
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  projectId String?
+  clientId  String?
+  channel   NotificationChannel
+  status    NotificationStatus  @default(Pending)
+  title     String
+  body      String
+  actionUrl String?
+  metadata  Json?
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project?            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  client    Client?             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([projectId])
+  @@index([clientId])
+}
+
+model AuditLog {
+  id             String          @id @default(cuid())
+  actorUserId    String?
+  action         String
+  entityType     String
+  entityId       String
+  projectId      String?
+  clientId       String?
+  beforeSnapshot Json?
+  afterSnapshot  Json?
+  metadata       Json?
+  severity       AuditSeverity   @default(Info)
+  isHidden       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  actorUser      User?           @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  project        Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  client         Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  signatureEvent SignatureEvent?
+
+  @@index([entityType, entityId])
+  @@index([projectId, createdAt])
+  @@index([clientId, createdAt])
+}
+
+model SystemLog {
+  id          String         @id @default(cuid())
+  actorUserId String?
+  source      String
+  action      String
+  message     String
+  entityType  String?
+  entityId    String?
+  projectId   String?
+  clientId    String?
+  severity    SystemSeverity @default(Info)
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  actorUser   User?          @relation("SystemActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  project     Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  client      Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([source, createdAt])
+  @@index([projectId, createdAt])
+  @@index([clientId, createdAt])
+}

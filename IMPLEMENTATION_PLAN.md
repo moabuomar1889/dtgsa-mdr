@@ -1,7 +1,7 @@
 # DTGSA MDR Implementation Plan
 
 Last updated: 2026-03-29
-Status: Planning baseline created
+Status: Phase 0 foundation complete, Phase 1 foundation in progress
 
 ## Purpose
 
@@ -31,10 +31,25 @@ new constraints appear, or scope is refined.
 
 ## Current Workspace State
 
-- Workspace is currently in planning/setup state.
-- Planning documents and project-control folders have been created.
-- The local runtime still needs to match the locked stack requirement of Node.js 22.x before app scaffolding begins.
-- Current detected local Node version before this plan was written: `20.19.6`.
+- Planning documents and project-control folders have been created and are now being maintained as living artifacts.
+- Local runtime has been upgraded to `Node.js 22.22.2` and `pnpm 10.30.3`.
+- Next.js App Router scaffold has been created in the workspace root with strict TypeScript, Tailwind CSS, ESLint, Prettier, Prisma 7, and the initial shadcn dashboard shell.
+- shadcn has been initialized and the `dashboard-01` shell equivalent has been applied via the official `@shadcn/dashboard-01` registry item because the requested raw blocks URL currently fails in the CLI.
+- Supabase SSR auth helper files, Prisma adapter-based client wiring, Google Drive service-account helper scaffolding, and LibreOffice conversion utilities have been added.
+- Prisma schema baseline has been authored, validated, and generated successfully.
+- Initial SQL migration artifact has been generated locally at `prisma/migrations/20260329143000_init_foundation/migration.sql`.
+- Core domain helper modules now exist for workflow status enforcement, token-based numbering generation, and RBAC permission expansion.
+- The initial database schema has now been applied to Supabase and the foundation seed has populated roles, permissions, default masters, and a default numbering rule.
+- Production build verification passed, and runtime smoke tests for `/dashboard`, `/projects`, and `/projects/new` returned HTTP 200 on the current build.
+- Shared Drive discovery pages now exist and compare available Google Drive project folders against projects already linked in the system.
+
+## Current Blockers
+
+- LibreOffice headless is not installed locally yet, so DOCX -> PDF conversion cannot run until `LIBREOFFICE_PATH` is set or LibreOffice is installed.
+- Google Shared Drive access is not fully ready yet:
+  - direct service-account access to the provided Shared Drive returned `Shared drive not found`
+  - impersonation returned `unauthorized_client`, which indicates domain-wide delegation is not fully configured for the requested scopes
+- `prisma migrate dev --create-only` still hits a Supabase/schema-engine issue, so the initial migration is tracked as SQL and was applied through PostgreSQL directly instead of Prisma's schema engine.
 
 ## Core Architecture
 
@@ -101,13 +116,14 @@ Status dimensions must remain separate in data design and UI logic:
 - Upgrade local Node to 22.x
 - Scaffold Next.js app with pnpm
 - Enable strict TypeScript
-- Configure Prisma
+- Configure Prisma 7 with adapter-based client setup
 - Configure Supabase SSR auth
 - Configure Tailwind CSS
 - Initialize shadcn/ui
 - Apply `dashboard-01` base shell
 - Create shared layout foundation
 - Create `.env.example`
+- Add runtime env validation helpers
 - Add lint/format baseline
 - Prepare LibreOffice integration and health-check strategy
 
@@ -240,6 +256,12 @@ Status dimensions must remain separate in data design and UI logic:
 
 ## Technical Design Highlights
 
+### Prisma 7
+
+- Prisma 7 connection URLs are configured through `prisma.config.ts`, not the schema file.
+- Runtime Prisma access uses `@prisma/adapter-pg` with `pg`.
+- Initial migration SQL is being tracked locally before any remote database apply step.
+
 ### Google Drive
 
 - Folder mapping must use `folderId` and `folderType`.
@@ -278,7 +300,7 @@ Status dimensions must remain separate in data design and UI logic:
 
 ## Open Inputs Needed From User
 
-- Supabase project credentials
+- Supabase service role key
 - Google Drive service account credentials
 - Google Drive root/shared drive details if used
 - Preferred email provider credentials
@@ -296,4 +318,3 @@ This file must be updated whenever:
 - a domain rule is clarified
 - a blocker is discovered
 - an external integration decision changes
-

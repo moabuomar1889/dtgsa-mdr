@@ -20,33 +20,36 @@ Legend:
 
 ## Phase 0 - Workspace and Foundation
 
-- [!] Upgrade local Node.js to 22.x
-- [ ] Scaffold Next.js latest app with App Router using `pnpm`
-- [ ] Enable TypeScript strict mode
-- [ ] Configure Prisma and initial datasource
-- [ ] Configure Supabase SSR auth
-- [ ] Configure Tailwind CSS
-- [ ] Run `npx shadcn@latest init`
-- [ ] Run `npx shadcn@latest add dashboard-01 https://ui.shadcn.com/blocks`
-- [ ] Add required shadcn components
-- [ ] Create shared application shell
-- [ ] Add `.env.example` validation strategy
-- [ ] Add linting and formatting baseline
-- [ ] Add LibreOffice health-check and integration utilities
+- [x] Upgrade local Node.js to 22.x
+- [x] Scaffold Next.js latest app with App Router using `pnpm`
+- [x] Enable TypeScript strict mode
+- [x] Configure Prisma and initial datasource
+- [x] Configure Supabase SSR auth
+- [x] Configure Tailwind CSS
+- [x] Run `npx shadcn@latest init`
+- [x] Run `npx shadcn@latest add dashboard-01 https://ui.shadcn.com/blocks`
+- [x] Add required shadcn components
+- [x] Create shared application shell
+- [x] Add `.env.example` validation strategy
+- [x] Add linting and formatting baseline
+- [x] Add LibreOffice health-check and integration utilities
 
 ## Phase 1 - Core Platform
 
-- [ ] Design Prisma schema baseline
-- [ ] Generate initial Prisma migration
-- [ ] Implement RBAC models and permission helpers
+- [x] Design Prisma schema baseline
+- [x] Generate initial Prisma migration
+- [-] Implement RBAC models and permission helpers
 - [ ] Implement user and signature profile flows
 - [ ] Implement client management
 - [ ] Implement project management
 - [ ] Implement settings hierarchy and inheritance services
 - [ ] Implement discipline management
 - [ ] Implement review code management
-- [ ] Implement numbering rule management
+- [-] Implement numbering rule management
 - [ ] Implement audit log foundation
+- [x] Apply initial database schema to Supabase
+- [x] Seed foundation roles, permissions, masters, and numbering defaults
+- [-] Implement Shared Drive project-folder discovery
 
 ## Phase 2 - PDI
 
@@ -115,8 +118,8 @@ Legend:
 
 ## User Inputs Needed
 
-- [ ] Supabase credentials
-- [ ] Google Drive credentials
+- [-] Supabase credentials
+- [-] Google Drive credentials
 - [ ] Email provider credentials
 - [ ] Cover sheet template samples
 - [ ] Transmittal template sample
@@ -127,4 +130,8 @@ Legend:
 - This file must be updated continuously through the project.
 - Blockers should be marked immediately when discovered.
 - Completed work should be checked off in the same turn it is finished.
-
+- Current blocker: LibreOffice is not installed locally yet, so DOCX -> PDF conversion cannot run.
+- Current blocker: Shared Drive access is not yet available to the provided service account or impersonation flow.
+- Current note: initial migration SQL was generated locally because `prisma migrate dev --create-only` failed through the Supabase schema engine.
+- Current note: workflow, numbering, and RBAC helper modules are now in place as Phase 1 foundations.
+- Current note: production build and runtime smoke tests passed for `/dashboard`, `/projects`, and `/projects/new`.
