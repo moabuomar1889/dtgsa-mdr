@@ -19,6 +19,8 @@ export function SiteHeader() {
     "/search": "Search",
     "/clients": "Clients",
     "/masters": "Masters",
+    "/profile": "Account",
+    "/notifications": "Notifications",
   }
 
   const title = titleMap[pathname] ?? "DTGSA Document Control"

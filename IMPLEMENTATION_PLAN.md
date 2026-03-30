@@ -1,7 +1,7 @@
 # DTGSA MDR Implementation Plan
 
 Last updated: 2026-03-30
-Status: Phase 0 foundation complete, Phase 1 admin/onboarding slice complete, Phase 2 PDI/MDR slice started
+Status: Phase 0 foundation complete, Phase 1 foundation substantially active, Phase 2 PDI/MDR live, Phase 3 workflow/auth slice started
 
 ## Purpose
 
@@ -48,6 +48,9 @@ new constraints appear, or scope is refined.
 - Users/roles administration now includes a Supabase-auth sync action so auth users can be pulled into the local domain user table.
 - The PDI module now supports real register item creation, automatic DTGSA document numbering, client-number capture, send-to-client state updates, and promotion into MDR.
 - The MDR page now exposes promoted operational document records and current revision state.
+- The app now has a protected sign-in flow, first-admin bootstrap, current-user resolution, sign-out, profile route, and notifications route.
+- MDR workflow actions now support prepare, review approve/reject, approve/reject, and DC validation transitions with workflow actions and signature-event records.
+- Audit pages now expose the real business audit log and technical system log views.
 
 ## Current Blockers
 
@@ -201,6 +204,21 @@ Status dimensions must remain separate in data design and UI logic:
 - Signature actions
 - Reviewer and approver loops
 - DC check queue
+
+### Phase 3 Current Completion Snapshot
+
+- Done:
+  - protected app-shell authentication with Supabase
+  - first-admin bootstrap flow
+  - current signed-in user resolution into the domain `User` table
+  - MDR workflow transitions for prepared, reviewed, approved, and DC check
+  - workflow-step seeding when a PDI item is promoted into MDR
+  - signature-event persistence for signed workflow actions
+- Still remaining in Phase 3:
+  - document upload flow
+  - signature-profile editing and image upload
+  - project-level assignment driven approval matrix
+  - richer workflow queues and comments history UI
 
 ### Phase 4
 
@@ -358,16 +376,9 @@ Status dimensions must remain separate in data design and UI logic:
 - `pnpm lint` passes
 - `pnpm typecheck` passes
 - `pnpm build` passes
-- Route smoke checks return HTTP 200 for:
-  - `/dashboard`
-  - `/clients`
-  - `/masters`
-  - `/settings`
-  - `/projects`
-  - `/projects/new`
-  - `/admin/users`
-  - `/pdi`
-  - `/mdr`
+- Anonymous route smoke checks:
+  - `/sign-in` returns HTTP `200`
+  - `/`, `/dashboard`, `/audit`, `/pdi`, and `/mdr` redirect with HTTP `307` into the sign-in flow
 
 ## Update Rule
 

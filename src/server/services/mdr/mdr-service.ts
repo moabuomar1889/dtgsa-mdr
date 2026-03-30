@@ -1,7 +1,25 @@
 import "server-only"
 import { prisma } from "@/lib/prisma/client"
+import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
+import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
-export async function getMdrOverview() {
+type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
+
+function canAct(
+  user: CurrentAppUser,
+  projectId: string,
+  permission: keyof typeof PERMISSIONS
+) {
+  return hasAnyPermission({
+    required: PERMISSIONS[permission],
+    systemRoles: user.userRoles.map((item) => item.role.code),
+    projectRoles: user.projectRoles
+      .filter((item) => item.projectId === projectId)
+      .map((item) => item.role.code),
+  })
+}
+
+export async function getMdrOverview(user: CurrentAppUser) {
   const documents = await prisma.mdrDocument.findMany({
     where: {
       deletedAt: null,
@@ -39,12 +57,10 @@ export async function getMdrOverview() {
         },
       },
       currentRevision: {
-        select: {
-          id: true,
-          revisionLabel: true,
-          workflowStatus: true,
-          revisionStatus: true,
-          clientReplyState: true,
+        include: {
+          workflowSteps: {
+            orderBy: [{ stepOrder: "asc" }],
+          },
         },
       },
       sourcePdiItem: {
@@ -64,7 +80,15 @@ export async function getMdrOverview() {
   })
 
   return {
-    documents,
+    documents: documents.map((document) => ({
+      ...document,
+      permissions: {
+        canPrepare: canAct(user, document.projectId, "workflowPrepare"),
+        canReview: canAct(user, document.projectId, "workflowReview"),
+        canApprove: canAct(user, document.projectId, "workflowApprove"),
+        canDcCheck: canAct(user, document.projectId, "dcCheck"),
+      },
+    })),
     counts: {
       total: documents.length,
       readyForWorkflow: documents.filter(

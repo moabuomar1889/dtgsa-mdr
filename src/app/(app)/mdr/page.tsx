@@ -1,4 +1,15 @@
+import {
+  approveApproveRevisionAction,
+  approveRejectRevisionAction,
+  dcApproveRevisionAction,
+  dcRejectRevisionAction,
+  prepareRevisionAction,
+  reviewApproveRevisionAction,
+  reviewRejectRevisionAction,
+} from "@/server/actions/workflow"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getMdrOverview } from "@/server/services/mdr/mdr-service"
+import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -7,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -18,8 +30,119 @@ import {
 
 export const dynamic = "force-dynamic"
 
+function WorkflowActions({
+  revisionId,
+  workflowStatus,
+  permissions,
+}: {
+  revisionId: string
+  workflowStatus: string
+  permissions: {
+    canPrepare: boolean
+    canReview: boolean
+    canApprove: boolean
+    canDcCheck: boolean
+  }
+}) {
+  if (workflowStatus === "Draft" && permissions.canPrepare) {
+    return (
+      <form action={prepareRevisionAction} className="grid gap-2">
+        <input type="hidden" name="revisionId" value={revisionId} />
+        <Input name="comments" placeholder="Preparation note" />
+        <SubmitButton
+          label="Prepared and send to review"
+          pendingLabel="Updating"
+          className="w-full"
+        />
+      </form>
+    )
+  }
+
+  if (workflowStatus === "PendingReview" && permissions.canReview) {
+    return (
+      <div className="grid gap-2">
+        <form action={reviewApproveRevisionAction} className="grid gap-2">
+          <input type="hidden" name="revisionId" value={revisionId} />
+          <Input name="comments" placeholder="Review approval note" />
+          <SubmitButton
+            label="Review approve"
+            pendingLabel="Updating"
+            className="w-full"
+          />
+        </form>
+        <form action={reviewRejectRevisionAction} className="grid gap-2">
+          <input type="hidden" name="revisionId" value={revisionId} />
+          <Input name="comments" placeholder="Review rejection comment" />
+          <SubmitButton
+            label="Review reject"
+            pendingLabel="Updating"
+            className="w-full"
+          />
+        </form>
+      </div>
+    )
+  }
+
+  if (workflowStatus === "PendingApproval" && permissions.canApprove) {
+    return (
+      <div className="grid gap-2">
+        <form action={approveApproveRevisionAction} className="grid gap-2">
+          <input type="hidden" name="revisionId" value={revisionId} />
+          <Input name="comments" placeholder="Approval note" />
+          <SubmitButton
+            label="Approve"
+            pendingLabel="Updating"
+            className="w-full"
+          />
+        </form>
+        <form action={approveRejectRevisionAction} className="grid gap-2">
+          <input type="hidden" name="revisionId" value={revisionId} />
+          <Input name="comments" placeholder="Approval rejection reason" />
+          <SubmitButton
+            label="Reject"
+            pendingLabel="Updating"
+            className="w-full"
+          />
+        </form>
+      </div>
+    )
+  }
+
+  if (workflowStatus === "ReadyForDcCheck" && permissions.canDcCheck) {
+    return (
+      <div className="grid gap-2">
+        <form action={dcApproveRevisionAction} className="grid gap-2">
+          <input type="hidden" name="revisionId" value={revisionId} />
+          <Input name="comments" placeholder="DC validation note" />
+          <SubmitButton
+            label="Ready to submit"
+            pendingLabel="Updating"
+            className="w-full"
+          />
+        </form>
+        <form action={dcRejectRevisionAction} className="grid gap-2">
+          <input type="hidden" name="revisionId" value={revisionId} />
+          <Input name="comments" placeholder="Return for correction" />
+          <SubmitButton
+            label="Return to preparer"
+            pendingLabel="Updating"
+            className="w-full"
+          />
+        </form>
+      </div>
+    )
+  }
+
+  return (
+    <span className="text-sm text-muted-foreground">
+      No workflow action available for your role.
+    </span>
+  )
+}
+
 export default async function MdrPage() {
-  const overview = await getMdrOverview()
+  const user = await requireCurrentAppUser()
+  const overview = await getMdrOverview(user)
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
@@ -116,7 +239,7 @@ export default async function MdrPage() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                  <TableCell>
                       <div className="flex flex-col gap-1">
                         <Badge>
                           Rev {document.currentRevision?.revisionLabel ?? "N/A"}
@@ -128,7 +251,7 @@ export default async function MdrPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex min-w-64 flex-col gap-2">
                         <Badge variant="outline">
                           {document.currentClientReplyState}
                         </Badge>
@@ -136,6 +259,13 @@ export default async function MdrPage() {
                           {document._count.revisions} revisions /{" "}
                           {document._count.clientReplies} replies
                         </span>
+                        {document.currentRevision ? (
+                          <WorkflowActions
+                            revisionId={document.currentRevision.id}
+                            workflowStatus={document.currentRevision.workflowStatus}
+                            permissions={document.permissions}
+                          />
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>

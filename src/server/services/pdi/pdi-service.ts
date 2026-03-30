@@ -13,6 +13,7 @@ import {
   renderDocumentNumber,
 } from "@/lib/numbering/engine"
 import { prisma } from "@/lib/prisma/client"
+import { seedWorkflowStepsForRevision } from "@/server/services/workflow/workflow-service"
 
 const GLOBAL_SCOPE_KEY = "system"
 
@@ -563,6 +564,8 @@ export async function promotePdiItemToMdr(input: unknown) {
         isCurrent: true,
       },
     })
+
+    await seedWorkflowStepsForRevision(tx, revision.id)
 
     const updatedDocument = await tx.mdrDocument.update({
       where: {
