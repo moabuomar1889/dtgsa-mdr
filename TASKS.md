@@ -53,18 +53,18 @@ Legend:
 
 ## Phase 2 - PDI
 
-- [ ] Implement PDI register model and services
-- [ ] Implement PDI CRUD screens
-- [ ] Implement DTGSA auto-number generation for PDI items
+- [-] Implement PDI register model and services
+- [-] Implement PDI CRUD screens
+- [x] Implement DTGSA auto-number generation for PDI items
 - [ ] Implement Excel export
 - [ ] Implement import flow
 - [ ] Implement client numbering portal
 - [ ] Implement client notification flow
-- [ ] Implement PDI to MDR promotion flow
+- [x] Implement PDI to MDR promotion flow
 
 ## Phase 3 - MDR and Workflow
 
-- [ ] Implement MDR document root and revision model
+- [-] Implement MDR document root and revision model
 - [ ] Implement document upload flow
 - [ ] Implement workflow engine
 - [ ] Implement preparer signing
@@ -134,8 +134,9 @@ Legend:
 - Current blocker: Shared Drive access is not yet available to the provided service account or impersonation flow.
 - Current note: initial migration SQL was generated locally because `prisma migrate dev --create-only` failed through the Supabase schema engine.
 - Current note: workflow, numbering, and RBAC helper modules are now in place as Phase 1 foundations.
-- Current note: production build and runtime smoke tests passed for `/dashboard`, `/clients`, `/masters`, `/settings`, `/projects`, `/projects/new`, and `/admin/users`.
+- Current note: production build and runtime smoke tests passed for `/dashboard`, `/clients`, `/masters`, `/settings`, `/projects`, `/projects/new`, `/admin/users`, `/pdi`, and `/mdr`.
 - Current note: Phase 1 now has real admin pages for dashboard, clients, masters, settings, projects, onboarding, and users/roles.
 - Current note: project onboarding can continue with manual folder mapping even while automatic Shared Drive discovery is blocked.
 - Current note: audit-log writes are now in place for new clients, projects, and global master-data records.
 - Current note: users/roles admin now includes a Supabase-auth sync action to pull auth users into the local `User` table.
+- Current note: PDI now supports item creation, auto-number generation, client-number capture, send status, and promotion into MDR.

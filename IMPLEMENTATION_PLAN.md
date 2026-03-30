@@ -1,7 +1,7 @@
 # DTGSA MDR Implementation Plan
 
 Last updated: 2026-03-30
-Status: Phase 0 foundation complete, Phase 1 admin/onboarding slice in progress
+Status: Phase 0 foundation complete, Phase 1 admin/onboarding slice complete, Phase 2 PDI/MDR slice started
 
 ## Purpose
 
@@ -46,6 +46,8 @@ new constraints appear, or scope is refined.
 - Client creation, master-data creation, and project creation now write business audit-log entries.
 - Project onboarding now supports manual folder mapping as a fallback when Shared Drive discovery is blocked, so implementation does not stop on the Google integration issue.
 - Users/roles administration now includes a Supabase-auth sync action so auth users can be pulled into the local domain user table.
+- The PDI module now supports real register item creation, automatic DTGSA document numbering, client-number capture, send-to-client state updates, and promotion into MDR.
+- The MDR page now exposes promoted operational document records and current revision state.
 
 ## Current Blockers
 
@@ -174,6 +176,21 @@ Status dimensions must remain separate in data design and UI logic:
 - Client numbering portal
 - Secure notification flow
 - PDI to MDR promotion
+
+### Phase 2 Current Completion Snapshot
+
+- Done:
+  - PDI register page with real item listing
+  - PDI item create flow with numbering engine integration
+  - inline client document number capture
+  - send-to-client state update
+  - PDI-to-MDR promotion
+  - MDR register read view for promoted documents
+- Still remaining in Phase 2:
+  - Excel import/export
+  - secure client portal flow
+  - notification emails
+  - richer PDI collaboration state
 
 ### Phase 3
 
@@ -349,6 +366,8 @@ Status dimensions must remain separate in data design and UI logic:
   - `/projects`
   - `/projects/new`
   - `/admin/users`
+  - `/pdi`
+  - `/mdr`
 
 ## Update Rule
 
