@@ -1,7 +1,7 @@
 # DTGSA MDR Implementation Plan
 
-Last updated: 2026-03-29
-Status: Phase 0 foundation complete, Phase 1 foundation in progress
+Last updated: 2026-03-30
+Status: Phase 0 foundation complete, Phase 1 admin/onboarding slice in progress
 
 ## Purpose
 
@@ -42,13 +42,21 @@ new constraints appear, or scope is refined.
 - The initial database schema has now been applied to Supabase and the foundation seed has populated roles, permissions, default masters, and a default numbering rule.
 - Production build verification passed, and runtime smoke tests for `/dashboard`, `/projects`, and `/projects/new` returned HTTP 200 on the current build.
 - Shared Drive discovery pages now exist and compare available Google Drive project folders against projects already linked in the system.
+- Phase 1 admin screens are now data-backed for dashboard, clients, masters, settings, users/roles, projects, and project onboarding.
+- Client creation, master-data creation, and project creation now write business audit-log entries.
+- Project onboarding now supports manual folder mapping as a fallback when Shared Drive discovery is blocked, so implementation does not stop on the Google integration issue.
+- Users/roles administration now includes a Supabase-auth sync action so auth users can be pulled into the local domain user table.
 
 ## Current Blockers
 
-- LibreOffice headless is not installed locally yet, so DOCX -> PDF conversion cannot run until `LIBREOFFICE_PATH` is set or LibreOffice is installed.
 - Google Shared Drive access is not fully ready yet:
   - direct service-account access to the provided Shared Drive returned `Shared drive not found`
   - impersonation returned `unauthorized_client`, which indicates domain-wide delegation is not fully configured for the requested scopes
+- Practical meaning of the Google blocker:
+  - the service account key is valid and can call Google APIs
+  - but the service account cannot currently see the configured Shared Drive or Projects folder
+  - and Workspace impersonation is not authorized yet for this service account
+- LibreOffice headless is intentionally deferred to a later implementation slice because it is only required once DOCX -> PDF cover generation begins.
 - `prisma migrate dev --create-only` still hits a Supabase/schema-engine issue, so the initial migration is tracked as SQL and was applied through PostgreSQL directly instead of Prisma's schema engine.
 
 ## Core Architecture
@@ -138,6 +146,25 @@ Status dimensions must remain separate in data design and UI logic:
 - Review code management
 - Numbering rule administration
 - Audit foundation
+
+### Phase 1 Current Completion Snapshot
+
+- Done:
+  - Prisma schema foundation applied and seeded
+  - RBAC role and permission seed plus helper expansion
+  - Global master-data list/create screens for disciplines, document types, release purposes, and review codes
+  - Client list/create screen
+  - Project list screen
+  - Project onboarding screen with Shared Drive discovery and manual fallback
+  - Read-only settings and integration diagnostic screen
+  - Read-only users/roles administration screen
+  - Business audit-log writes for new client, project, and master-data creation
+- Still remaining in Phase 1:
+  - real user provisioning and signature profile flows
+  - editable settings hierarchy and inheritance resolution UI
+  - client-scoped and project-scoped overrides for masters and numbering rules
+  - project-level role assignment UI
+  - stronger auth enforcement across pages and actions
 
 ### Phase 2
 
@@ -308,6 +335,20 @@ Status dimensions must remain separate in data design and UI logic:
 - Example transmittal design/template
 - Final numbering formats per client/project or at least the first client default
 - Preferred timezone defaults if different from `Asia/Riyadh`
+
+## Current Verification Snapshot
+
+- `pnpm lint` passes
+- `pnpm typecheck` passes
+- `pnpm build` passes
+- Route smoke checks return HTTP 200 for:
+  - `/dashboard`
+  - `/clients`
+  - `/masters`
+  - `/settings`
+  - `/projects`
+  - `/projects/new`
+  - `/admin/users`
 
 ## Update Rule
 

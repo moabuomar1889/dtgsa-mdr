@@ -1,6 +1,6 @@
 # DTGSA MDR Tasks
 
-Last updated: 2026-03-29
+Last updated: 2026-03-30
 
 Legend:
 - `[ ]` Not started
@@ -38,15 +38,15 @@ Legend:
 
 - [x] Design Prisma schema baseline
 - [x] Generate initial Prisma migration
-- [-] Implement RBAC models and permission helpers
+- [x] Implement RBAC models and permission helpers
 - [ ] Implement user and signature profile flows
-- [ ] Implement client management
-- [ ] Implement project management
-- [ ] Implement settings hierarchy and inheritance services
-- [ ] Implement discipline management
-- [ ] Implement review code management
+- [-] Implement client management
+- [-] Implement project management
+- [-] Implement settings hierarchy and inheritance services
+- [-] Implement discipline management
+- [-] Implement review code management
 - [-] Implement numbering rule management
-- [ ] Implement audit log foundation
+- [-] Implement audit log foundation
 - [x] Apply initial database schema to Supabase
 - [x] Seed foundation roles, permissions, masters, and numbering defaults
 - [-] Implement Shared Drive project-folder discovery
@@ -130,8 +130,12 @@ Legend:
 - This file must be updated continuously through the project.
 - Blockers should be marked immediately when discovered.
 - Completed work should be checked off in the same turn it is finished.
-- Current blocker: LibreOffice is not installed locally yet, so DOCX -> PDF conversion cannot run.
+- Current blocker: LibreOffice is intentionally deferred until DOCX -> PDF work begins.
 - Current blocker: Shared Drive access is not yet available to the provided service account or impersonation flow.
 - Current note: initial migration SQL was generated locally because `prisma migrate dev --create-only` failed through the Supabase schema engine.
 - Current note: workflow, numbering, and RBAC helper modules are now in place as Phase 1 foundations.
-- Current note: production build and runtime smoke tests passed for `/dashboard`, `/projects`, and `/projects/new`.
+- Current note: production build and runtime smoke tests passed for `/dashboard`, `/clients`, `/masters`, `/settings`, `/projects`, `/projects/new`, and `/admin/users`.
+- Current note: Phase 1 now has real admin pages for dashboard, clients, masters, settings, projects, onboarding, and users/roles.
+- Current note: project onboarding can continue with manual folder mapping even while automatic Shared Drive discovery is blocked.
+- Current note: audit-log writes are now in place for new clients, projects, and global master-data records.
+- Current note: users/roles admin now includes a Supabase-auth sync action to pull auth users into the local `User` table.

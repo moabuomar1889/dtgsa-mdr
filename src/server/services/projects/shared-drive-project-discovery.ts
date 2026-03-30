@@ -31,6 +31,12 @@ export type SharedDriveProjectDiscoveryResult = {
   linkedFolders: SharedDriveProjectFolder[]
 }
 
+type DiscoveryAttempt = {
+  mode: "impersonated" | "direct"
+  error: string | null
+  folders: SharedDriveProjectFolder[]
+}
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
@@ -42,6 +48,45 @@ function buildProjectFolderPattern(prefix: string) {
 function extractProjectCode(name: string, prefix: string) {
   const pattern = new RegExp(`^(${escapeRegExp(prefix)}\\d{3})`, "i")
   return name.match(pattern)?.[1]?.toUpperCase() ?? prefix.toUpperCase()
+}
+
+function extractGoogleErrorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "error" in error.response.data
+  ) {
+    const payload = error.response.data as {
+      error?:
+        | { message?: string; error_description?: string }
+        | string
+        | undefined
+    }
+
+    if (typeof payload.error === "string") {
+      return payload.error
+    }
+
+    if (payload.error?.message) {
+      return payload.error.message
+    }
+
+    if (payload.error?.error_description) {
+      return payload.error.error_description
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  return "Unknown Google Drive error."
 }
 
 export async function discoverSharedDriveProjectFolders(): Promise<SharedDriveProjectDiscoveryResult> {
@@ -111,62 +156,118 @@ export async function discoverSharedDriveProjectFolders(): Promise<SharedDrivePr
   }
 
   try {
-    const drive = createGoogleDriveClient()
-    const discoveredFolders: SharedDriveProjectFolder[] = []
-    let pageToken: string | undefined
+    const attempts: DiscoveryAttempt[] = []
+    const modes: Array<{ mode: "impersonated" | "direct"; impersonateUser?: string | null }> =
+      env.GOOGLE_DRIVE_IMPERSONATE_USER
+        ? [
+            {
+              mode: "impersonated",
+              impersonateUser: env.GOOGLE_DRIVE_IMPERSONATE_USER,
+            },
+            {
+              mode: "direct",
+              impersonateUser: null,
+            },
+          ]
+        : [
+            {
+              mode: "direct",
+              impersonateUser: null,
+            },
+          ]
 
-    do {
-      const response = await drive.files.list({
-        corpora: "drive",
-        driveId: sharedDriveId,
-        includeItemsFromAllDrives: true,
-        supportsAllDrives: true,
-        pageSize: 200,
-        pageToken,
-        orderBy: "name_natural",
-        q: `'${projectsFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-        fields:
-          "nextPageToken, files(id, name, modifiedTime, webViewLink)",
-      })
+    for (const attempt of modes) {
+      try {
+        const drive = createGoogleDriveClient({
+          impersonateUser: attempt.impersonateUser,
+          scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+        })
+        const discoveredFolders: SharedDriveProjectFolder[] = []
+        let pageToken: string | undefined
 
-      for (const file of response.data.files ?? []) {
-        const folderName = file.name ?? ""
+        do {
+          const response = await drive.files.list({
+            corpora: "drive",
+            driveId: sharedDriveId,
+            includeItemsFromAllDrives: true,
+            supportsAllDrives: true,
+            pageSize: 200,
+            pageToken,
+            orderBy: "name_natural",
+            q: `'${projectsFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+            fields:
+              "nextPageToken, files(id, name, modifiedTime, webViewLink)",
+          })
 
-        if (!file.id || !projectFolderPattern.test(folderName)) {
-          continue
+          for (const file of response.data.files ?? []) {
+            const folderName = file.name ?? ""
+
+            if (!file.id || !projectFolderPattern.test(folderName)) {
+              continue
+            }
+
+            const linkedProject = linkedByFolderId.get(file.id)
+
+            discoveredFolders.push({
+              folderId: file.id,
+              name: folderName,
+              code: extractProjectCode(folderName, scanPrefix),
+              modifiedTime: file.modifiedTime ?? null,
+              webViewLink: file.webViewLink ?? null,
+              alreadyInitiated: Boolean(linkedProject),
+              linkedProjectId: linkedProject?.projectId ?? null,
+              linkedProjectCode: linkedProject?.projectCode ?? null,
+              linkedProjectName: linkedProject?.projectName ?? null,
+            })
+          }
+
+          pageToken = response.data.nextPageToken ?? undefined
+        } while (pageToken)
+
+        attempts.push({
+          mode: attempt.mode,
+          error: null,
+          folders: discoveredFolders,
+        })
+
+        const linkedFolders = discoveredFolders.filter(
+          (folder) => folder.alreadyInitiated
+        )
+        const availableFolders = discoveredFolders.filter(
+          (folder) => !folder.alreadyInitiated
+        )
+
+        return {
+          status: "ready",
+          sharedDriveId,
+          projectsFolderId,
+          scanPrefix,
+          totalMatchingFolders: discoveredFolders.length,
+          availableFolders,
+          linkedFolders,
         }
-
-        const linkedProject = linkedByFolderId.get(file.id)
-
-        discoveredFolders.push({
-          folderId: file.id,
-          name: folderName,
-          code: extractProjectCode(folderName, scanPrefix),
-          modifiedTime: file.modifiedTime ?? null,
-          webViewLink: file.webViewLink ?? null,
-          alreadyInitiated: Boolean(linkedProject),
-          linkedProjectId: linkedProject?.projectId ?? null,
-          linkedProjectCode: linkedProject?.projectCode ?? null,
-          linkedProjectName: linkedProject?.projectName ?? null,
+      } catch (error) {
+        attempts.push({
+          mode: attempt.mode,
+          error: extractGoogleErrorMessage(error),
+          folders: [],
         })
       }
+    }
 
-      pageToken = response.data.nextPageToken ?? undefined
-    } while (pageToken)
-
-    const linkedFolders = discoveredFolders.filter((folder) => folder.alreadyInitiated)
-    const availableFolders = discoveredFolders.filter(
-      (folder) => !folder.alreadyInitiated
-    )
+    const detail = attempts
+      .map((attempt) => `${attempt.mode}: ${attempt.error ?? "unknown error"}`)
+      .join(" | ")
 
     return {
-      status: "ready",
+      status: "drive_error",
+      message: detail,
       sharedDriveId,
       projectsFolderId,
       scanPrefix,
-      totalMatchingFolders: discoveredFolders.length,
-      availableFolders,
-      linkedFolders,
+      totalMatchingFolders: 0,
+      availableFolders: [],
+      linkedFolders: [],
     }
   } catch (error) {
     const message =

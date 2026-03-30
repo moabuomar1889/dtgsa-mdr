@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { listProjects } from "@/server/services/projects/project-management"
+import { discoverSharedDriveProjectFolders } from "@/server/services/projects/shared-drive-project-discovery"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { discoverSharedDriveProjectFolders } from "@/server/services/projects/shared-drive-project-discovery"
 
 export const dynamic = "force-dynamic"
 
@@ -32,7 +33,10 @@ function formatDate(value: string | null) {
 }
 
 export default async function ProjectsPage() {
-  const discovery = await discoverSharedDriveProjectFolders()
+  const [discovery, projects] = await Promise.all([
+    discoverSharedDriveProjectFolders(),
+    listProjects(),
+  ])
   const isReady = discovery.status === "ready"
 
   return (
@@ -49,17 +53,17 @@ export default async function ProjectsPage() {
               </Badge>
             </div>
             <CardTitle className="text-2xl font-semibold tracking-tight">
-              Project folders are discovered directly from the Google Workspace
-              Shared Drive.
+              Project folders are discovered from the Google Workspace Shared
+              Drive and compared against initiated project records.
             </CardTitle>
             <CardDescription className="max-w-3xl leading-6">
-              The system scans the configured Projects folder, keeps only
-              folders that start with <code>{discovery.scanPrefix ?? "PRJ-"}</code>
-              and three digits, then highlights the folders that have not been
-              initiated in the application yet.
+              The app scans the configured Projects folder, keeps only folder
+              names that match the <code>PRJ-XXX</code> rule, and separates
+              folders that are still waiting to be initiated from folders that
+              are already linked to project records.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 pt-4 sm:grid-cols-3">
+          <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
             <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
               <p className="text-sm text-muted-foreground">Matching folders</p>
               <p className="mt-2 text-2xl font-semibold tracking-tight">
@@ -73,9 +77,15 @@ export default async function ProjectsPage() {
               </p>
             </div>
             <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Already initiated</p>
+              <p className="text-sm text-muted-foreground">Already linked</p>
               <p className="mt-2 text-2xl font-semibold tracking-tight">
                 {discovery.linkedFolders.length}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <p className="text-sm text-muted-foreground">Projects in system</p>
+              <p className="mt-2 text-2xl font-semibold tracking-tight">
+                {projects.length}
               </p>
             </div>
           </CardContent>
@@ -83,10 +93,9 @@ export default async function ProjectsPage() {
 
         <Card className="border-border/70 bg-card/95 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Drive Source</CardTitle>
+            <CardTitle className="text-lg">Drive source</CardTitle>
             <CardDescription>
-              The project creator chooses from folders under the configured
-              Shared Drive projects directory.
+              Discovery uses the configured Shared Drive and Projects folder ID.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
@@ -98,7 +107,7 @@ export default async function ProjectsPage() {
             </div>
             <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Projects Folder
+                Projects folder
               </p>
               <p className="mt-2 font-medium">
                 {discovery.projectsFolderId ?? "Not set"}
@@ -113,10 +122,66 @@ export default async function ProjectsPage() {
 
       <Card className="border-border/70 bg-card/95 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Drive Discovery Result</CardTitle>
+          <CardTitle className="text-lg">Initiated projects</CardTitle>
+          <CardDescription>
+            Project records already linked in the platform database.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {projects.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Root folder</TableHead>
+                  <TableHead>MDR docs</TableHead>
+                  <TableHead>Transmittals</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">
+                          {project.code} - {project.name}
+                        </span>
+                        {project.contractNumber ? (
+                          <span className="text-xs text-muted-foreground">
+                            Contract: {project.contractNumber}
+                          </span>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {project.client.code} - {project.client.name}
+                    </TableCell>
+                    <TableCell className="max-w-80 text-muted-foreground">
+                      {project.driveMappings[0]?.folderName ?? "Unmapped"}
+                    </TableCell>
+                    <TableCell>{project._count.mdrDocuments}</TableCell>
+                    <TableCell>{project._count.transmittals}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              No projects have been initiated yet. Use the onboarding queue to
+              create the first project record from a Shared Drive folder or by
+              manual folder mapping if discovery is still blocked.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/70 bg-card/95 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Drive discovery result</CardTitle>
           <CardDescription>
             {isReady
-              ? "These folders were found in Google Drive and filtered by the PRJ-XXX naming rule."
+              ? "These folders were found in Google Drive and filtered by the configured prefix rule."
               : discovery.message ?? "Google Drive discovery is waiting for configuration."}
           </CardDescription>
         </CardHeader>
@@ -125,10 +190,10 @@ export default async function ProjectsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Project Code</TableHead>
-                  <TableHead>Folder Name</TableHead>
+                  <TableHead>Project code</TableHead>
+                  <TableHead>Folder name</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last Modified</TableHead>
+                  <TableHead>Last modified</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -170,7 +235,7 @@ export default async function ProjectsPage() {
           ) : (
             <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
               {discovery.message ??
-                "Drive discovery could not run yet. Provide the Shared Drive configuration and confirm service-account access."}
+                "Drive discovery could not run yet. The system can still continue with manual folder mapping from the onboarding screen."}
             </div>
           )}
         </CardContent>

@@ -1,4 +1,10 @@
+import Link from "next/link"
+import { createProjectAction } from "@/server/actions/platform-admin"
+import { listClientOptions } from "@/server/services/clients/client-management"
+import { discoverSharedDriveProjectFolders } from "@/server/services/projects/shared-drive-project-discovery"
+import { ProjectOnboardingForm } from "@/components/app/project-onboarding-form"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -14,12 +20,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { discoverSharedDriveProjectFolders } from "@/server/services/projects/shared-drive-project-discovery"
 
 export const dynamic = "force-dynamic"
 
 export default async function NewProjectPage() {
-  const discovery = await discoverSharedDriveProjectFolders()
+  const [discovery, clients] = await Promise.all([
+    discoverSharedDriveProjectFolders(),
+    listClientOptions(),
+  ])
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
@@ -34,23 +42,95 @@ export default async function NewProjectPage() {
             </Badge>
           </div>
           <CardTitle className="text-2xl font-semibold tracking-tight">
-            New projects start by selecting an unlinked folder from the Shared
-            Drive.
+            Create a project by linking it to the correct Shared Drive folder.
           </CardTitle>
           <CardDescription className="max-w-3xl leading-6">
-            This page is the first onboarding checkpoint. It lists folders under
-            the configured Projects directory that match the required PRJ-XXX
-            naming rule and are not already linked to a project record.
+            When Google Drive discovery is healthy, users select from unlinked
+            <code> PRJ-XXX </code> folders automatically. If Drive visibility is
+            still blocked, the same form falls back to manual folder mapping so
+            project setup does not stop.
           </CardDescription>
         </CardHeader>
       </Card>
+
+      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="border-border/70 bg-card/95 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Create project</CardTitle>
+            <CardDescription>
+              Choose a client first. The selected folder becomes the root Drive
+              mapping for the project.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {clients.length > 0 ? (
+              <ProjectOnboardingForm
+                clients={clients}
+                folders={discovery.availableFolders.map((folder) => ({
+                  folderId: folder.folderId,
+                  name: folder.name,
+                  code: folder.code,
+                }))}
+                action={createProjectAction}
+              />
+            ) : (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+                  No clients exist yet, so project onboarding is paused until
+                  the first client record is created.
+                </div>
+                <Button asChild>
+                  <Link href="/clients">Create first client</Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 bg-card/95 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Discovery status</CardTitle>
+            <CardDescription>
+              Current Drive connectivity state for the onboarding flow.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <p className="text-sm text-muted-foreground">Mode</p>
+              <p className="mt-2 text-lg font-semibold tracking-tight">
+                {discovery.status === "ready"
+                  ? "Automatic discovery"
+                  : "Manual fallback available"}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <p className="text-sm text-muted-foreground">Message</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {discovery.status === "ready"
+                  ? `${discovery.availableFolders.length} unlinked project folders are ready for onboarding.`
+                  : discovery.message ??
+                    "Drive visibility is not ready yet, but manual folder mapping is enabled."}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <p className="text-sm text-muted-foreground">Configured scope</p>
+              <p className="mt-2 break-all text-sm text-muted-foreground">
+                Shared Drive: {discovery.sharedDriveId ?? "Not set"}
+              </p>
+              <p className="break-all text-sm text-muted-foreground">
+                Projects folder: {discovery.projectsFolderId ?? "Not set"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       <Card className="border-border/70 bg-card/95 shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg">Available project folders</CardTitle>
           <CardDescription>
-            The actual project-create form will use this queue so users pick the
-            correct Google Drive folder instead of typing a folder ID manually.
+            These are the folders currently eligible for onboarding when Drive
+            discovery succeeds.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -59,8 +139,8 @@ export default async function NewProjectPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Project Code</TableHead>
-                    <TableHead>Folder Name</TableHead>
+                    <TableHead>Project code</TableHead>
+                    <TableHead>Folder name</TableHead>
                     <TableHead>Folder ID</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -79,14 +159,15 @@ export default async function NewProjectPage() {
             ) : (
               <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
                 Every matching Shared Drive folder is already linked in the
-                system, or there are no matching `PRJ-XXX` folders in the
-                configured Projects directory.
+                system, or there are no matching folders under the configured
+                Projects directory.
               </div>
             )
           ) : (
             <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
-              {discovery.message ??
-                "Google Drive discovery is not ready yet for project onboarding."}
+              Automatic discovery is currently blocked, so the form above accepts
+              manual folder ID and folder name input until the Shared Drive
+              access configuration is corrected.
             </div>
           )}
         </CardContent>
