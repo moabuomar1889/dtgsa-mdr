@@ -21,6 +21,7 @@ import {
   FileChartColumnIcon,
   FileTextIcon,
   FolderKanbanIcon,
+  InboxIcon,
   LayoutDashboardIcon,
   SearchIcon,
   Settings2Icon,
@@ -54,6 +55,11 @@ const data = {
       title: "Transmittals",
       url: "/transmittals",
       icon: <FileBadge2Icon />,
+    },
+    {
+      title: "Client Replies",
+      url: "/replies",
+      icon: <InboxIcon />,
     },
   ],
   navSecondary: [

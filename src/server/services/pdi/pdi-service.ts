@@ -8,11 +8,8 @@ import {
   WorkflowStatus,
 } from "@prisma/client"
 import { z } from "zod"
-import {
-  buildSequenceScopeKey,
-  renderDocumentNumber,
-} from "@/lib/numbering/engine"
 import { prisma } from "@/lib/prisma/client"
+import { generateDocumentNumber } from "@/server/services/numbering/document-numbering-service"
 import { seedWorkflowStepsForRevision } from "@/server/services/workflow/workflow-service"
 
 const GLOBAL_SCOPE_KEY = "system"
@@ -50,64 +47,6 @@ function normalizeTags(value?: string) {
         .filter(Boolean)
     )
   )
-}
-
-function buildCustomScopeKey(input: {
-  projectId: string
-  disciplineCode: string
-  documentTypeCode: string
-}) {
-  return `PROJECT:${input.projectId}|DISCIPLINE:${input.disciplineCode}|DOC_TYPE:${input.documentTypeCode}`
-}
-
-async function resolveNumberingRule(projectId: string, clientId: string) {
-  const include = {
-    tokens: {
-      orderBy: [{ order: "asc" as const }],
-    },
-  }
-
-  const projectRule = await prisma.numberingRule.findFirst({
-    where: {
-      projectId,
-      isActive: true,
-    },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-    include,
-  })
-
-  if (projectRule) {
-    return projectRule
-  }
-
-  const clientRule = await prisma.numberingRule.findFirst({
-    where: {
-      clientId,
-      isActive: true,
-    },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-    include,
-  })
-
-  if (clientRule) {
-    return clientRule
-  }
-
-  const globalRule = await prisma.numberingRule.findFirst({
-    where: {
-      scopeLevel: ScopeLevel.Global,
-      scopeKey: GLOBAL_SCOPE_KEY,
-      isActive: true,
-    },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-    include,
-  })
-
-  if (!globalRule) {
-    throw new Error("No active numbering rule is available for this project.")
-  }
-
-  return globalRule
 }
 
 export async function getPdiOverview() {
@@ -266,25 +205,23 @@ export async function createPdiItem(input: unknown) {
     throw new Error("The selected project could not be found.")
   }
 
-  const [discipline, documentTypeCategory, releasePurpose, numberingRule] =
-    await Promise.all([
-      prisma.discipline.findUnique({
-        where: {
-          id: parsed.disciplineId,
-        },
-      }),
-      prisma.documentTypeCategory.findUnique({
-        where: {
-          id: parsed.documentTypeCategoryId,
-        },
-      }),
-      prisma.releasePurpose.findUnique({
-        where: {
-          id: parsed.releasePurposeId,
-        },
-      }),
-      resolveNumberingRule(project.id, project.client.id),
-    ])
+  const [discipline, documentTypeCategory, releasePurpose] = await Promise.all([
+    prisma.discipline.findUnique({
+      where: {
+        id: parsed.disciplineId,
+      },
+    }),
+    prisma.documentTypeCategory.findUnique({
+      where: {
+        id: parsed.documentTypeCategoryId,
+      },
+    }),
+    prisma.releasePurpose.findUnique({
+      where: {
+        id: parsed.releasePurposeId,
+      },
+    }),
+  ])
 
   if (!discipline || discipline.deletedAt || !discipline.isActive) {
     throw new Error("The selected discipline is not available.")
@@ -298,20 +235,6 @@ export async function createPdiItem(input: unknown) {
     throw new Error("The selected release purpose is not available.")
   }
 
-  const customScopeKey = buildCustomScopeKey({
-    projectId: project.id,
-    disciplineCode: discipline.code,
-    documentTypeCode: documentTypeCategory.code,
-  })
-
-  const scopeKey = buildSequenceScopeKey(numberingRule.sequenceScope, {
-    projectId: project.id,
-    projectCode: project.code,
-    disciplineCode: discipline.code,
-    documentTypeCode: documentTypeCategory.code,
-    customScopeKey,
-  })
-
   return prisma.$transaction(async (tx) => {
     const register =
       project.pdiRegister ??
@@ -321,49 +244,13 @@ export async function createPdiItem(input: unknown) {
         },
       }))
 
-    const sequence = await tx.numberingSequence.upsert({
-      where: {
-        ruleId_scopeKey: {
-          ruleId: numberingRule.id,
-          scopeKey,
-        },
-      },
-      update: {
-        currentValue: {
-          increment: 1,
-        },
-      },
-      create: {
-        ruleId: numberingRule.id,
-        scopeKey,
-        currentValue: 1,
-      },
-    })
-
-    const dtgsaDocumentNumber = renderDocumentNumber({
-      formatString: numberingRule.formatString,
-      separator: numberingRule.separator,
-      padding: numberingRule.padding,
-      tokens: numberingRule.tokens.map((token) => ({
-        key: token.key,
-        order: token.order,
-        padding: token.padding,
-        separator: token.separator,
-        tokenType: token.tokenType,
-        valueTemplate: token.valueTemplate,
-        isOptional: token.isOptional,
-      })),
-      sequenceValue: sequence.currentValue,
-      context: {
-        clientCode: project.client.code,
-        projectCode: project.code,
-        projectId: project.id,
-        disciplineCode: discipline.code,
-        documentTypeCode: documentTypeCategory.code,
-        releasePurposeCode: releasePurpose.code,
-        revision: parsed.revision,
-        customScopeKey,
-      },
+    const numberGeneration = await generateDocumentNumber({
+      db: tx,
+      project,
+      discipline,
+      documentTypeCategory,
+      releasePurpose,
+      revision: parsed.revision,
     })
 
     const pdiItem = await tx.pdiItem.create({
@@ -373,8 +260,8 @@ export async function createPdiItem(input: unknown) {
         disciplineId: discipline.id,
         documentTypeCategoryId: documentTypeCategory.id,
         releasePurposeId: releasePurpose.id,
-        numberingRuleId: numberingRule.id,
-        dtgsaDocumentNumber,
+        numberingRuleId: numberGeneration.numberingRuleId,
+        dtgsaDocumentNumber: numberGeneration.dtgsaDocumentNumber,
         title: parsed.title.trim(),
         revision: parsed.revision.trim(),
         remarks: parsed.remarks?.trim() || null,
@@ -391,12 +278,12 @@ export async function createPdiItem(input: unknown) {
         clientId: project.client.id,
         severity: AuditSeverity.Info,
         afterSnapshot: {
-          dtgsaDocumentNumber,
+          dtgsaDocumentNumber: numberGeneration.dtgsaDocumentNumber,
           title: pdiItem.title,
           disciplineCode: discipline.code,
           documentTypeCode: documentTypeCategory.code,
           releasePurposeCode: releasePurpose.code,
-          sequenceScopeKey: scopeKey,
+          sequenceScopeKey: numberGeneration.scopeKey,
         },
       },
     })

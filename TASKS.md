@@ -1,6 +1,6 @@
 # DTGSA MDR Tasks
 
-Last updated: 2026-03-30
+Last updated: 2026-03-31
 
 Legend:
 - `[ ]` Not started
@@ -91,21 +91,21 @@ Legend:
 
 ## Phase 5 - Transmittals
 
-- [ ] Implement transmittal numbering and model
-- [ ] Implement transmittal builder UI
-- [ ] Implement total attachment size validation
+- [x] Implement transmittal numbering and model
+- [x] Implement transmittal builder UI
+- [x] Implement total attachment size validation
 - [ ] Implement transmittal PDF generation
 - [ ] Implement email send flow
-- [ ] Link submitted documents to transmittals
+- [x] Link submitted documents to transmittals
 
 ## Phase 6 - Client Replies and Revision Paths
 
-- [ ] Implement client reply capture
-- [ ] Implement review code application
-- [ ] Implement rejected file naming automation
-- [ ] Implement revision-required branch
-- [ ] Implement new-document-number branch
-- [ ] Implement response-driven notifications
+- [x] Implement client reply capture
+- [x] Implement review code application
+- [x] Implement rejected file naming automation
+- [x] Implement revision-required branch
+- [x] Implement new-document-number branch
+- [-] Implement response-driven notifications
 
 ## Phase 7 - Drive, Dashboards, Hardening
 
@@ -144,3 +144,6 @@ Legend:
 - Current note: the app shell is now protected by Supabase auth and includes first-admin bootstrap, sign-in, profile, notifications, and sign-out.
 - Current note: MDR now supports live workflow transitions for prepare, review, approval, and DC validation with signature events.
 - Current note: audit page now shows the real business audit log and system log tables.
+- Current note: transmittals now support draft creation from ReadyToSubmit revisions, attachment-size validation, item linkage, and submitted-to-client workflow transitions.
+- Current note: client replies now support review-code application, rejected-file naming metadata, same-number revision branching, and new-document-number branching.
+- Current note: in-app notifications are now generated for transmittal sends and client-reply processing, and the notification center is live.

@@ -13,6 +13,7 @@ export function SiteHeader() {
     "/pdi": "Project Document Index",
     "/mdr": "Master Document Register",
     "/transmittals": "Transmittals",
+    "/replies": "Client Replies",
     "/audit": "Audit Log",
     "/settings": "Settings",
     "/admin/users": "Users & Roles",
