@@ -148,6 +148,7 @@ export default async function TransmittalsPage() {
                   <TableHead>Documents</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Size</TableHead>
+                  <TableHead>PDF</TableHead>
                   <TableHead>Sent</TableHead>
                 </TableRow>
               </TableHeader>
@@ -211,6 +212,22 @@ export default async function TransmittalsPage() {
                     </TableCell>
                     <TableCell className="text-sm">
                       {formatBytes(transmittal.totalAttachmentBytes)}
+                    </TableCell>
+                    <TableCell>
+                      {transmittal.generatedPdfUrl ? (
+                        <a
+                          href={transmittal.generatedPdfUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          Open PDF
+                        </a>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          Not generated yet
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {transmittal.sentAt

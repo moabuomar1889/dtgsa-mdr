@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
 import { createClient } from "@/server/services/clients/client-management"
 import {
   createGlobalDiscipline,
@@ -17,6 +20,9 @@ function toBoolean(value: FormDataEntryValue | null) {
 }
 
 export async function createClientAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.clientsManage)
+
   await createClient({
     code: formData.get("code"),
     name: formData.get("name"),
@@ -31,6 +37,9 @@ export async function createClientAction(formData: FormData) {
 }
 
 export async function createProjectAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.projectsManage)
+
   await createProjectFromDriveFolder({
     clientId: formData.get("clientId"),
     code: formData.get("code"),
@@ -47,6 +56,9 @@ export async function createProjectAction(formData: FormData) {
 }
 
 export async function createDisciplineAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.mastersManage)
+
   await createGlobalDiscipline({
     code: formData.get("code"),
     name: formData.get("name"),
@@ -58,6 +70,9 @@ export async function createDisciplineAction(formData: FormData) {
 }
 
 export async function createDocumentTypeAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.mastersManage)
+
   await createGlobalDocumentType({
     code: formData.get("code"),
     name: formData.get("name"),
@@ -69,6 +84,9 @@ export async function createDocumentTypeAction(formData: FormData) {
 }
 
 export async function createReleasePurposeAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.mastersManage)
+
   await createGlobalReleasePurpose({
     code: formData.get("code"),
     name: formData.get("name"),
@@ -80,6 +98,9 @@ export async function createReleasePurposeAction(formData: FormData) {
 }
 
 export async function createReviewCodeAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.mastersManage)
+
   await createGlobalReviewCode({
     code: formData.get("code"),
     label: formData.get("label"),
@@ -94,6 +115,9 @@ export async function createReviewCodeAction(formData: FormData) {
 }
 
 export async function syncSupabaseUsersAction() {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.usersManage)
+
   await syncSupabaseUsers()
 
   revalidatePath("/admin/users")

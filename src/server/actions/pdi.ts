@@ -1,6 +1,9 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
 import {
   createPdiItem,
   markPdiItemSentToClient,
@@ -9,6 +12,9 @@ import {
 } from "@/server/services/pdi/pdi-service"
 
 export async function createPdiItemAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.pdiManage)
+
   await createPdiItem({
     projectId: formData.get("projectId"),
     disciplineId: formData.get("disciplineId"),
@@ -18,6 +24,7 @@ export async function createPdiItemAction(formData: FormData) {
     revision: formData.get("revision"),
     remarks: formData.get("remarks"),
     tags: formData.get("tags"),
+    createdByUserId: actor.id,
   })
 
   revalidatePath("/pdi")
@@ -25,6 +32,9 @@ export async function createPdiItemAction(formData: FormData) {
 }
 
 export async function markPdiItemSentToClientAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.pdiManage)
+
   await markPdiItemSentToClient({
     pdiItemId: formData.get("pdiItemId"),
   })
@@ -33,6 +43,9 @@ export async function markPdiItemSentToClientAction(formData: FormData) {
 }
 
 export async function updatePdiClientDocumentNumberAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, [PERMISSIONS.pdiManage, PERMISSIONS.pdiCollaborate])
+
   await updatePdiClientDocumentNumber({
     pdiItemId: formData.get("pdiItemId"),
     clientDocumentNumber: formData.get("clientDocumentNumber"),
@@ -42,6 +55,9 @@ export async function updatePdiClientDocumentNumberAction(formData: FormData) {
 }
 
 export async function promotePdiItemToMdrAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.pdiManage)
+
   await promotePdiItemToMdr({
     pdiItemId: formData.get("pdiItemId"),
   })

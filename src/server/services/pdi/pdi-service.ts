@@ -23,6 +23,7 @@ const createPdiItemSchema = z.object({
   revision: z.string().trim().min(1).max(20).default("00"),
   remarks: z.string().trim().max(1000).optional(),
   tags: z.string().trim().optional(),
+  createdByUserId: z.string().trim().min(1).optional(),
 })
 
 const pdiItemIdSchema = z.object({
@@ -266,11 +267,13 @@ export async function createPdiItem(input: unknown) {
         revision: parsed.revision.trim(),
         remarks: parsed.remarks?.trim() || null,
         tags: normalizeTags(parsed.tags),
+        createdByUserId: parsed.createdByUserId?.trim() || null,
       },
     })
 
     await tx.auditLog.create({
       data: {
+        actorUserId: parsed.createdByUserId?.trim() || null,
         action: "pdi.item.create",
         entityType: "PdiItem",
         entityId: pdiItem.id,

@@ -7,6 +7,7 @@ import {
 } from "@prisma/client"
 import { env } from "@/lib/config/env"
 import { prisma } from "@/lib/prisma/client"
+import { queueAndSendEmailNotification } from "@/server/services/email/email-service"
 
 type NotificationMetadata = Prisma.InputJsonValue | null | undefined
 
@@ -111,22 +112,71 @@ export async function notifyProjectRoles(input: NotifyProjectRolesInput) {
     metadata: input.metadata,
   })
 
-  if (input.requestEmailDelivery && !env.EMAIL_PROVIDER) {
-    await prisma.systemLog.create({
-      data: {
-        source: "notifications",
-        action: "email.skipped",
-        message:
-          "Email delivery was requested for a project notification, but EMAIL_PROVIDER is not configured.",
-        projectId: input.projectId,
-        clientId: input.clientId ?? null,
-        severity: SystemSeverity.Warning,
-        metadata: {
-          title: input.title,
-          requestedRoleCodes: input.roleCodes,
+  if (input.requestEmailDelivery) {
+    if (!env.EMAIL_PROVIDER) {
+      await prisma.systemLog.create({
+        data: {
+          source: "notifications",
+          action: "email.skipped",
+          message:
+            "Email delivery was requested for a project notification, but EMAIL_PROVIDER is not configured.",
+          projectId: input.projectId,
+          clientId: input.clientId ?? null,
+          severity: SystemSeverity.Warning,
+          metadata: {
+            title: input.title,
+            requestedRoleCodes: input.roleCodes,
+          },
         },
-      },
-    })
+      })
+    } else if (userIds.length > 0) {
+      const recipients = await prisma.user.findMany({
+        where: {
+          id: {
+            in: userIds,
+          },
+          isActive: true,
+          deletedAt: null,
+        },
+        select: {
+          email: true,
+        },
+      })
+
+      const emails = recipients.map((item) => item.email).filter(Boolean)
+
+      if (emails.length > 0) {
+        await queueAndSendEmailNotification({
+          to: emails,
+          subject: input.title,
+          text: input.body,
+          html: input.actionUrl
+            ? `<p>${input.body}</p><p><a href="${input.actionUrl}">Open in DTGSA MDR</a></p>`
+            : `<p>${input.body}</p>`,
+          projectId: input.projectId,
+          clientId: input.clientId ?? null,
+        }).catch(async (error) => {
+          await prisma.systemLog.create({
+            data: {
+              source: "notifications",
+              action: "email.failed",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown notification email failure.",
+              projectId: input.projectId,
+              clientId: input.clientId ?? null,
+              severity: SystemSeverity.Warning,
+              metadata: {
+                title: input.title,
+                requestedRoleCodes: input.roleCodes,
+                recipients: emails,
+              },
+            },
+          })
+        })
+      }
+    }
   }
 
   return result

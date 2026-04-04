@@ -2,6 +2,7 @@ import "server-only"
 import { createHash } from "node:crypto"
 import {
   AuditSeverity,
+  DocumentFileType,
   WorkflowActionType,
   WorkflowStatus,
   WorkflowStepStatus,
@@ -113,6 +114,11 @@ async function getRevisionForAction(revisionId: string) {
       workflowSteps: {
         orderBy: [{ stepOrder: "asc" }],
       },
+      files: {
+        where: {
+          deletedAt: null,
+        },
+      },
       reviewCode: true,
     },
   })
@@ -168,6 +174,12 @@ async function signWorkflowStep(input: {
 
     if (lockState) {
       throw new Error("This revision is locked and cannot be changed.")
+    }
+
+    if (!input.actor.signatureProfile?.signatureFilePath) {
+      throw new Error(
+        "A signature image must be uploaded in the user profile before signing workflow steps."
+      )
     }
 
     const step = revision.workflowSteps.find(
@@ -264,6 +276,17 @@ export async function prepareRevision(
   const parsed = revisionActionSchema.parse(input)
   const revision = await getRevisionForAction(parsed.revisionId)
   assertPermission(actor, revision.document.projectId, "workflowPrepare")
+
+  const hasSourceFile = revision.files.some((file) =>
+    file.type === DocumentFileType.SOURCE ||
+    file.type === DocumentFileType.REVISION_SOURCE
+  )
+
+  if (!hasSourceFile) {
+    throw new Error(
+      "At least one source file must be uploaded before the revision can be prepared."
+    )
+  }
 
   return signWorkflowStep({
     revisionId: revision.id,

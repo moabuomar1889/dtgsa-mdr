@@ -1,6 +1,6 @@
 # DTGSA MDR Tasks
 
-Last updated: 2026-03-31
+Last updated: 2026-04-04
 
 Legend:
 - `[ ]` Not started
@@ -39,8 +39,8 @@ Legend:
 - [x] Design Prisma schema baseline
 - [x] Generate initial Prisma migration
 - [x] Implement RBAC models and permission helpers
-- [ ] Implement user and signature profile flows
-- [-] Implement protected authentication shell
+- [-] Implement user and signature profile flows
+- [x] Implement protected authentication shell
 - [-] Implement client management
 - [-] Implement project management
 - [-] Implement settings hierarchy and inheritance services
@@ -57,45 +57,45 @@ Legend:
 - [-] Implement PDI register model and services
 - [-] Implement PDI CRUD screens
 - [x] Implement DTGSA auto-number generation for PDI items
-- [ ] Implement Excel export
-- [ ] Implement import flow
-- [ ] Implement client numbering portal
-- [ ] Implement client notification flow
+- [x] Implement Excel export
+- [x] Implement import flow
+- [x] Implement client numbering portal
+- [-] Implement client notification flow
 - [x] Implement PDI to MDR promotion flow
 
 ## Phase 3 - MDR and Workflow
 
 - [-] Implement MDR document root and revision model
-- [ ] Implement document upload flow
+- [x] Implement document upload flow
 - [-] Implement workflow engine
-- [ ] Implement preparer signing
-- [ ] Implement reviewer actions
-- [ ] Implement approver actions
+- [x] Implement preparer signing
+- [x] Implement reviewer actions
+- [x] Implement approver actions
 - [-] Implement DC check queue
-- [ ] Enforce locking and submission rules in backend logic
+- [-] Enforce locking and submission rules in backend logic
 
 ## Phase 4 - Covers and PDF
 
-- [ ] Implement DOCX template storage and management
-- [ ] Implement DTGSA cover generation
-- [ ] Implement client cover generation
-- [ ] Implement LibreOffice DOCX -> PDF conversion
-- [ ] Implement PDF preview
-- [ ] Implement PDF merge
-- [ ] Implement PDF split
-- [ ] Implement PDF reorder
-- [ ] Implement PDF rotate
-- [ ] Implement PDF delete pages
-- [ ] Implement stamping and signature overlays
-- [ ] Implement final merged package generation
+- [x] Implement DOCX template storage and management
+- [x] Implement DTGSA cover generation
+- [x] Implement client cover generation
+- [-] Implement LibreOffice DOCX -> PDF conversion
+- [-] Implement PDF preview
+- [x] Implement PDF merge
+- [x] Implement PDF split
+- [x] Implement PDF reorder
+- [x] Implement PDF rotate
+- [x] Implement PDF delete pages
+- [x] Implement stamping and signature overlays
+- [x] Implement final merged package generation
 
 ## Phase 5 - Transmittals
 
 - [x] Implement transmittal numbering and model
 - [x] Implement transmittal builder UI
 - [x] Implement total attachment size validation
-- [ ] Implement transmittal PDF generation
-- [ ] Implement email send flow
+- [x] Implement transmittal PDF generation
+- [-] Implement email send flow
 - [x] Link submitted documents to transmittals
 
 ## Phase 6 - Client Replies and Revision Paths
@@ -109,17 +109,17 @@ Legend:
 
 ## Phase 7 - Drive, Dashboards, Hardening
 
-- [ ] Implement full Google Drive folder mapping services
-- [ ] Implement project dashboards
-- [ ] Implement discipline dashboards
-- [ ] Implement task dashboard
-- [ ] Implement reporting views
-- [ ] Implement mobile polish
-- [ ] Implement resilience and hardening pass
+- [-] Implement full Google Drive folder mapping services
+- [x] Implement project dashboards
+- [-] Implement discipline dashboards
+- [x] Implement task dashboard
+- [x] Implement reporting views
+- [-] Implement mobile polish
+- [-] Implement resilience and hardening pass
 
 ## User Inputs Needed
 
-- [-] Supabase credentials
+- [x] Supabase credentials
 - [-] Google Drive credentials
 - [ ] Email provider credentials
 - [ ] Cover sheet template samples
@@ -147,3 +147,11 @@ Legend:
 - Current note: transmittals now support draft creation from ReadyToSubmit revisions, attachment-size validation, item linkage, and submitted-to-client workflow transitions.
 - Current note: client replies now support review-code application, rejected-file naming metadata, same-number revision branching, and new-document-number branching.
 - Current note: in-app notifications are now generated for transmittal sends and client-reply processing, and the notification center is live.
+- Current note: signature profile image upload, MDR file upload, cover generation, merged package generation, and real artifact links are now live.
+- Current note: Excel import/export and the client PDI portal are now active.
+- Current note: DOCX template uploads are now supported for cover sheets and transmittals.
+- Current note: a practical PDF tools page now supports merge, split, reorder, rotate, remove pages, and text stamping.
+- Current note: reporting, project dashboards, task dashboards, and global search are now active in the shell.
+- Current blocker: Google Shared Drive authorization is still not fixed for the provided service-account / impersonation setup, so live Drive scanning and upload verification remain partially blocked.
+- Current blocker: real outbound email delivery still needs provider credentials before end-to-end verification can complete.
+- Current blocker: LibreOffice is still not installed or configured locally, so DOCX -> PDF conversion cannot be fully validated yet.

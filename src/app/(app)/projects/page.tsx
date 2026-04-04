@@ -137,6 +137,7 @@ export default async function ProjectsPage() {
                   <TableHead>Root folder</TableHead>
                   <TableHead>MDR docs</TableHead>
                   <TableHead>Transmittals</TableHead>
+                  <TableHead>Dashboard</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -162,6 +163,14 @@ export default async function ProjectsPage() {
                     </TableCell>
                     <TableCell>{project._count.mdrDocuments}</TableCell>
                     <TableCell>{project._count.transmittals}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        Open
+                      </Link>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

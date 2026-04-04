@@ -1,6 +1,7 @@
 import "server-only"
 import { prisma } from "@/lib/prisma/client"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
+import { createSignedStorageUrl } from "@/server/services/storage/storage-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
@@ -61,6 +62,12 @@ export async function getMdrOverview(user: CurrentAppUser) {
           workflowSteps: {
             orderBy: [{ stepOrder: "asc" }],
           },
+          files: {
+            where: {
+              deletedAt: null,
+            },
+            orderBy: [{ createdAt: "desc" }],
+          },
         },
       },
       sourcePdiItem: {
@@ -79,20 +86,41 @@ export async function getMdrOverview(user: CurrentAppUser) {
     },
   })
 
-  return {
-    documents: documents.map((document) => ({
+  const mappedDocuments = await Promise.all(
+    documents.map(async (document) => ({
       ...document,
+      currentRevisionFiles: await Promise.all(
+        (document.currentRevision?.files ?? []).map(async (file) => ({
+          ...file,
+          accessUrl:
+            file.storageBucket && file.storagePath
+              ? await createSignedStorageUrl(
+                  file.storageBucket,
+                  file.storagePath
+                ).catch(() => null)
+              : file.googleDriveFileId
+                ? `https://drive.google.com/file/d/${file.googleDriveFileId}/view`
+                : null,
+        }))
+      ),
       permissions: {
         canPrepare: canAct(user, document.projectId, "workflowPrepare"),
         canReview: canAct(user, document.projectId, "workflowReview"),
         canApprove: canAct(user, document.projectId, "workflowApprove"),
         canDcCheck: canAct(user, document.projectId, "dcCheck"),
+        canUpload: canAct(user, document.projectId, "workflowPrepare"),
       },
-    })),
+    }))
+  )
+
+  return {
+    documents: mappedDocuments,
     counts: {
       total: documents.length,
       readyForWorkflow: documents.filter(
-        (document) => document.currentWorkflowStatus === "Draft"
+        (document) =>
+          document.currentWorkflowStatus === "Draft" ||
+          document.currentWorkflowStatus === "Uploaded"
       ).length,
       submittedToClient: documents.filter(
         (document) => document.currentWorkflowStatus === "SubmittedToClient"

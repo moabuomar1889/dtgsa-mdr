@@ -16,6 +16,7 @@ export async function recordClientReplyAction(formData: FormData) {
     replyDate: formData.get("replyDate"),
     comments: formData.get("comments"),
     returnedFileName: formData.get("returnedFileName"),
+    file: formData.get("file"),
   })
 
   revalidatePath("/replies")

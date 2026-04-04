@@ -7,10 +7,16 @@ import {
   reviewApproveRevisionAction,
   reviewRejectRevisionAction,
 } from "@/server/actions/workflow"
+import {
+  generateMergedRevisionPackageAction,
+  generateRevisionCoverSheetsAction,
+  uploadRevisionFileAction,
+} from "@/server/actions/mdr"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getMdrOverview } from "@/server/services/mdr/mdr-service"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -42,9 +48,13 @@ function WorkflowActions({
     canReview: boolean
     canApprove: boolean
     canDcCheck: boolean
+    canUpload: boolean
   }
 }) {
-  if (workflowStatus === "Draft" && permissions.canPrepare) {
+  if (
+    (workflowStatus === "Draft" || workflowStatus === "Uploaded") &&
+    permissions.canPrepare
+  ) {
     return (
       <form action={prepareRevisionAction} className="grid gap-2">
         <input type="hidden" name="revisionId" value={revisionId} />
@@ -210,6 +220,7 @@ export default async function MdrPage() {
                   <TableHead>Document</TableHead>
                   <TableHead>Current revision</TableHead>
                   <TableHead>Reply state</TableHead>
+                  <TableHead>Files</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -266,6 +277,108 @@ export default async function MdrPage() {
                             permissions={document.permissions}
                           />
                         ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex min-w-72 flex-col gap-3">
+                        {document.currentRevision ? (
+                          <>
+                            <div className="grid gap-2 md:grid-cols-2">
+                              <form
+                                action={generateRevisionCoverSheetsAction}
+                                className="grid gap-2"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="revisionId"
+                                  value={document.currentRevision.id}
+                                />
+                                <SubmitButton
+                                  label="Generate covers"
+                                  pendingLabel="Generating"
+                                  className="w-full"
+                                />
+                              </form>
+                              <form
+                                action={generateMergedRevisionPackageAction}
+                                className="grid gap-2"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="revisionId"
+                                  value={document.currentRevision.id}
+                                />
+                                <SubmitButton
+                                  label="Build merged PDF"
+                                  pendingLabel="Building"
+                                  className="w-full"
+                                />
+                              </form>
+                            </div>
+                            <form
+                              action={uploadRevisionFileAction}
+                              className="grid gap-2"
+                            >
+                              <input
+                                type="hidden"
+                                name="revisionId"
+                                value={document.currentRevision.id}
+                              />
+                              <Input name="file" type="file" />
+                              <SubmitButton
+                                label="Upload source file"
+                                pendingLabel="Uploading"
+                                className="w-full"
+                                disabled={!document.permissions.canUpload}
+                              />
+                            </form>
+                            {document.currentRevisionFiles.length > 0 ? (
+                              <div className="grid gap-2">
+                                {document.currentRevisionFiles.map((file) => (
+                                  <div
+                                    key={file.id}
+                                    className="rounded-xl border border-border/60 bg-background/70 p-3"
+                                  >
+                                    <div className="flex items-center justify-between gap-3">
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-medium">
+                                          {file.fileName}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {file.type} /{" "}
+                                          {Math.max(
+                                            1,
+                                            Math.round(file.fileSizeBytes / 1024)
+                                          )}{" "}
+                                          KB
+                                        </p>
+                                      </div>
+                                      {file.accessUrl ? (
+                                        <Button asChild size="sm" variant="outline">
+                                          <a
+                                            href={file.accessUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                          >
+                                            Open
+                                          </a>
+                                        </Button>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                No source files uploaded yet.
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            No current revision.
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

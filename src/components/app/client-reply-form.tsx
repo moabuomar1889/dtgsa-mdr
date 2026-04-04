@@ -300,6 +300,20 @@ export function ClientReplyForm({
       </div>
 
       <div className="grid gap-2">
+        <Label htmlFor="reply-file">Returned client file</Label>
+        <Input
+          id="reply-file"
+          name="file"
+          type="file"
+          accept=".pdf,.doc,.docx,.xlsx,.xls,.zip,image/*"
+        />
+        <p className="text-xs text-muted-foreground">
+          Upload the reviewed client file here. Rejected PDFs will be renamed automatically using the
+          required <code>Rej-XXXXXXXXXXX.pdf</code> rule before they are mirrored into Drive.
+        </p>
+      </div>
+
+      <div className="grid gap-2">
         <Label htmlFor="reply-comments">Comments</Label>
         <Textarea
           id="reply-comments"

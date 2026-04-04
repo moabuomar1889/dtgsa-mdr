@@ -19,10 +19,14 @@ import {
   CommandIcon,
   FileBadge2Icon,
   FileChartColumnIcon,
+  FileCog2Icon,
+  FileStackIcon,
   FileTextIcon,
   FolderKanbanIcon,
   InboxIcon,
   LayoutDashboardIcon,
+  ListTodoIcon,
+  ReceiptTextIcon,
   SearchIcon,
   Settings2Icon,
   ShieldCheckIcon,
@@ -61,6 +65,16 @@ const data = {
       url: "/replies",
       icon: <InboxIcon />,
     },
+    {
+      title: "PDF Tools",
+      url: "/pdf-tools",
+      icon: <FileStackIcon />,
+    },
+    {
+      title: "Tasks",
+      url: "/tasks",
+      icon: <ListTodoIcon />,
+    },
   ],
   navSecondary: [
     {
@@ -77,6 +91,16 @@ const data = {
       title: "Search",
       url: "/search",
       icon: <SearchIcon />,
+    },
+    {
+      title: "Templates",
+      url: "/templates",
+      icon: <FileCog2Icon />,
+    },
+    {
+      title: "Reports",
+      url: "/reports",
+      icon: <ReceiptTextIcon />,
     },
   ],
   navOperations: [

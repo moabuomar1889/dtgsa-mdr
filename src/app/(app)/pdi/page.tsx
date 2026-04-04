@@ -6,6 +6,7 @@ import {
   promotePdiItemToMdrAction,
   updatePdiClientDocumentNumberAction,
 } from "@/server/actions/pdi"
+import { importPdiWorkbookAction } from "@/server/actions/pdi-import"
 import { getPdiOverview } from "@/server/services/pdi/pdi-service"
 import { PdiItemForm } from "@/components/app/pdi-item-form"
 import { SubmitButton } from "@/components/app/submit-button"
@@ -102,19 +103,83 @@ export default async function PdiPage() {
           </CardHeader>
           <CardContent>
             {overview.projects.length > 0 ? (
-              <PdiItemForm
-                projects={overview.projects.map((project) => ({
-                  id: project.id,
-                  code: project.code,
-                  name: project.name,
-                  clientCode: project.client.code,
-                  clientName: project.client.name,
-                }))}
-                disciplines={overview.disciplines}
-                documentTypes={overview.documentTypes}
-                releasePurposes={overview.releasePurposes}
-                action={createPdiItemAction}
-              />
+              <div className="grid gap-6">
+                <PdiItemForm
+                  projects={overview.projects.map((project) => ({
+                    id: project.id,
+                    code: project.code,
+                    name: project.name,
+                    clientCode: project.client.code,
+                    clientName: project.client.name,
+                  }))}
+                  disciplines={overview.disciplines}
+                  documentTypes={overview.documentTypes}
+                  releasePurposes={overview.releasePurposes}
+                  action={createPdiItemAction}
+                />
+
+                <div className="grid gap-4 rounded-2xl border border-border/60 bg-background/80 p-4">
+                  <div className="space-y-1">
+                    <p className="font-medium">Excel import / export</p>
+                    <p className="text-sm text-muted-foreground">
+                      Export project PDI workbooks for client collaboration, or
+                      bulk import Excel rows back into the register.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 lg:grid-cols-[1fr_1fr]">
+                    <div className="grid gap-3">
+                      {overview.projects.map((project) => (
+                        <Button key={project.id} asChild variant="outline">
+                          <a href={`/api/pdi/export?projectId=${project.id}`}>
+                            Export {project.code} workbook
+                          </a>
+                        </Button>
+                      ))}
+                    </div>
+
+                    <form
+                      action={importPdiWorkbookAction}
+                      className="grid gap-3 rounded-xl border border-border/60 bg-card/60 p-4"
+                    >
+                      <div className="grid gap-2">
+                        <label htmlFor="pdi-import-project" className="text-sm font-medium">
+                          Import target project
+                        </label>
+                        <select
+                          id="pdi-import-project"
+                          name="projectId"
+                          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                          defaultValue={overview.projects[0]?.id}
+                        >
+                          {overview.projects.map((project) => (
+                            <option key={project.id} value={project.id}>
+                              {project.code} - {project.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="pdi-import-file" className="text-sm font-medium">
+                          Excel workbook
+                        </label>
+                        <Input
+                          id="pdi-import-file"
+                          name="file"
+                          type="file"
+                          accept=".xlsx,.xls"
+                          required
+                        />
+                      </div>
+                      <SubmitButton
+                        label="Import workbook"
+                        pendingLabel="Importing"
+                        className="w-full"
+                      />
+                    </form>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="space-y-4">
                 <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">

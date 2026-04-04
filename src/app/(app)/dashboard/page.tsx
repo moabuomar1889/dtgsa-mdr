@@ -23,18 +23,18 @@ const roadmap = [
   },
   {
     phase: "Phase 1",
-    status: "Active",
+    status: "Done",
     summary: "RBAC, masters, clients, projects, settings visibility, and onboarding flows.",
   },
   {
     phase: "Phase 2",
-    status: "Queued",
-    summary: "PDI register, Excel flows, client numbering portal, and promotion into MDR.",
+    status: "Active",
+    summary: "PDI register, Excel flows, client numbering portal, MDR operations, uploads, and reply loops.",
   },
   {
     phase: "Phase 3+",
-    status: "Planned",
-    summary: "Workflow, covers, transmittals, client replies, dashboards, and hardening.",
+    status: "Active",
+    summary: "Workflow, covers, transmittals, client replies, generated packages, notifications, and hardening.",
   },
 ] as const
 
@@ -80,10 +80,46 @@ export default async function DashboardPage() {
       icon: SlidersHorizontalIcon,
     },
     {
-      title: "Masters",
-      value: overview.documentTypeCount + overview.reviewCodeCount,
-      detail: "Document types and review codes",
+      title: "MDR Docs",
+      value: overview.mdrCount,
+      detail: "Operational documents now in the register",
       icon: FileChartColumnIcon,
+    },
+  ]
+
+  const workflowMetrics = [
+    {
+      title: "PDI waiting client",
+      value: overview.pendingPdiCount,
+      detail: "Lines still waiting for client numbering",
+    },
+    {
+      title: "Ready to submit",
+      value: overview.readyToSubmitCount,
+      detail: "Current revisions cleared for transmittal packaging",
+    },
+    {
+      title: "Submitted to client",
+      value: overview.submittedCount,
+      detail: "Revisions already issued externally",
+    },
+    {
+      title: "Pending client reply",
+      value: overview.pendingReplyCount,
+      detail: "Submitted documents still waiting for response",
+    },
+    {
+      title: "Ready transmittals",
+      value: overview.readyTransmittalCount,
+      detail: "Drafted outbound packages waiting to be sent",
+    },
+    {
+      title: "Masters + rules",
+      value:
+        overview.documentTypeCount +
+        overview.reviewCodeCount +
+        overview.numberingRuleCount,
+      detail: "Coding tables and numbering logic in the platform",
     },
   ]
 
@@ -119,18 +155,19 @@ export default async function DashboardPage() {
               <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
                 Enterprise Platform
               </Badge>
-              <Badge variant="outline">Phase 1 in progress</Badge>
+              <Badge variant="outline">Core workflow live</Badge>
             </div>
             <div className="space-y-2">
               <CardTitle className="max-w-2xl text-2xl font-semibold tracking-tight md:text-3xl">
-                DTGSA document control is now running on the production stack
-                with real database-backed administration screens.
+                DTGSA document control is now running on the production stack with live
+                registers, workflow actions, client replies, and generated outbound packages.
               </CardTitle>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-                The current slice covers the shell, Prisma foundation, seeded
-                RBAC, masters, client creation, project onboarding, and
-                integration diagnostics while keeping numbering, workflow, and
-                status dimensions isolated for the later modules.
+                The current slice covers the shell, Prisma foundation, seeded RBAC,
+                masters, client creation, project onboarding, PDI, MDR, uploads,
+                workflow gates, client numbering portal, replies, transmittals,
+                notification plumbing, and generated PDFs while keeping numbering,
+                workflow, revision, and client-response states isolated.
               </p>
             </div>
           </CardHeader>
@@ -192,16 +229,38 @@ export default async function DashboardPage() {
       <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <Card className="border-border/70 bg-card/95 shadow-sm">
           <CardHeader>
+            <CardTitle className="text-lg">Operational pipeline</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            {workflowMetrics.map((metric) => (
+              <div
+                key={metric.title}
+                className="rounded-2xl border border-border/60 bg-background/80 p-4"
+              >
+                <p className="text-sm text-muted-foreground">{metric.title}</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight">
+                  {metric.value}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {metric.detail}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/70 bg-card/95 shadow-sm">
+          <CardHeader>
             <CardTitle className="text-lg">Delivery roadmap</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3">
+          <CardContent className="space-y-3">
             {roadmap.map((phase) => (
               <div
                 key={phase.phase}
                 className="rounded-2xl border border-border/60 bg-background/80 p-4"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">{phase.phase}</p>
+                  <h3 className="font-medium">{phase.phase}</h3>
                   <Badge variant={phase.status === "Active" ? "default" : "outline"}>
                     {phase.status}
                   </Badge>
@@ -213,12 +272,14 @@ export default async function DashboardPage() {
             ))}
           </CardContent>
         </Card>
+      </section>
 
+      <section>
         <Card className="border-border/70 bg-card/95 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg">Status model guardrails</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="grid gap-3 lg:grid-cols-4">
             {statusGuardrails.map((item) => (
               <div
                 key={item.title}

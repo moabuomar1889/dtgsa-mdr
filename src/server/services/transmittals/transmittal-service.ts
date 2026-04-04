@@ -1,8 +1,14 @@
 import "server-only"
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import {
   AuditSeverity,
   DocumentFileType,
+  DriveFolderType,
+  GeneratedDocumentKind,
   Prisma,
+  StorageProvider,
   SystemSeverity,
   TransmittalStatus,
   WorkflowActionType,
@@ -10,12 +16,54 @@ import {
 } from "@prisma/client"
 import { z } from "zod"
 import { env } from "@/lib/config/env"
+import { convertDocxToPdf } from "@/lib/docx/libreoffice"
+import { createTransmittalPdfBuffer } from "@/lib/pdf/toolkit"
 import { PERMISSIONS, ROLE_CODES, hasAnyPermission } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
+import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
+import { queueAndSendEmailNotification } from "@/server/services/email/email-service"
 import { notifyProjectRoles } from "@/server/services/notifications/notification-service"
+import {
+  buildStoragePath,
+  createSignedStorageUrl,
+  uploadBytesToSupabaseStorage,
+} from "@/server/services/storage/storage-service"
+import { renderDocxTemplateFromStorage } from "@/server/services/templates/docx-template-service"
+import { findPreferredTransmittalTemplate } from "@/server/services/templates/template-management-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
+type TransmittalTemplateContext = {
+  id: string
+  projectId: string
+  transmittalNumber: string
+  subject: string
+  purpose: string | null
+  fromText: string | null
+  toText: string | null
+  ccText: string | null
+  attention: string | null
+  messageBody: string | null
+  respondByDate: Date | null
+  project: {
+    code: string
+    name: string
+    clientId: string
+    client: {
+      code: string
+      name: string
+    }
+  }
+  items: Array<{
+    documentRevision: {
+      revisionLabel: string
+      document: {
+        dtgsaDocumentNumber: string
+        title: string
+      }
+    }
+  }>
+}
 
 const emptyStringToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
@@ -135,6 +183,95 @@ function canManageTransmittals(user: CurrentAppUser) {
   })
 }
 
+function extractEmailRecipients(...values: Array<string | null | undefined>) {
+  const regex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi
+  const recipients = new Set<string>()
+
+  for (const value of values) {
+    if (!value) {
+      continue
+    }
+
+    for (const match of value.match(regex) ?? []) {
+      recipients.add(match.toLowerCase())
+    }
+  }
+
+  return Array.from(recipients)
+}
+
+async function renderTransmittalPdfWithTemplate(input: {
+  transmittal: TransmittalTemplateContext | null
+}) {
+  const transmittal = input.transmittal
+
+  if (!transmittal) {
+    return null
+  }
+
+  const template = await findPreferredTransmittalTemplate({
+    clientId: transmittal.project.clientId,
+    projectId: transmittal.projectId,
+  })
+
+  if (!template) {
+    return null
+  }
+
+  const tempDir = await mkdtemp(join(tmpdir(), "dtgsa-transmittal-"))
+
+  try {
+    const docxBuffer = await renderDocxTemplateFromStorage(template, {
+      transmittal_number: transmittal.transmittalNumber,
+      project_title: transmittal.project.name,
+      project_code: transmittal.project.code,
+      client_name: transmittal.project.client.name,
+      client_code: transmittal.project.client.code,
+      subject: transmittal.subject,
+      purpose: transmittal.purpose ?? "",
+      from_text: transmittal.fromText ?? "",
+      to_text: transmittal.toText ?? "",
+      cc_text: transmittal.ccText ?? "",
+      attention: transmittal.attention ?? "",
+      respond_by_date:
+        transmittal.respondByDate?.toLocaleDateString("en-GB") ?? "",
+      message_body: transmittal.messageBody ?? "",
+      items: transmittal.items.map((item) => ({
+        document_number: item.documentRevision.document.dtgsaDocumentNumber,
+        revision_label: item.documentRevision.revisionLabel,
+        title: item.documentRevision.document.title,
+      })),
+    })
+    const inputPath = join(tempDir, "transmittal.docx")
+    await writeFile(inputPath, docxBuffer)
+    const outputPath = await convertDocxToPdf(inputPath, tempDir)
+    return await readFile(outputPath)
+  } catch (error) {
+    await prisma.systemLog.create({
+      data: {
+        source: "transmittals",
+        action: "template.render_failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unknown transmittal template rendering failure.",
+        entityType: "Transmittal",
+        entityId: transmittal.id,
+        projectId: transmittal.projectId,
+        clientId: transmittal.project.clientId,
+        severity: SystemSeverity.Warning,
+      },
+    })
+
+    return null
+  } finally {
+    await rm(tempDir, {
+      recursive: true,
+      force: true,
+    }).catch(() => undefined)
+  }
+}
+
 export async function getTransmittalOverview(user: CurrentAppUser) {
   if (!canManageTransmittals(user)) {
     throw new Error("You do not have permission to view transmittals.")
@@ -241,6 +378,13 @@ export async function getTransmittalOverview(user: CurrentAppUser) {
             },
           },
         },
+        generatedDocuments: {
+          where: {
+            kind: GeneratedDocumentKind.TRANSMITTAL_PDF,
+          },
+          orderBy: [{ createdAt: "desc" }],
+          take: 1,
+        },
       },
     }),
   ])
@@ -266,7 +410,21 @@ export async function getTransmittalOverview(user: CurrentAppUser) {
   return {
     projects,
     eligibleRevisions: mappedEligibleRevisions,
-    transmittals,
+    transmittals: await Promise.all(
+      transmittals.map(async (transmittal) => ({
+        ...transmittal,
+        generatedPdfUrl:
+          transmittal.generatedDocuments[0]?.storageBucket &&
+          transmittal.generatedDocuments[0]?.storagePath
+            ? await createSignedStorageUrl(
+                transmittal.generatedDocuments[0].storageBucket,
+                transmittal.generatedDocuments[0].storagePath
+              ).catch(() => null)
+            : transmittal.generatedDocuments[0]?.googleDriveFileId
+              ? `https://drive.google.com/file/d/${transmittal.generatedDocuments[0].googleDriveFileId}/view`
+              : null,
+      }))
+    ),
     counts: {
       total: transmittals.length,
       readyToSend: transmittals.filter(
@@ -510,6 +668,51 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
   }
 
   const sentAt = new Date()
+  const fallbackTransmittalPdf = createTransmittalPdfBuffer({
+    transmittalNumber: transmittal.transmittalNumber,
+    subject: transmittal.subject,
+    projectName: transmittal.project.name,
+    projectCode: transmittal.project.code,
+    fromText: transmittal.fromText,
+    toText: transmittal.toText,
+    attention: transmittal.attention,
+    messageBody: transmittal.messageBody,
+    items: transmittal.items.map((item) => ({
+      documentNumber: item.documentRevision.document.dtgsaDocumentNumber,
+      revisionLabel: item.documentRevision.revisionLabel,
+      title: item.documentRevision.document.title,
+    })),
+  })
+  const transmittalPdfBuffer =
+    (await renderTransmittalPdfWithTemplate({ transmittal })) ??
+    (await fallbackTransmittalPdf)
+  const transmittalPdfUpload = await uploadBytesToSupabaseStorage({
+    bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
+    path: buildStoragePath(
+      "projects",
+      transmittal.project.code,
+      "transmittals",
+      transmittal.transmittalNumber,
+      "transmittal.pdf"
+    ),
+    bytes: transmittalPdfBuffer,
+    fileName: `${transmittal.transmittalNumber}.pdf`,
+    mimeType: "application/pdf",
+    upsert: true,
+  })
+  const transmittalDriveUpload = await uploadProjectFileToGoogleDrive({
+    projectId: transmittal.projectId,
+    folderType: DriveFolderType.TRANSMITTALS,
+    fileName: transmittalPdfUpload.fileName,
+    bytes: transmittalPdfBuffer,
+    mimeType: transmittalPdfUpload.mimeType,
+    actorUserId: actor.id,
+  })
+  const transmittalPdfUrl = await createSignedStorageUrl(
+    transmittalPdfUpload.bucket,
+    transmittalPdfUpload.path,
+    60 * 60 * 24 * 7
+  ).catch(() => null)
 
   await prisma.$transaction(async (tx) => {
     await tx.transmittal.update({
@@ -558,6 +761,19 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
       })
     }
 
+    await tx.generatedDocument.create({
+      data: {
+        transmittalId: transmittal.id,
+        kind: GeneratedDocumentKind.TRANSMITTAL_PDF,
+        fileName: transmittalPdfUpload.fileName,
+        storageProvider: StorageProvider.Supabase,
+        storageBucket: transmittalPdfUpload.bucket,
+        storagePath: transmittalPdfUpload.path,
+        googleDriveFileId: transmittalDriveUpload?.fileId ?? null,
+        generatedByUserId: actor.id,
+      },
+    })
+
     await tx.auditLog.create({
       data: {
         actorUserId: actor.id,
@@ -595,6 +811,77 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
       })
     }
   })
+
+  const emailRecipients = extractEmailRecipients(
+    transmittal.toText,
+    transmittal.ccText
+  )
+
+  if (env.EMAIL_PROVIDER && emailRecipients.length > 0) {
+    await queueAndSendEmailNotification({
+      to: emailRecipients,
+      subject: `Transmittal ${transmittal.transmittalNumber}: ${transmittal.subject}`,
+      text: [
+        `Project: ${transmittal.project.code} - ${transmittal.project.name}`,
+        `Transmittal: ${transmittal.transmittalNumber}`,
+        transmittal.messageBody ? `Message: ${transmittal.messageBody}` : null,
+        transmittalPdfUrl ? `PDF: ${transmittalPdfUrl}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      html: `
+        <p><strong>Project:</strong> ${transmittal.project.code} - ${transmittal.project.name}</p>
+        <p><strong>Transmittal:</strong> ${transmittal.transmittalNumber}</p>
+        <p><strong>Subject:</strong> ${transmittal.subject}</p>
+        ${transmittal.messageBody ? `<p>${transmittal.messageBody}</p>` : ""}
+        ${transmittalPdfUrl ? `<p><a href="${transmittalPdfUrl}">Open transmittal PDF</a></p>` : ""}
+      `,
+      projectId: transmittal.projectId,
+      clientId: transmittal.project.clientId,
+      actorUserId: actor.id,
+    }).catch(async (error) => {
+      await prisma.systemLog.create({
+        data: {
+          actorUserId: actor.id,
+          source: "transmittals",
+          action: "email.failed",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unknown transmittal email delivery failure.",
+          entityType: "Transmittal",
+          entityId: transmittal.id,
+          projectId: transmittal.projectId,
+          clientId: transmittal.project.clientId,
+          severity: SystemSeverity.Warning,
+          metadata: {
+            transmittalNumber: transmittal.transmittalNumber,
+            recipients: emailRecipients,
+          },
+        },
+      })
+    })
+  } else if (env.EMAIL_PROVIDER && emailRecipients.length === 0) {
+    await prisma.systemLog.create({
+      data: {
+        actorUserId: actor.id,
+        source: "transmittals",
+        action: "email.skipped",
+        message:
+          "Transmittal email delivery was requested, but no valid recipient email addresses were found in To/CC.",
+        entityType: "Transmittal",
+        entityId: transmittal.id,
+        projectId: transmittal.projectId,
+        clientId: transmittal.project.clientId,
+        severity: SystemSeverity.Warning,
+        metadata: {
+          transmittalNumber: transmittal.transmittalNumber,
+          toText: transmittal.toText,
+          ccText: transmittal.ccText,
+        },
+      },
+    })
+  }
 
   await notifyProjectRoles({
     projectId: transmittal.projectId,
