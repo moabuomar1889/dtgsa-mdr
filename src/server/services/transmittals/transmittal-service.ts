@@ -4,7 +4,6 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import {
   AuditSeverity,
-  DocumentFileType,
   DriveFolderType,
   GeneratedDocumentKind,
   Prisma,
@@ -18,7 +17,11 @@ import { z } from "zod"
 import { env } from "@/lib/config/env"
 import { convertDocxToPdf } from "@/lib/docx/libreoffice"
 import { createTransmittalPdfBuffer } from "@/lib/pdf/toolkit"
-import { PERMISSIONS, ROLE_CODES, hasAnyPermission } from "@/lib/permissions/rbac"
+import {
+  PERMISSIONS,
+  ROLE_CODES,
+  hasAnyPermission,
+} from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
 import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
 import { queueAndSendEmailNotification } from "@/server/services/email/email-service"
@@ -30,6 +33,11 @@ import {
 } from "@/server/services/storage/storage-service"
 import { renderDocxTemplateFromStorage } from "@/server/services/templates/docx-template-service"
 import { findPreferredTransmittalTemplate } from "@/server/services/templates/template-management-service"
+import {
+  extractEmailRecipients,
+  pickPreferredAttachmentFile,
+  resolveTransmittalMaxBytes,
+} from "@/server/services/transmittals/transmittal-policy"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
@@ -79,11 +87,20 @@ const createTransmittalSchema = z.object({
   revisionIds: z.array(z.string().trim().min(1)).min(1),
   subject: z.string().trim().min(3).max(200),
   purpose: z.preprocess(emptyStringToUndefined, z.string().max(200).optional()),
-  fromText: z.preprocess(emptyStringToUndefined, z.string().max(200).optional()),
+  fromText: z.preprocess(
+    emptyStringToUndefined,
+    z.string().max(200).optional()
+  ),
   toText: z.preprocess(emptyStringToUndefined, z.string().max(200).optional()),
   ccText: z.preprocess(emptyStringToUndefined, z.string().max(500).optional()),
-  attention: z.preprocess(emptyStringToUndefined, z.string().max(200).optional()),
-  messageBody: z.preprocess(emptyStringToUndefined, z.string().max(4000).optional()),
+  attention: z.preprocess(
+    emptyStringToUndefined,
+    z.string().max(200).optional()
+  ),
+  messageBody: z.preprocess(
+    emptyStringToUndefined,
+    z.string().max(4000).optional()
+  ),
   respondByDate: z.preprocess(
     emptyStringToUndefined,
     z.coerce.date().optional()
@@ -119,44 +136,6 @@ function assertProjectPermission(
   }
 }
 
-function pickPreferredAttachmentFile(
-  files: Array<{
-    id: string
-    type: DocumentFileType
-    fileName: string
-    fileSizeBytes: number
-  }>
-) {
-  const priority = [
-    DocumentFileType.MERGED,
-    DocumentFileType.REVISION_SOURCE,
-    DocumentFileType.SOURCE,
-    DocumentFileType.PREVIEW,
-  ]
-
-  for (const type of priority) {
-    const file = files.find((item) => item.type === type)
-
-    if (file) {
-      return file
-    }
-  }
-
-  return files[0] ?? null
-}
-
-function resolveTransmittalMaxBytes(input: {
-  projectOverrideMb?: number | null
-  clientDefaultMb?: number | null
-}) {
-  const maxMb =
-    input.projectOverrideMb ??
-    input.clientDefaultMb ??
-    env.TRANSMITTAL_MAX_TOTAL_MB
-
-  return maxMb * 1024 * 1024
-}
-
 async function buildTransmittalNumber(
   tx: Prisma.TransactionClient,
   project: {
@@ -181,23 +160,6 @@ function canManageTransmittals(user: CurrentAppUser) {
     systemRoles: user.userRoles.map((item) => item.role.code),
     projectRoles: user.projectRoles.map((item) => item.role.code),
   })
-}
-
-function extractEmailRecipients(...values: Array<string | null | undefined>) {
-  const regex = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi
-  const recipients = new Set<string>()
-
-  for (const value of values) {
-    if (!value) {
-      continue
-    }
-
-    for (const match of value.match(regex) ?? []) {
-      recipients.add(match.toLowerCase())
-    }
-  }
-
-  return Array.from(recipients)
 }
 
 async function renderTransmittalPdfWithTemplate(input: {
@@ -430,17 +392,15 @@ export async function getTransmittalOverview(user: CurrentAppUser) {
       readyToSend: transmittals.filter(
         (item) => item.status === TransmittalStatus.ReadyToSend
       ).length,
-      sent: transmittals.filter((item) => item.status === TransmittalStatus.Sent)
-        .length,
+      sent: transmittals.filter(
+        (item) => item.status === TransmittalStatus.Sent
+      ).length,
       eligibleDocuments: mappedEligibleRevisions.length,
     },
   }
 }
 
-export async function createTransmittal(
-  actor: CurrentAppUser,
-  input: unknown
-) {
+export async function createTransmittal(actor: CurrentAppUser, input: unknown) {
   const parsed = createTransmittalSchema.parse(input)
   const revisionIds = Array.from(new Set(parsed.revisionIds))
 
@@ -552,6 +512,7 @@ export async function createTransmittal(
   const maxAttachmentBytes = resolveTransmittalMaxBytes({
     projectOverrideMb: project.setting?.transmittalMaxTotalMbOverride,
     clientDefaultMb: project.client.setting?.defaultTransmittalMaxMb,
+    defaultMaxMb: env.TRANSMITTAL_MAX_TOTAL_MB,
   })
 
   if (totalAttachmentBytes > maxAttachmentBytes) {

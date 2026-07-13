@@ -14,11 +14,22 @@ import {
 } from "@prisma/client"
 import { z } from "zod"
 import { env } from "@/lib/config/env"
-import { PERMISSIONS, ROLE_CODES, hasAnyPermission } from "@/lib/permissions/rbac"
+import {
+  PERMISSIONS,
+  ROLE_CODES,
+  hasAnyPermission,
+} from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
 import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
 import { generateDocumentNumber } from "@/server/services/numbering/document-numbering-service"
 import { notifyProjectRoles } from "@/server/services/notifications/notification-service"
+import {
+  buildApplicableReviewCodes,
+  getNextRevisionLabel,
+  resolveRejectedIdentifier,
+  resolveReplyState,
+  sanitizeFileName,
+} from "@/server/services/replies/client-reply-policy"
 import {
   buildStoragePath,
   uploadBytesToSupabaseStorage,
@@ -43,13 +54,19 @@ const createClientReplySchema = z.object({
   documentId: z.string().trim().min(1),
   reviewCodeId: z.string().trim().min(1),
   nextAction: z.nativeEnum(ClientReplyNextAction),
-  transmittalId: z.preprocess(emptyStringToUndefined, z.string().trim().optional()),
+  transmittalId: z.preprocess(
+    emptyStringToUndefined,
+    z.string().trim().optional()
+  ),
   driveTargetFolderType: z.preprocess(
     emptyStringToUndefined,
     z.nativeEnum(DriveFolderType).optional()
   ),
   replyDate: z.preprocess(emptyStringToUndefined, z.coerce.date().optional()),
-  comments: z.preprocess(emptyStringToUndefined, z.string().max(4000).optional()),
+  comments: z.preprocess(
+    emptyStringToUndefined,
+    z.string().max(4000).optional()
+  ),
   returnedFileName: z.preprocess(
     emptyStringToUndefined,
     z.string().trim().max(255).optional()
@@ -83,138 +100,6 @@ function assertProjectPermission(
   ) {
     throw new Error("You do not have permission to process client replies.")
   }
-}
-
-function resolveReplyState(input: {
-  requiresResubmittal: boolean
-  finalizesDocument: boolean
-  informationalOnly: boolean
-}) {
-  if (input.finalizesDocument) {
-    return ClientReplyState.NoFurtherSubmittal
-  }
-
-  if (input.informationalOnly) {
-    return ClientReplyState.InformationOnly
-  }
-
-  if (input.requiresResubmittal) {
-    return ClientReplyState.RevisionRequired
-  }
-
-  return ClientReplyState.ReplyReceived
-}
-
-function getNextRevisionLabel(currentLabel: string) {
-  if (/^\d+$/.test(currentLabel)) {
-    return String(Number(currentLabel) + 1).padStart(currentLabel.length, "0")
-  }
-
-  if (/^[A-Z]$/.test(currentLabel)) {
-    return String.fromCharCode(currentLabel.charCodeAt(0) + 1)
-  }
-
-  const match = currentLabel.match(/^(.*?)(\d+)$/)
-
-  if (match) {
-    return `${match[1]}${String(Number(match[2]) + 1).padStart(match[2].length, "0")}`
-  }
-
-  return `${currentLabel}-1`
-}
-
-function sanitizeFileNameSegment(value: string) {
-  return value.replace(/[<>:"/\\|?*\u0000-\u001F]+/g, "-").replace(/\s+/g, "_")
-}
-
-function sanitizeFileName(value: string) {
-  return value
-    .trim()
-    .replace(/[<>:"/\\|?*\u0000-\u001F]+/g, "-")
-    .replace(/\s+/g, "_")
-}
-
-function resolveRejectedIdentifier(input: {
-  strategy?: string | null
-  dtgsaDocumentNumber: string
-  clientDocumentNumber: string | null
-}) {
-  if (
-    input.strategy === "CLIENT_DOCUMENT_NUMBER" &&
-    input.clientDocumentNumber?.trim()
-  ) {
-    return sanitizeFileNameSegment(input.clientDocumentNumber.trim())
-  }
-
-  return sanitizeFileNameSegment(input.dtgsaDocumentNumber)
-}
-
-function buildApplicableReviewCodes(
-  projectId: string,
-  clientId: string,
-  codes: Array<{
-    id: string
-    code: string
-    label: string
-    description: string | null
-    displayOrder: number
-    requiresResubmittal: boolean
-    finalizesDocument: boolean
-    informationalOnly: boolean
-    projectId: string | null
-    clientId: string | null
-    scopeLevel: ScopeLevel
-  }>
-) {
-  const deduped = new Map<
-    string,
-    (typeof codes)[number] & {
-      specificity: number
-    }
-  >()
-
-  for (const code of codes) {
-    let specificity = 0
-
-    if (code.projectId === projectId) {
-      specificity = 3
-    } else if (code.clientId === clientId) {
-      specificity = 2
-    } else if (
-      code.scopeLevel === ScopeLevel.Global &&
-      !code.projectId &&
-      !code.clientId
-    ) {
-      specificity = 1
-    } else {
-      continue
-    }
-
-    const existing = deduped.get(code.code)
-
-    if (!existing || existing.specificity < specificity) {
-      deduped.set(code.code, {
-        ...code,
-        specificity,
-      })
-    }
-  }
-
-  return Array.from(deduped.values())
-    .sort((left, right) => left.displayOrder - right.displayOrder)
-    .map((item) => ({
-      id: item.id,
-      code: item.code,
-      label: item.label,
-      description: item.description,
-      displayOrder: item.displayOrder,
-      requiresResubmittal: item.requiresResubmittal,
-      finalizesDocument: item.finalizesDocument,
-      informationalOnly: item.informationalOnly,
-      projectId: item.projectId,
-      clientId: item.clientId,
-      scopeLevel: item.scopeLevel,
-    }))
 }
 
 export async function getClientRepliesOverview(user: CurrentAppUser) {
@@ -308,7 +193,9 @@ export async function getClientRepliesOverview(user: CurrentAppUser) {
     }),
   ])
 
-  const projectIds = Array.from(new Set(documents.map((item) => item.projectId)))
+  const projectIds = Array.from(
+    new Set(documents.map((item) => item.projectId))
+  )
   const clientIds = Array.from(
     new Set(documents.map((item) => item.project.client.id))
   )
@@ -390,7 +277,8 @@ export async function getClientRepliesOverview(user: CurrentAppUser) {
   >()
 
   for (const link of transmittalLinks) {
-    const current = transmittalsByDocument.get(link.documentRevision.documentId) ?? []
+    const current =
+      transmittalsByDocument.get(link.documentRevision.documentId) ?? []
 
     if (!current.some((item) => item.id === link.transmittal.id)) {
       current.push({
@@ -565,11 +453,15 @@ export async function recordClientReply(
     ? (() => {
         const fileName = generatedRejectedFileName
           ? generatedRejectedFileName
-          : sanitizeFileName(parsed.returnedFileName?.trim() || returnedFile.name)
+          : sanitizeFileName(
+              parsed.returnedFileName?.trim() || returnedFile.name
+            )
 
         return {
           fileName,
-          bytesPromise: returnedFile.arrayBuffer().then((buffer) => Buffer.from(buffer)),
+          bytesPromise: returnedFile
+            .arrayBuffer()
+            .then((buffer) => Buffer.from(buffer)),
           mimeType: returnedFile.type || "application/octet-stream",
           fileSizeBytes: returnedFile.size,
         }
@@ -689,7 +581,9 @@ export async function recordClientReply(
       const nextRevision = await tx.documentRevision.create({
         data: {
           documentId: document.id,
-          revisionLabel: getNextRevisionLabel(document.currentRevision!.revisionLabel),
+          revisionLabel: getNextRevisionLabel(
+            document.currentRevision!.revisionLabel
+          ),
           revisionIndex: document.currentRevision!.revisionIndex + 1,
           workflowStatus: WorkflowStatus.Draft,
           revisionStatus: RevisionStatus.RevisionInProgress,
@@ -868,7 +762,8 @@ export async function recordClientReply(
           afterSnapshot: {
             sourceDocumentId: document.id,
             replacementDocumentId: replacementDocument.id,
-            replacementDtgsaDocumentNumber: replacementDocument.dtgsaDocumentNumber,
+            replacementDtgsaDocumentNumber:
+              replacementDocument.dtgsaDocumentNumber,
             clientReplyId: reply.id,
           },
         },
