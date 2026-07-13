@@ -1,7 +1,7 @@
 import { ClientReplyState } from "@prisma/client"
 import { recordClientReplyAction } from "@/server/actions/replies"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { getClientRepliesOverview } from "@/server/services/replies/client-reply-service"
+import { getClientRepliesOverview } from "@/server/services/replies/client-reply-overview-service"
 import { ClientReplyForm } from "@/components/app/client-reply-form"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -41,9 +41,9 @@ export default async function RepliesPage() {
     <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="border-border/70 bg-card/95 shadow-sm">
-          <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+          <CardHeader className="border-border/60 from-primary/12 gap-3 border-b bg-gradient-to-br via-transparent to-transparent">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+              <Badge className="bg-primary/15 text-primary hover:bg-primary/15 rounded-full px-3 py-1">
                 Client Replies
               </Badge>
               <Badge variant="outline">Inbound review processing</Badge>
@@ -59,26 +59,28 @@ export default async function RepliesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Waiting reply</p>
+            <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+              <p className="text-muted-foreground text-sm">Waiting reply</p>
               <p className="mt-2 text-2xl font-semibold tracking-tight">
                 {overview.counts.pendingReply}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Replies recorded</p>
+            <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+              <p className="text-muted-foreground text-sm">Replies recorded</p>
               <p className="mt-2 text-2xl font-semibold tracking-tight">
                 {overview.counts.totalReplies}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Revision required</p>
+            <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+              <p className="text-muted-foreground text-sm">Revision required</p>
               <p className="mt-2 text-2xl font-semibold tracking-tight">
                 {overview.counts.revisionRequired}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">No further submittal</p>
+            <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+              <p className="text-muted-foreground text-sm">
+                No further submittal
+              </p>
               <p className="mt-2 text-2xl font-semibold tracking-tight">
                 {overview.counts.noFurtherSubmittal}
               </p>
@@ -101,7 +103,7 @@ export default async function RepliesPage() {
                 action={recordClientReplyAction}
               />
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-6 text-sm leading-6">
                 No documents are currently waiting for a client reply. Send a
                 transmittal first to start the reply loop.
               </div>
@@ -138,8 +140,9 @@ export default async function RepliesPage() {
                         <span className="font-medium">
                           {reply.project.code} - {reply.project.name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          {reply.transmittal?.transmittalNumber ?? "Direct reply"}
+                        <span className="text-muted-foreground text-xs">
+                          {reply.transmittal?.transmittalNumber ??
+                            "Direct reply"}
                         </span>
                       </div>
                     </TableCell>
@@ -148,18 +151,20 @@ export default async function RepliesPage() {
                         <span className="font-medium">
                           {reply.document.dtgsaDocumentNumber}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {reply.document.title}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           Rev {reply.submittedRevision?.revisionLabel ?? "N/A"}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <Badge variant="outline">Code {reply.reviewCode.code}</Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <Badge variant="outline">
+                          Code {reply.reviewCode.code}
+                        </Badge>
+                        <span className="text-muted-foreground text-xs">
                           {reply.reviewCode.label}
                         </span>
                       </div>
@@ -169,11 +174,11 @@ export default async function RepliesPage() {
                         <Badge variant={replyStateVariant(reply.replyState)}>
                           {reply.replyState}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {reply.nextAction}
                         </span>
                         {reply.triggeredRevisions.length > 0 ? (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             Triggered:{" "}
                             {reply.triggeredRevisions
                               .map(
@@ -185,10 +190,10 @@ export default async function RepliesPage() {
                         ) : null}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-sm">
                       {reply.driveFileName ?? "Not stored yet"}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-sm">
                       {reply.replyDate.toLocaleString("en-US")}
                     </TableCell>
                   </TableRow>
@@ -196,7 +201,7 @@ export default async function RepliesPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+            <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-6 text-sm leading-6">
               No client replies have been recorded yet.
             </div>
           )}
