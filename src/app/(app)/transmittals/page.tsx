@@ -4,7 +4,7 @@ import {
   sendTransmittalAction,
 } from "@/server/actions/transmittals"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { getTransmittalOverview } from "@/server/services/transmittals/transmittal-service"
+import { getTransmittalOverview } from "@/server/services/transmittals/transmittal-overview-service"
 import { TransmittalCreateForm } from "@/components/app/transmittal-create-form"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/ui/badge"
