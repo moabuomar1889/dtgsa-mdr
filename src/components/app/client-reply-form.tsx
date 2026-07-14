@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ClientReplyNextAction, DriveFolderType } from "@prisma/client"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -16,6 +15,24 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+
+const CLIENT_REPLY_NEXT_ACTION = {
+  REVISION_REQUIRED: "REVISION_REQUIRED",
+  NEW_DOCUMENT_NUMBER_REQUIRED: "NEW_DOCUMENT_NUMBER_REQUIRED",
+  NO_FURTHER_ACTION: "NO_FURTHER_ACTION",
+} as const
+
+const DRIVE_FOLDER_TYPE = {
+  RECEIVED: "RECEIVED",
+  REJECTED: "REJECTED",
+  REVISIONS: "REVISIONS",
+} as const
+
+type ClientReplyNextActionValue =
+  (typeof CLIENT_REPLY_NEXT_ACTION)[keyof typeof CLIENT_REPLY_NEXT_ACTION]
+
+type DriveFolderTypeValue =
+  (typeof DRIVE_FOLDER_TYPE)[keyof typeof DRIVE_FOLDER_TYPE]
 
 type DocumentOption = {
   id: string
@@ -60,11 +77,11 @@ export function ClientReplyForm({
   const [transmittalId, setTransmittalId] = useState(
     documents[0]?.transmittals[0]?.id ?? ""
   )
-  const [nextAction, setNextAction] = useState<ClientReplyNextAction>(
-    ClientReplyNextAction.NO_FURTHER_ACTION
+  const [nextAction, setNextAction] = useState<ClientReplyNextActionValue>(
+    CLIENT_REPLY_NEXT_ACTION.NO_FURTHER_ACTION
   )
   const [driveTargetFolderType, setDriveTargetFolderType] =
-    useState<DriveFolderType>(DriveFolderType.RECEIVED)
+    useState<DriveFolderTypeValue>(DRIVE_FOLDER_TYPE.RECEIVED)
 
   const selectedDocument = useMemo(
     () => documents.find((document) => document.id === documentId) ?? null,
@@ -85,19 +102,19 @@ export function ClientReplyForm({
       | undefined
   ) {
     if (!reviewCode) {
-      setNextAction(ClientReplyNextAction.NO_FURTHER_ACTION)
-      setDriveTargetFolderType(DriveFolderType.RECEIVED)
+      setNextAction(CLIENT_REPLY_NEXT_ACTION.NO_FURTHER_ACTION)
+      setDriveTargetFolderType(DRIVE_FOLDER_TYPE.RECEIVED)
       return
     }
 
     if (reviewCode.requiresResubmittal) {
-      setNextAction(ClientReplyNextAction.REVISION_REQUIRED)
-      setDriveTargetFolderType(DriveFolderType.REJECTED)
+      setNextAction(CLIENT_REPLY_NEXT_ACTION.REVISION_REQUIRED)
+      setDriveTargetFolderType(DRIVE_FOLDER_TYPE.REJECTED)
       return
     }
 
-    setNextAction(ClientReplyNextAction.NO_FURTHER_ACTION)
-    setDriveTargetFolderType(DriveFolderType.RECEIVED)
+    setNextAction(CLIENT_REPLY_NEXT_ACTION.NO_FURTHER_ACTION)
+    setDriveTargetFolderType(DRIVE_FOLDER_TYPE.RECEIVED)
   }
 
   if (documents.length === 0) {
@@ -225,7 +242,7 @@ export function ClientReplyForm({
           <Select
             value={nextAction}
             onValueChange={(value) =>
-              setNextAction(value as ClientReplyNextAction)
+              setNextAction(value as ClientReplyNextActionValue)
             }
           >
             <SelectTrigger id="reply-next-action" className="w-full">
@@ -234,15 +251,15 @@ export function ClientReplyForm({
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Follow-up</SelectLabel>
-                <SelectItem value={ClientReplyNextAction.REVISION_REQUIRED}>
+                <SelectItem value={CLIENT_REPLY_NEXT_ACTION.REVISION_REQUIRED}>
                   Same document number, new revision
                 </SelectItem>
                 <SelectItem
-                  value={ClientReplyNextAction.NEW_DOCUMENT_NUMBER_REQUIRED}
+                  value={CLIENT_REPLY_NEXT_ACTION.NEW_DOCUMENT_NUMBER_REQUIRED}
                 >
                   New DTGSA document number
                 </SelectItem>
-                <SelectItem value={ClientReplyNextAction.NO_FURTHER_ACTION}>
+                <SelectItem value={CLIENT_REPLY_NEXT_ACTION.NO_FURTHER_ACTION}>
                   No further action
                 </SelectItem>
               </SelectGroup>
@@ -256,7 +273,7 @@ export function ClientReplyForm({
           <Select
             value={driveTargetFolderType}
             onValueChange={(value) =>
-              setDriveTargetFolderType(value as DriveFolderType)
+              setDriveTargetFolderType(value as DriveFolderTypeValue)
             }
           >
             <SelectTrigger id="reply-folder-type" className="w-full">
@@ -265,9 +282,9 @@ export function ClientReplyForm({
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Folder types</SelectLabel>
-                <SelectItem value={DriveFolderType.RECEIVED}>Received</SelectItem>
-                <SelectItem value={DriveFolderType.REJECTED}>Rejected</SelectItem>
-                <SelectItem value={DriveFolderType.REVISIONS}>Revisions</SelectItem>
+                <SelectItem value={DRIVE_FOLDER_TYPE.RECEIVED}>Received</SelectItem>
+                <SelectItem value={DRIVE_FOLDER_TYPE.REJECTED}>Rejected</SelectItem>
+                <SelectItem value={DRIVE_FOLDER_TYPE.REVISIONS}>Revisions</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
