@@ -173,9 +173,10 @@ controls.
 
 ## Commit SHA
 
-`PENDING_PHASE_4_COMMIT`
+`8bb829fdb93915ddfc9097e3e14ac39e0fec08e5`
 
 ## Working Tree
 
-The clean-tree result will be recorded after the implementation commit and
-report finalization commit.
+PASS. The Phase 4 implementation commit produced a clean tree. This report SHA
+update is committed separately, after which the branch is pushed and compared
+with the remote head.
