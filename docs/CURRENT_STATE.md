@@ -17,6 +17,9 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 9: COMPLETE / LOCALLY_VERIFIED.
 - Phase 10: COMPLETE / LOCALLY_VERIFIED.
 - Phase 10 live provider and qpdf verification: `STAGING_REQUIRED`.
+- Phase 11: COMPLETE / LOCALLY_VERIFIED.
+- Phase 11 live storage and large response-package verification:
+  `STAGING_REQUIRED`.
 
 ## Authoritative Workspace
 
@@ -59,6 +62,7 @@ The additive migration inventory is:
 20260729210000_phase8_cover_designer
 20260729230000_phase9_approval_application
 20260730010000_phase10_durable_worker
+20260730030000_phase11_client_responses
 ```
 
 Phase 4 adds internal and external sessions, OIDC transactions, invitation
@@ -117,3 +121,12 @@ Signed Internally and transmittal requests instead of doing heavy work in the
 request. Signed Internally creates one private, expiring, hash-verified artifact
 without permanent Main PDF duplication. Large-file qpdf and live provider
 delivery require staging infrastructure.
+
+# Phase 11 Client Responses and Revisions
+
+Client and project response policies are configurable, versioned, immutable
+after publication, and independent from code numbers. Responses preserve exact
+policy, effects, files, submissions, and history. Guided revision creation
+preserves lineage, creates a new controlled Main hash and Package Hash,
+restarts approvals, and never copies signatures. Dynamic response downloads
+use the exact submitted Main PDF and the durable worker.

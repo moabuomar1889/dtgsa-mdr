@@ -8,14 +8,13 @@ Date: 2026-07-29
   foundation.
 - Phase 4: identity and access implementation is code-complete and
   staging-ready; live Google verification is externally blocked.
-- Phases 5-10: controlled storage, trust evidence, configurable workflow,
-  visual cover design, central approval, and durable downloads/worker are
-  complete locally.
+- Phases 5-11: controlled storage, trust evidence, configurable workflow,
+  visual cover design, central approval, durable downloads/worker, and client
+  response revision lifecycle are complete locally.
 
 ## Next
 
-- Phase 11: client responses and revision lifecycle.
-- Phase 12: verification and integration work.
+- Phase 12: public document verification portal.
 - Phases 13-15: operational hardening, release evidence, and final acceptance.
 
 Production deployment remains outside the modernization phases unless
@@ -48,3 +47,10 @@ without changing decision authority.
 The PostgreSQL worker, idempotent queueing, encrypted temporary assembly,
 private Signed Internally delivery, artifact evidence, and cleanup are complete
 locally. Phase 11 may reuse these contracts for client-response packages.
+
+# Phase 11 Status
+
+Versioned client/project response policies, historical response evidence,
+guided revision creation, and dynamic client-response downloads are complete
+locally. Phase 12 may expose strictly allowlisted public verification without
+revealing private files or internal workflow data.

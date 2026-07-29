@@ -103,7 +103,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <Card className="border-border/70 bg-card/95 shadow-sm">
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Replies</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{results.counts.clientReplies}</p>
+            <p className="mt-2 text-2xl font-semibold tracking-tight">
+              {results.counts.clientReplies}
+            </p>
           </CardContent>
         </Card>
       </section>
@@ -217,7 +219,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     className="rounded-2xl border border-border/60 bg-background/80 p-4"
                   >
                     <p className="font-medium">
-                      {reply.document.dtgsaDocumentNumber} / {reply.reviewCode.code}
+                      {reply.document.dtgsaDocumentNumber} /{" "}
+                      {reply.reviewCode.code}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {reply.project.code} / {reply.document.title}

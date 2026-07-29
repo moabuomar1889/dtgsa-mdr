@@ -14,6 +14,7 @@ import {
   withEncryptedTemporaryWorkspace,
   type JobHandlers,
 } from "@dtg/job-engine"
+import { mergePdfBuffers } from "@dtg/pdf-engine"
 
 type AssemblyPayload = {
   revisionId: string
@@ -425,6 +426,167 @@ export function createPhase10Handlers(input: {
       bytesProcessed: assembly.bytesProcessed,
       durationMs: assembly.assemblyDurationMs,
     }
+  }
+
+  handlers.PDF_ASSEMBLE_CLIENT_RESPONSE = async ({ job, heartbeat }) => {
+    const payload = job.payload as {
+      responseId?: string
+      revisionId?: string
+      requesterUserId?: string
+      projectId?: string
+      packageHash?: string
+      cacheKey?: string
+      componentFileIds?: string[]
+      label?: string
+      expiresInSeconds?: number
+    }
+    if (
+      !payload.responseId ||
+      !payload.revisionId ||
+      !payload.requesterUserId ||
+      !payload.projectId ||
+      !payload.packageHash ||
+      !payload.cacheKey ||
+      !payload.componentFileIds?.length
+    ) {
+      throw new NonRetryableJobError(
+        "INVALID_CLIENT_RESPONSE_PAYLOAD",
+        "The client-response assembly payload is incomplete."
+      )
+    }
+    await heartbeat(10, "Loading exact response and submitted components.")
+    const components = await Promise.all(
+      payload.componentFileIds.map((id) => storage.read(id))
+    )
+    const totalBytes = components.reduce(
+      (sum, component) => sum + component.byteLength,
+      0
+    )
+    if (
+      selectPdfAssemblyEngine({
+        totalBytes,
+        qpdfAvailable: false,
+      }).engine !== "pdf-lib"
+    ) {
+      throw new NonRetryableJobError(
+        "LARGE_PDF_ENGINE_UNAVAILABLE",
+        "Large client-response assembly requires the bounded qpdf worker."
+      )
+    }
+    const startedAt = performance.now()
+    const bytes = await withEncryptedTemporaryWorkspace(async (workspace) => {
+      const paths = await Promise.all(
+        components.map((component, index) =>
+          workspace.write(`response-${index + 1}.pdf`, component)
+        )
+      )
+      return mergePdfBuffers(
+        await Promise.all(paths.map((path) => workspace.read(path)))
+      )
+    })
+    const artifactSha256 = sha256(bytes)
+    const durationMs = Math.ceil(performance.now() - startedAt)
+    const stored = await storage.writeTemporary({
+      cacheKey: payload.cacheKey,
+      bytes,
+    })
+    const expiresAt = new Date(
+      now().getTime() +
+        Math.min(86_400, Math.max(60, payload.expiresInSeconds ?? 3_600)) *
+          1_000
+    )
+    await input.prisma.$transaction(async (tx) => {
+      const fileObject = await tx.fileObject.upsert({
+        where: {
+          storageProvider_providerKey: {
+            storageProvider: stored.provider,
+            providerKey: stored.providerKey,
+          },
+        },
+        create: {
+          storageProvider: stored.provider,
+          providerKey: stored.providerKey,
+          fileName: stored.fileName,
+          mimeType: stored.mimeType,
+          sizeBytes: BigInt(bytes.byteLength),
+          checksum: artifactSha256,
+        },
+        update: {
+          sizeBytes: BigInt(bytes.byteLength),
+          checksum: artifactSha256,
+          deletedAt: null,
+        },
+      })
+      const artifact = await tx.generatedArtifactRecord.upsert({
+        where: { cacheKey: payload.cacheKey },
+        create: {
+          revisionId: payload.revisionId,
+          fileObjectId: fileObject.id,
+          artifactKind: "CLIENT_RESPONSE_PDF",
+          authoritative: false,
+          packageHash: payload.packageHash,
+          cacheKey: payload.cacheKey,
+          assemblyProfile: {
+            responseId: payload.responseId,
+            label: payload.label,
+            componentFileIds: payload.componentFileIds,
+          },
+          pdfEngineVersion: "pdf-lib@1.17.1",
+          artifactSha256,
+          sizeBytes: BigInt(bytes.byteLength),
+          requesterUserId: payload.requesterUserId,
+          authorizationScope: { projectId: payload.projectId },
+          expiresAt,
+          cleanupStatus: "Available",
+          bytesProcessed: BigInt(totalBytes),
+          assemblyDurationMs: durationMs,
+        },
+        update: {
+          fileObjectId: fileObject.id,
+          expiresAt,
+          cleanupStatus: "Available",
+          cleanedAt: null,
+          artifactSha256,
+          sizeBytes: BigInt(bytes.byteLength),
+          bytesProcessed: BigInt(totalBytes),
+          assemblyDurationMs: durationMs,
+        },
+      })
+      await tx.jobArtifact.upsert({
+        where: {
+          jobId_artifactId: { jobId: job.id, artifactId: artifact.id },
+        },
+        create: {
+          jobId: job.id,
+          artifactId: artifact.id,
+          artifactKind: artifact.artifactKind,
+          checksum: artifactSha256,
+          sizeBytes: BigInt(bytes.byteLength),
+        },
+        update: {},
+      })
+      await tx.auditLog.create({
+        data: {
+          actorUserId: payload.requesterUserId,
+          action: "client_response.artifact_assembled",
+          entityType: "ClientResponse",
+          entityId: payload.responseId!,
+          projectId: payload.projectId,
+          correlationId: job.correlationId,
+          relevantHashes: {
+            packageHash: payload.packageHash,
+            artifactSha256,
+          },
+          afterSnapshot: {
+            componentFileIds: payload.componentFileIds,
+            label: payload.label,
+            expiresAt: expiresAt.toISOString(),
+          },
+        },
+      })
+    })
+    await heartbeat(100, "Client-response artifact is ready.")
+    return { bytesProcessed: totalBytes, durationMs }
   }
 
   handlers.FILE_HASH = async ({ job }) => {

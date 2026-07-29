@@ -73,3 +73,15 @@ Large files fail closed without bounded qpdf. Remaining staging risks are
 provider timeout ambiguity, cloud secure-deletion limitations, worker
 credential scope, qpdf sandbox enforcement, and live storage/Drive/email
 behavior.
+
+# Phase 11 Client Response Addendum
+
+Policy substitution is limited by published-version immutability, project and
+client scope resolution, exact policy snapshots, and audit hashes. Numeric-code
+confusion is prevented by effect-driven behavior. Returned files are private,
+hashed evidence; external visible signatures are never promoted to platform
+approval evidence. Revision creation preserves lineage and explicitly refuses
+signature copying. Dynamic assembly selects the exact submitted Main file and
+uses private TTL artifacts. Residual staging risks include malicious document
+content, live malware-provider behavior, storage cleanup guarantees, large
+response packages, and client procedure accuracy.

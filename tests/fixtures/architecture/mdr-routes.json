@@ -31,6 +31,7 @@
   "/reports",
   "/search",
   "/settings",
+  "/settings/response-codes",
   "/sign-in",
   "/tasks",
   "/templates",

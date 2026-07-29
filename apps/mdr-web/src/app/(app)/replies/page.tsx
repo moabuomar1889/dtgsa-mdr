@@ -1,8 +1,15 @@
 import { ClientReplyState } from "@prisma/client"
-import { recordClientReplyAction } from "@/server/actions/replies"
+import Link from "next/link"
+import {
+  createRevisionFromClientResponseAction,
+  registerConfiguredClientResponseAction,
+  requestClientResponseDownloadAction,
+} from "@/server/actions/replies"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getClientRepliesOverview } from "@/server/services/replies/client-reply-overview-service"
-import { ClientReplyForm } from "@/components/app/client-reply-form"
+import { getConfigurableClientResponseOverview } from "@/server/services/replies/client-response-service"
+import { ClientResponseForm } from "@/components/app/client-response-form"
+import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -19,6 +26,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export const dynamic = "force-dynamic"
 
@@ -33,9 +42,21 @@ function replyStateVariant(state: ClientReplyState) {
   }
 }
 
-export default async function RepliesPage() {
+export default async function RepliesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    outcome?: string
+    action?: "REVISION_REQUIRED" | "OVERDUE" | "ALL"
+  }>
+}) {
   const user = await requireCurrentAppUser()
+  const filters = await searchParams
   const overview = await getClientRepliesOverview(user)
+  const configured = await getConfigurableClientResponseOverview(user, {
+    outcomeClass: filters.outcome || undefined,
+    action: filters.action || "ALL",
+  })
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
@@ -97,20 +118,184 @@ export default async function RepliesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {overview.documents.length > 0 ? (
-              <ClientReplyForm
-                documents={overview.documents}
-                action={recordClientReplyAction}
+            {configured.submissions.length > 0 ? (
+              <ClientResponseForm
+                submissions={configured.submissions}
+                action={registerConfiguredClientResponseAction}
               />
             ) : (
               <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-6 text-sm leading-6">
-                No documents are currently waiting for a client reply. Send a
-                transmittal first to start the reply loop.
+                No durable client submissions are waiting for a response.
               </div>
             )}
           </CardContent>
         </Card>
       </section>
+
+      <div className="flex justify-end">
+        <Button asChild variant="outline">
+          <Link href="/settings/response-codes">
+            Manage response-code policies
+          </Link>
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Configured response evidence</CardTitle>
+          <CardDescription>
+            Historical policy snapshots, dynamic labels, files, and revision
+            actions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <form className="grid gap-3 rounded-2xl border p-4 md:grid-cols-3">
+            <select
+              name="outcome"
+              defaultValue={filters.outcome ?? ""}
+              className="rounded-md border p-2"
+            >
+              <option value="">All outcomes</option>
+              {[
+                "REJECTED",
+                "REJECTED_WITH_COMMENTS",
+                "CONDITIONALLY_APPROVED",
+                "APPROVED_WITH_COMMENTS",
+                "REVISION_REQUIRED",
+                "FINAL_APPROVED",
+                "INFORMATION_ONLY",
+                "HOLD",
+                "CANCELLED",
+                "CUSTOM",
+              ].map((outcome) => (
+                <option key={outcome}>{outcome}</option>
+              ))}
+            </select>
+            <select
+              name="action"
+              defaultValue={filters.action ?? "ALL"}
+              className="rounded-md border p-2"
+            >
+              <option value="ALL">All actions</option>
+              <option value="REVISION_REQUIRED">Revision required</option>
+              <option value="OVERDUE">Overdue action</option>
+            </select>
+            <Button type="submit" variant="outline">
+              Filter response history
+            </Button>
+          </form>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border p-3">
+              <p className="text-muted-foreground text-xs">
+                Filtered responses
+              </p>
+              <p className="text-xl font-semibold">{configured.counts.total}</p>
+            </div>
+            <div className="rounded-xl border p-3">
+              <p className="text-muted-foreground text-xs">Revision required</p>
+              <p className="text-xl font-semibold">
+                {configured.counts.revisionRequired}
+              </p>
+            </div>
+            <div className="rounded-xl border p-3">
+              <p className="text-muted-foreground text-xs">Overdue action</p>
+              <p className="text-xl font-semibold">
+                {configured.counts.overdue}
+              </p>
+            </div>
+          </div>
+          {configured.responses.map((response) => {
+            const effects =
+              (response.effectsSnapshot as Record<string, unknown> | null) ?? {}
+            const requiresRevision =
+              effects.newRevisionRequired === true ||
+              effects.newDocumentNumberRequired === true
+            return (
+              <div key={response.id} className="rounded-2xl border p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">
+                      {response.externalCodeSnapshot} - {response.labelSnapshot}
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      {response.outcomeClass} / {response.incomingReference}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      Response {response.receivedAt.toLocaleDateString()} /
+                      Policy snapshot{" "}
+                      {response.policySnapshot?.snapshotHash.slice(0, 12) ??
+                        "Unavailable"}
+                    </p>
+                    {response.comments ? (
+                      <p className="mt-2 text-sm">{response.comments}</p>
+                    ) : null}
+                    {response.files.length > 0 ? (
+                      <p className="text-muted-foreground mt-2 text-xs">
+                        Files:{" "}
+                        {response.files
+                          .map(
+                            (file) =>
+                              `${file.isPrimary ? "Primary" : "Attachment"}: ${
+                                file.originalFileName ?? file.fileKind
+                              }`
+                          )
+                          .join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex gap-2">
+                    {response.overdue ? (
+                      <Badge variant="destructive">Overdue</Badge>
+                    ) : null}
+                    <Badge variant={response.isActive ? "default" : "outline"}>
+                      {response.isActive ? "Current" : "Historical"}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <form action={requestClientResponseDownloadAction}>
+                    <input
+                      type="hidden"
+                      name="responseId"
+                      value={response.id}
+                    />
+                    <SubmitButton
+                      label={`Client Response - ${response.labelSnapshot}`}
+                      pendingLabel="Queuing assembly"
+                      variant="outline"
+                    />
+                  </form>
+                  {requiresRevision &&
+                  response.isActive &&
+                  !response.triggeredRevisionId ? (
+                    <form
+                      action={createRevisionFromClientResponseAction}
+                      className="grid gap-2 rounded-xl border p-3"
+                    >
+                      <input
+                        type="hidden"
+                        name="responseId"
+                        value={response.id}
+                      />
+                      <Input
+                        name="workingMainPdf"
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        required
+                      />
+                      <Input name="reason" placeholder="Revision reason" />
+                      <SubmitButton
+                        label="Create guided revision"
+                        pendingLabel="Creating revision"
+                      />
+                    </form>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })}
+        </CardContent>
+      </Card>
 
       <Card className="border-border/70 bg-card/95 shadow-sm">
         <CardHeader>

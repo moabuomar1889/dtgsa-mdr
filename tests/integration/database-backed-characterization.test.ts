@@ -94,6 +94,11 @@ import {
   saveVisualCoverDraft,
 } from "@/server/services/templates/visual-cover-template-service"
 import { createPrismaJobStore } from "../../apps/worker/src/prisma-job-store"
+import { responsePolicySnapshot } from "@dtg/client-response-domain"
+import {
+  resolvePublishedResponsePolicy,
+  toDefinition,
+} from "@/server/services/replies/client-response-policy-service"
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL
 
@@ -2118,5 +2123,250 @@ test("Phase 10 PostgreSQL leases recover and delivery attempts reject duplicates
       },
     }),
     /Unique constraint/
+  )
+})
+
+test("Phase 11 resolves project policies and preserves response evidence", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const fixture = await createDocumentFixture(baseline, {
+    workflowStatus: WorkflowStatus.SubmittedToClient,
+  })
+  const submittedMain = await prisma.fileObject.create({
+    data: {
+      storageProvider: StorageProvider.Temporary,
+      providerKey: "phase-11/submitted-main.pdf",
+      fileName: "submitted-main.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: 100n,
+      checksum: "1".repeat(64),
+    },
+  })
+  const manifest = await prisma.packageManifest.create({
+    data: {
+      revisionId: fixture.revision.id,
+      schemaVersion: "phase-11",
+      canonicalizationVersion: "1",
+      manifestJson: { mainFileObjectId: submittedMain.id },
+      manifestDigest: "2".repeat(64),
+    },
+  })
+  const submission = await prisma.clientSubmission.create({
+    data: {
+      revisionId: fixture.revision.id,
+      manifestId: manifest.id,
+      submittedMainFileObjectId: submittedMain.id,
+      packageHash: "2".repeat(64),
+      submissionNumber: 1,
+    },
+  })
+
+  const clientSet = await prisma.clientResponseCodeSet.create({
+    data: {
+      clientId: baseline.client.id,
+      code: "CLIENT_DEFAULT_11",
+      name: "Client default response policy",
+    },
+  })
+  const clientVersion = await prisma.clientResponseCodeSetVersion.create({
+    data: {
+      codeSetId: clientSet.id,
+      version: 1,
+      codes: {
+        create: {
+          externalCode: "A",
+          exactWording: "Accepted for information",
+          internalLabel: "Information only",
+          outcomeClass: "INFORMATION_ONLY",
+          countsAsApproved: true,
+          displayOrder: 1,
+        },
+      },
+    },
+    include: { codes: true },
+  })
+  await prisma.clientResponseCodeSetVersion.update({
+    where: { id: clientVersion.id },
+    data: {
+      status: FoundationRecordStatus.Published,
+      publishedAt: new Date(),
+      snapshotHash: "3".repeat(64),
+    },
+  })
+  assert.equal(
+    (
+      await resolvePublishedResponsePolicy({
+        projectId: baseline.otherProject.id,
+        clientId: baseline.client.id,
+      })
+    )?.id,
+    clientVersion.id
+  )
+
+  const projectSet = await prisma.clientResponseCodeSet.create({
+    data: {
+      clientId: baseline.client.id,
+      code: "PROJECT_OVERRIDE_11",
+      name: "Project response policy",
+    },
+  })
+  const projectVersion = await prisma.clientResponseCodeSetVersion.create({
+    data: {
+      codeSetId: projectSet.id,
+      version: 1,
+      codes: {
+        create: {
+          externalCode: "2",
+          exactWording: "Conditionally approved - rectify and resubmit",
+          internalLabel: "Conditional approval",
+          outcomeClass: "CONDITIONALLY_APPROVED",
+          countsAsApproved: true,
+          requiresCommentRectification: true,
+          requiresNewRevision: true,
+          requiresInternalReapproval: true,
+          requiresResubmission: true,
+          allowsTemporaryUse: true,
+          requiresReturnedFile: true,
+          expectedPrimaryFileKind: "COMMENT_SHEET",
+          displayOrder: 1,
+        },
+      },
+    },
+    include: { codes: true },
+  })
+  await prisma.clientResponseCodeSetVersion.update({
+    where: { id: projectVersion.id },
+    data: {
+      status: FoundationRecordStatus.Published,
+      publishedAt: new Date(),
+      snapshotHash: "4".repeat(64),
+    },
+  })
+  await prisma.projectResponseCodeConfiguration.create({
+    data: {
+      projectId: baseline.project.id,
+      codeSetVersionId: projectVersion.id,
+      configuredByUserId: baseline.actor.id,
+    },
+  })
+  const resolved = await resolvePublishedResponsePolicy({
+    projectId: baseline.project.id,
+    clientId: baseline.client.id,
+  })
+  assert.equal(resolved?.id, projectVersion.id)
+  assert.equal(resolved?.codes[0]?.externalCode, "2")
+
+  const definition = toDefinition(projectVersion.codes[0]!)
+  const snapshot = responsePolicySnapshot({
+    codeSetId: projectSet.id,
+    versionId: projectVersion.id,
+    version: projectVersion.version,
+    code: definition,
+  })
+  const storedSnapshot = await prisma.clientResponsePolicySnapshot.create({
+    data: {
+      projectId: baseline.project.id,
+      codeSetVersionId: projectVersion.id,
+      snapshotHash: snapshot.hash,
+      content: snapshot.content,
+    },
+  })
+  const responseFile = await prisma.fileObject.create({
+    data: {
+      storageProvider: StorageProvider.Temporary,
+      providerKey: "phase-11/comment-sheet.pdf",
+      fileName: "comment-sheet.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: 20n,
+      checksum: "5".repeat(64),
+    },
+  })
+  const attachment = await prisma.fileObject.create({
+    data: {
+      storageProvider: StorageProvider.Temporary,
+      providerKey: "phase-11/markup.xlsx",
+      fileName: "markup.xlsx",
+      mimeType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      sizeBytes: 10n,
+      checksum: "6".repeat(64),
+    },
+  })
+  const historical = await prisma.clientResponse.create({
+    data: {
+      revisionId: fixture.revision.id,
+      submissionId: submission.id,
+      policySnapshotId: storedSnapshot.id,
+      responseCodeId: projectVersion.codes[0]!.id,
+      externalCodeSnapshot: "2",
+      labelSnapshot: "Conditional approval",
+      outcomeClass: "CONDITIONALLY_APPROVED",
+      effectsSnapshot: definition.effects,
+      incomingReference: "CLIENT-RESP-001",
+      isActive: false,
+      supersededAt: new Date(),
+    },
+  })
+  const current = await prisma.clientResponse.create({
+    data: {
+      revisionId: fixture.revision.id,
+      submissionId: submission.id,
+      policySnapshotId: storedSnapshot.id,
+      responseCodeId: projectVersion.codes[0]!.id,
+      externalCodeSnapshot: "2",
+      labelSnapshot: "Conditional approval",
+      outcomeClass: "CONDITIONALLY_APPROVED",
+      effectsSnapshot: definition.effects,
+      incomingReference: "CLIENT-RESP-002",
+      primaryFileObjectId: responseFile.id,
+      primaryFileKind: "COMMENT_SHEET",
+      isActive: true,
+    },
+  })
+  await prisma.clientResponseFile.createMany({
+    data: [
+      {
+        clientResponseId: current.id,
+        fileObjectId: responseFile.id,
+        fileKind: "COMMENT_SHEET",
+        isPrimary: true,
+        originalFileName: responseFile.fileName,
+      },
+      {
+        clientResponseId: current.id,
+        fileObjectId: attachment.id,
+        fileKind: "ATTACHMENT",
+        attachmentKind: "MARKUP",
+        originalFileName: attachment.fileName,
+      },
+    ],
+  })
+
+  assert.equal(
+    await prisma.clientResponse.count({
+      where: { revisionId: fixture.revision.id },
+    }),
+    2
+  )
+  assert.equal(
+    (
+      await prisma.clientResponse.findFirstOrThrow({
+        where: { revisionId: fixture.revision.id, isActive: true },
+      })
+    ).id,
+    current.id
+  )
+  assert.equal(
+    await prisma.clientResponseFile.count({
+      where: { clientResponseId: current.id },
+    }),
+    2
+  )
+  assert.equal(historical.isActive, false)
+  await assert.rejects(
+    prisma.clientResponseCode.update({
+      where: { id: projectVersion.codes[0]!.id },
+      data: { exactWording: "Mutated wording" },
+    }),
+    /Published response-code content is immutable/
   )
 })

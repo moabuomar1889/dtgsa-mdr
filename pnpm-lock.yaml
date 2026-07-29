@@ -21,6 +21,9 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
     devDependencies:
+      '@dtg/client-response-domain':
+        specifier: workspace:*
+        version: link:packages/client-response-domain
       '@dtg/job-engine':
         specifier: workspace:*
         version: link:packages/job-engine
@@ -126,6 +129,9 @@ importers:
       '@dtg/authorization':
         specifier: workspace:*
         version: link:../../packages/authorization
+      '@dtg/client-response-domain':
+        specifier: workspace:*
+        version: link:../../packages/client-response-domain
       '@dtg/controlled-storage-domain':
         specifier: workspace:*
         version: link:../../packages/controlled-storage-domain
@@ -304,6 +310,9 @@ importers:
       '@dtg/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@dtg/pdf-engine':
+        specifier: workspace:*
+        version: link:../../packages/pdf-engine
       '@prisma/client':
         specifier: ^7.6.0
         version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
@@ -322,6 +331,8 @@ importers:
         version: 5.9.3
 
   packages/authorization: {}
+
+  packages/client-response-domain: {}
 
   packages/configuration:
     dependencies:

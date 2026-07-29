@@ -65,3 +65,12 @@ Never mark delivery successful from enqueue state. Client-response work may
 reuse temporary artifact assembly, but must preserve revision lineage, exact
 package hashes, controlled Main authority, TTL cleanup, and authorization.
 Install and benchmark qpdf in staging before accepting inputs above 32 MiB.
+
+# Phase 11 Handoff
+
+Use `@dtg/client-response-domain` for effects, snapshots, file-kind assembly,
+and revision labels. Never branch on a numeric response code. Preserve the
+exact `ClientSubmission` Main file and Package Hash, all response versions and
+files, and published policy snapshots. Phase 12 may read verification evidence
+but must not expose response files, reviewer names, internal comments, or
+revision workflow internals publicly.

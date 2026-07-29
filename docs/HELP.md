@@ -28,3 +28,12 @@ content, do not decide; reopen the package and confirm its Package Hash. For an
 integrity-blocked file, contact Document Control. Rejection and return require
 clear comments; return additionally requires a responsible department,
 blocking comments, due date, and confirmation.
+
+## Client Responses
+
+Document Control manages client response meanings at
+`/settings/response-codes`. Published policies are immutable; create a new
+draft version for changes. Register returned evidence at `/replies`, preview
+the configured effects, and use the guided revision action only when offered.
+The dynamic download label comes from the policy and may include the exact
+submitted Main PDF.

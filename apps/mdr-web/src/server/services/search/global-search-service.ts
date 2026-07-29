@@ -30,6 +30,27 @@ export async function searchPlatform(
     return createEmptySearchResult(search)
   }
 
+  const accessibleRevisions = await prisma.documentRevision.findMany({
+    where: {
+      document: { projectId: { in: accessibleProjectIds }, deletedAt: null },
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      revisionLabel: true,
+      document: {
+        select: {
+          dtgsaDocumentNumber: true,
+          title: true,
+          project: { select: { code: true, name: true } },
+        },
+      },
+    },
+  })
+  const revisionById = new Map(
+    accessibleRevisions.map((revision) => [revision.id, revision])
+  )
+
   const projectWhere = {
     deletedAt: null,
     id: {
@@ -305,6 +326,46 @@ export async function searchPlatform(
         },
       }),
     ])
+  const configuredClientResponseRows = await prisma.clientResponse.findMany({
+    where: {
+      revisionId: { in: accessibleRevisions.map((revision) => revision.id) },
+      OR: [
+        { externalCodeSnapshot: { contains: search, mode: "insensitive" } },
+        { labelSnapshot: { contains: search, mode: "insensitive" } },
+        { incomingReference: { contains: search, mode: "insensitive" } },
+        { comments: { contains: search, mode: "insensitive" } },
+      ],
+    },
+    orderBy: { receivedAt: "desc" },
+    take: 10,
+  })
+  const configuredClientReplies = configuredClientResponseRows.flatMap(
+    (response) => {
+      const revision = revisionById.get(response.revisionId)
+      return revision
+        ? [
+            {
+              id: `configured-${response.id}`,
+              replyDate: response.receivedAt,
+              comments: response.comments,
+              project: revision.document.project,
+              document: {
+                dtgsaDocumentNumber: revision.document.dtgsaDocumentNumber,
+                title: revision.document.title,
+              },
+              reviewCode: {
+                code: response.externalCodeSnapshot ?? "N/A",
+                label: response.labelSnapshot ?? response.outcomeClass,
+              },
+            },
+          ]
+        : []
+    }
+  )
+  const combinedClientReplies = [
+    ...configuredClientReplies,
+    ...clientReplies,
+  ].slice(0, 10)
 
   return {
     search,
@@ -313,12 +374,12 @@ export async function searchPlatform(
       pdiItems: pdiItems.length,
       mdrDocuments: mdrDocuments.length,
       transmittals: transmittals.length,
-      clientReplies: clientReplies.length,
+      clientReplies: combinedClientReplies.length,
     },
     projects,
     pdiItems,
     mdrDocuments,
     transmittals,
-    clientReplies,
+    clientReplies: combinedClientReplies,
   }
 }

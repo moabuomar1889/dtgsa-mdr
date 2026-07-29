@@ -140,6 +140,29 @@ enum ClientReplyNextAction {
   NO_FURTHER_ACTION
 }
 
+enum ClientResponseOutcomeClass {
+  REJECTED
+  REJECTED_WITH_COMMENTS
+  CONDITIONALLY_APPROVED
+  APPROVED_WITH_COMMENTS
+  REVISION_REQUIRED
+  FINAL_APPROVED
+  INFORMATION_ONLY
+  HOLD
+  CANCELLED
+  CUSTOM
+}
+
+enum ClientResponseFileKind {
+  FULL_DOCUMENT
+  COVER_ONLY
+  COMMENT_SHEET
+  APPROVAL_LETTER
+  RESPONSE_FORM
+  TRANSMITTAL
+  OTHER
+}
+
 enum DriveFolderType {
   ROOT
   DOCUMENT_CONTROL
@@ -801,40 +824,41 @@ model MdrDocument {
 }
 
 model DocumentRevision {
-  id                  String               @id @default(cuid())
-  documentId          String
-  revisionLabel       String
-  revisionIndex       Int
-  workflowStatus      WorkflowStatus       @default(Draft)
-  revisionStatus      RevisionStatus       @default(Original)
-  clientReplyState    ClientReplyState     @default(WaitingClientReply)
-  reviewCodeId        String?
-  parentRevisionId    String?
-  sourceClientReplyId String?
-  reasonForRevision   String?
-  isCurrent           Boolean              @default(false)
-  submittedToClientAt DateTime?
-  closedAt            DateTime?
-  lockedAt            DateTime?
-  createdByUserId     String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  deletedAt           DateTime?
-  document            MdrDocument          @relation("DocumentRevisions", fields: [documentId], references: [id], onDelete: Cascade)
-  currentForDocument  MdrDocument?         @relation("CurrentDocumentRevision")
-  reviewCode          ReviewCode?          @relation("RevisionReviewCode", fields: [reviewCodeId], references: [id], onDelete: SetNull)
-  parentRevision      DocumentRevision?    @relation("RevisionLineage", fields: [parentRevisionId], references: [id], onDelete: SetNull)
-  childRevisions      DocumentRevision[]   @relation("RevisionLineage")
-  sourceClientReply   ClientReply?         @relation("ReplyTriggeredRevisions", fields: [sourceClientReplyId], references: [id], onDelete: SetNull)
-  clientReplies       ClientReply[]        @relation("SubmittedRevisionReply")
-  files               DocumentFile[]
-  workflowSteps       WorkflowStep[]
-  workflowActions     WorkflowAction[]
-  generatedDocuments  GeneratedDocument[]
-  transmittalItems    TransmittalItem[]
-  controlledMainFiles ControlledMainFile[]
-  approvalCycles      ApprovalCycle[]
-  packageManifests    PackageManifest[]
+  id                     String               @id @default(cuid())
+  documentId             String
+  revisionLabel          String
+  revisionIndex          Int
+  workflowStatus         WorkflowStatus       @default(Draft)
+  revisionStatus         RevisionStatus       @default(Original)
+  clientReplyState       ClientReplyState     @default(WaitingClientReply)
+  reviewCodeId           String?
+  parentRevisionId       String?
+  sourceClientReplyId    String?
+  sourceClientResponseId String?
+  reasonForRevision      String?
+  isCurrent              Boolean              @default(false)
+  submittedToClientAt    DateTime?
+  closedAt               DateTime?
+  lockedAt               DateTime?
+  createdByUserId        String?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  deletedAt              DateTime?
+  document               MdrDocument          @relation("DocumentRevisions", fields: [documentId], references: [id], onDelete: Cascade)
+  currentForDocument     MdrDocument?         @relation("CurrentDocumentRevision")
+  reviewCode             ReviewCode?          @relation("RevisionReviewCode", fields: [reviewCodeId], references: [id], onDelete: SetNull)
+  parentRevision         DocumentRevision?    @relation("RevisionLineage", fields: [parentRevisionId], references: [id], onDelete: SetNull)
+  childRevisions         DocumentRevision[]   @relation("RevisionLineage")
+  sourceClientReply      ClientReply?         @relation("ReplyTriggeredRevisions", fields: [sourceClientReplyId], references: [id], onDelete: SetNull)
+  clientReplies          ClientReply[]        @relation("SubmittedRevisionReply")
+  files                  DocumentFile[]
+  workflowSteps          WorkflowStep[]
+  workflowActions        WorkflowAction[]
+  generatedDocuments     GeneratedDocument[]
+  transmittalItems       TransmittalItem[]
+  controlledMainFiles    ControlledMainFile[]
+  approvalCycles         ApprovalCycle[]
+  packageManifests       PackageManifest[]
 
   @@unique([documentId, revisionLabel])
   @@index([documentId, isCurrent])
@@ -1536,6 +1560,9 @@ model ClientResponseFile {
   clientResponseId String
   fileObjectId     String   @unique
   fileKind         String
+  isPrimary        Boolean  @default(false)
+  attachmentKind   String?
+  originalFileName String?
   receivedAt       DateTime @default(now())
 
   @@index([clientResponseId])
@@ -2119,28 +2146,47 @@ model PublicVerificationPolicy {
 }
 
 model ClientResponseCodeSet {
-  id        String                         @id @default(cuid())
-  clientId  String
-  code      String
-  name      String
-  createdAt DateTime                       @default(now())
-  versions  ClientResponseCodeSetVersion[]
+  id              String                         @id @default(cuid())
+  clientId        String
+  code            String
+  name            String
+  description     String?
+  createdByUserId String?
+  createdAt       DateTime                       @default(now())
+  versions        ClientResponseCodeSetVersion[]
 
   @@unique([clientId, code])
 }
 
 model ClientResponseCodeSetVersion {
-  id            String                 @id @default(cuid())
-  codeSetId     String
-  version       Int
-  status        FoundationRecordStatus @default(Draft)
-  publishedAt   DateTime?
-  effectiveFrom DateTime?
-  effectiveTo   DateTime?
-  codeSet       ClientResponseCodeSet  @relation(fields: [codeSetId], references: [id], onDelete: Restrict)
-  codes         ClientResponseCode[]
+  id                String                 @id @default(cuid())
+  codeSetId         String
+  version           Int
+  status            FoundationRecordStatus @default(Draft)
+  publishedAt       DateTime?
+  effectiveFrom     DateTime?
+  effectiveTo       DateTime?
+  validatedAt       DateTime?
+  publishedByUserId String?
+  supersededAt      DateTime?
+  validationResult  Json?
+  snapshotHash      String?                @unique
+  codeSet           ClientResponseCodeSet  @relation(fields: [codeSetId], references: [id], onDelete: Restrict)
+  codes             ClientResponseCode[]
 
   @@unique([codeSetId, version])
+}
+
+model ClientResponseCodeReference {
+  id              String   @id @default(cuid())
+  codeSetId       String
+  fileObjectId    String
+  referenceKind   String
+  description     String?
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+
+  @@unique([codeSetId, fileObjectId])
 }
 
 model ClientResponseCode {
@@ -2169,10 +2215,11 @@ model ClientResponseCode {
 }
 
 model ProjectResponseCodeConfiguration {
-  id               String   @id @default(cuid())
-  projectId        String   @unique
-  codeSetVersionId String
-  configuredAt     DateTime @default(now())
+  id                 String   @id @default(cuid())
+  projectId          String   @unique
+  codeSetVersionId   String
+  configuredByUserId String?
+  configuredAt       DateTime @default(now())
 }
 
 model ClientResponsePolicySnapshot {
@@ -2185,15 +2232,31 @@ model ClientResponsePolicySnapshot {
 }
 
 model ClientResponse {
-  id                  String   @id @default(cuid())
-  revisionId          String
-  policySnapshotId    String
-  responseCodeId      String
-  receivedAt          DateTime @default(now())
-  comments            String?
-  primaryFileObjectId String?
+  id                   String                     @id @default(cuid())
+  revisionId           String
+  submissionId         String?
+  policySnapshotId     String
+  responseCodeId       String
+  externalCodeSnapshot String?
+  labelSnapshot        String?
+  outcomeClass         ClientResponseOutcomeClass @default(CUSTOM)
+  effectsSnapshot      Json?
+  incomingReference    String?
+  receivedAt           DateTime                   @default(now())
+  clientReviewerName   String?
+  clientReviewerDate   DateTime?
+  comments             String?
+  primaryFileObjectId  String?
+  primaryFileKind      ClientResponseFileKind?
+  createdByUserId      String?
+  confirmedAt          DateTime?
+  isActive             Boolean                    @default(true)
+  supersededAt         DateTime?
+  triggeredRevisionId  String?
 
   @@index([revisionId, receivedAt])
+  @@index([submissionId, receivedAt])
+  @@index([outcomeClass, receivedAt])
 }
 
 model ClientResponseAttachment {
@@ -2207,12 +2270,14 @@ model ClientResponseAttachment {
 }
 
 model ClientSubmission {
-  id               String   @id @default(cuid())
-  revisionId       String
-  manifestId       String
-  transmittalId    String?
-  submissionNumber Int
-  submittedAt      DateTime @default(now())
+  id                        String   @id @default(cuid())
+  revisionId                String
+  manifestId                String
+  transmittalId             String?
+  submittedMainFileObjectId String?
+  packageHash               String?
+  submissionNumber          Int
+  submittedAt               DateTime @default(now())
 
   @@unique([revisionId, submissionNumber])
 }

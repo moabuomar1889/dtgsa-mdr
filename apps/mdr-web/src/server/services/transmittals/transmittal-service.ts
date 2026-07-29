@@ -531,6 +531,17 @@ export async function deliverTransmittalNow(
                   dtgsaDocumentNumber: true,
                 },
               },
+              controlledMainFiles: {
+                where: { isActive: true },
+                orderBy: { controlledAt: "desc" },
+                take: 1,
+              },
+              packageManifests: {
+                where: { invalidatedAt: null },
+                include: { hashes: true },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+              },
             },
           },
         },
@@ -647,6 +658,28 @@ export async function deliverTransmittalNow(
           },
         },
       })
+
+      const manifest = item.documentRevision.packageManifests[0]
+      const controlledMain = item.documentRevision.controlledMainFiles[0]
+      if (manifest && controlledMain) {
+        const priorSubmissionCount = await tx.clientSubmission.count({
+          where: { revisionId: item.documentRevisionId },
+        })
+        await tx.clientSubmission.create({
+          data: {
+            revisionId: item.documentRevisionId,
+            manifestId: manifest.id,
+            transmittalId: transmittal.id,
+            submittedMainFileObjectId: controlledMain.fileObjectId,
+            packageHash:
+              manifest.hashes.find(
+                (hash) => hash.algorithm.toUpperCase() === "SHA-256"
+              )?.value ?? manifest.manifestDigest,
+            submissionNumber: priorSubmissionCount + 1,
+            submittedAt: sentAt,
+          },
+        })
+      }
     }
 
     await tx.generatedDocument.create({
