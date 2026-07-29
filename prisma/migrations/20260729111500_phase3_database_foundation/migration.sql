@@ -1461,4 +1461,3 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER "ClientResponseCode_published_content_immutable"
 BEFORE INSERT OR UPDATE OR DELETE ON "ClientResponseCode"
 FOR EACH ROW EXECUTE FUNCTION "prevent_published_response_code_mutation"();
-
