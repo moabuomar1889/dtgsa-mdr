@@ -4,23 +4,29 @@ Date: 2026-07-29
 
 ## Current Gate
 
-Phase 3 is complete on `codex/dtg-signature-platform-merge`. Review
-`docs/reports/PHASE_3_DATABASE_FOUNDATION_REPORT.md` and the Phase 3 commit
-before beginning Phase 4.
+Phase 4 identity and access is code-complete and staging-ready on
+`codex/dtg-signature-platform-merge`. Review
+`docs/reports/PHASE_4_IDENTITY_AND_ACCESS_REPORT.md` before Phase 5.
+
+Live Google verification remains `BLOCKED_EXTERNAL_CREDENTIALS`; do not report
+the phase as production-verified.
 
 ## Resume Checklist
 
-1. Confirm the branch and clean working tree.
-2. Confirm the Phase 3 commit is present remotely.
+1. Confirm the Phase 4 commit exists locally and remotely.
+2. Confirm the working tree is clean.
 3. Run `pnpm install --frozen-lockfile` and `pnpm exec prisma generate`.
-4. Run `pnpm test:ci`, `pnpm build`, and `pnpm check:architecture`.
-5. Confirm both migrations apply to disposable PostgreSQL.
-6. Read the Phase 3 database ownership, constraints, roles, and migration docs.
+4. Run `pnpm test:ci`, `pnpm build`, `pnpm lint`, and
+   `pnpm check:architecture`.
+5. Read the Google integration, migration, session, role mapping, portal, and
+   threat-model documents.
+6. Keep `AUTH_MODE=GOOGLE_WORKSPACE` for every production runtime.
+7. Do not enable live Directory synchronization without owner-authorized
+   delegated credentials.
 
-## Boundaries
+## Phase 5 Boundary
 
-Do not treat approval, verification, API, or worker foundations as completed
-business features. Do not remove compatibility exports until their target
-phases provide parity. The Phase 3 models are not activated runtime features.
-Do not connect to live services or production data without explicit
-authorization.
+Controlled Google Drive may use the authenticated internal identity and the
+Phase 3 file authority. It must not merge external sessions with employee
+access, replace the workflow engine, implement final signing, deploy to
+production, or weaken the Phase 4 security controls.

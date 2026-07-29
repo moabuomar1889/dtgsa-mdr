@@ -8,12 +8,10 @@ Branch: `codex/dtg-signature-platform-merge`
 
 ## Phase Status
 
-- Phase 0: COMPLETE
-- Phase 1: COMPLETE
-- Phase 1.5: COMPLETE
-- Phase 2: COMPLETE after all recorded gates
-- Phase 3: COMPLETE after all recorded gates
-- Phase 4: CLOSED / NOT_STARTED
+- Phases 0, 1, 1.5, 2, and 3: COMPLETE.
+- Phase 4: CODE_COMPLETE / STAGING_READY.
+- Phase 4 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
+- Phase 5: NOT_STARTED.
 
 ## Authoritative Workspace
 
@@ -23,54 +21,51 @@ The only authoritative workspace is:
 C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr
 ```
 
-The obsolete Google Drive clone was removed and must not be used.
+The obsolete Google Drive clone must not be used.
 
-## Product State
+## Identity State
 
-The existing MDR/PDI application is under `apps/mdr-web`. Its existing routes,
-Supabase authentication, Supabase storage, Prisma transactions, Google Drive
-integration behavior, fixed workflow, numbering, PDI, revisions, client
-replies, signatures, transmittals, and PDF behavior remain unchanged.
+`mdr-web` now supports Google Workspace OIDC with state, nonce, PKCE, strict
+claims and domain validation, immutable Google subject linking, internal
+session rotation, CSRF, revocation, and recent-auth evidence. Explicit legacy
+and dual modes exist only for development/staging migration. Production
+accepts only `GOOGLE_WORKSPACE` and rejects password login and bootstrap.
 
-The modular workspace contains:
+Directory synchronization supports profiles, departments, groups, scoped role
+mapping, dry-run, incremental cursors, suspension, session revocation, and
+workflow reassignment flags. Live delegated synchronization remains disabled
+without owner-authorized credentials.
 
-- `apps/approve-web`: truthful shell and operational endpoints.
-- `apps/verify-web`: privacy-safe shell and operational endpoints.
-- `apps/platform-api`: health, readiness, and version endpoints only.
-- `apps/worker`: lifecycle, configuration, health state, and no jobs.
-- Eight meaningful `@dtg/*` packages with enforced dependency direction.
-
-Phase 3 intentionally changes three approved PDI behaviors: invalid workbook
-content is rejected, promotion requires `ClientNumberReceived`, and PDI status
-writes use an explicit forward-only transition policy with idempotent retries.
-The existing workflow engine and all other characterized MDR behavior remain
-the compatibility path.
+The external PDI portal uses isolated Magic Link invitations and sessions
+scoped to client, project, and optional PDI items. External identities do not
+inherit internal roles.
 
 ## Database State
 
-The authoritative Prisma schema and additive migration history remain at the
-repository root. Phase 3 adds normalized foundations for identity, controlled
-files, workflows, covers, package evidence, client responses, comments,
-durable jobs, integrations, retention, and audit integrity.
+The additive migration inventory is:
 
 ```text
 20260329143000_init_foundation
 20260729111500_phase3_database_foundation
+20260729133000_phase4_identity_and_access
 ```
 
-Legacy models remain readable. Database SQL enforces one active controlled
-Main File per revision, one active approval cycle per revision, published
-version immutability, and append-only audit rows.
+Phase 4 adds internal and external sessions, OIDC transactions, invitation
+scope, Directory runs, mapping versions, role assignments/overrides, link
+reviews, and rate-limit state. PostgreSQL enforces valid expiry, immutable
+Google subjects, and append-only mapping versions.
 
 ## Validation State
 
-The complete Phase 3 result is recorded in
-`docs/reports/PHASE_3_DATABASE_FOUNDATION_REPORT.md`. The report contains exact
-test, build, migration, architecture, documentation, and Graphify evidence.
+Unit/security tests, disposable PostgreSQL integration, empty and upgrade
+migrations, lint, typecheck, builds, architecture validation, documentation,
+and Graphify are required in the Phase 4 report. No live Google endpoint was
+called during ordinary tests.
 
 ## Known Limits
 
-The new domain tables are foundations only: no Google identity, Drive,
-workflow, signing, sealing, verification, background worker, or deployment
-runtime is activated. PAdES remains inactive. `MDR-DEFECT-004` remains open for
-the workflow-engine phase. Phase 4 must not begin without owner review.
+Phase 4 is not production-verified until approved OAuth, redirect, Workspace,
+and delegated Directory credentials are tested in staging. Supabase
+compatibility remains intentionally present for rollback. Controlled Drive,
+the replacement workflow engine, final signing, sealing, and production
+deployment remain later-phase work.

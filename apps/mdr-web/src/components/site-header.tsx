@@ -18,6 +18,7 @@ export function SiteHeader() {
     "/audit": "Audit Log",
     "/settings": "Settings",
     "/admin/users": "Users & Roles",
+    "/admin/identity": "Identity Control",
     "/search": "Search",
     "/tasks": "Task Dashboard",
     "/templates": "Templates",
@@ -31,7 +32,7 @@ export function SiteHeader() {
   const title = titleMap[pathname] ?? "DTGSA Document Control"
 
   return (
-    <header className="sticky top-0 z-20 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 backdrop-blur-xl transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="border-border/60 bg-background/80 sticky top-0 z-20 flex h-(--header-height) shrink-0 items-center gap-2 border-b backdrop-blur-xl transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center justify-between gap-4 px-4 lg:px-6">
         <div className="flex items-center gap-1 lg:gap-2">
           <SidebarTrigger className="-ml-1" />
@@ -41,7 +42,7 @@ export function SiteHeader() {
           />
           <div className="space-y-0.5">
             <h1 className="text-base font-semibold tracking-tight">{title}</h1>
-            <p className="hidden text-xs text-muted-foreground md:block">
+            <p className="text-muted-foreground hidden text-xs md:block">
               Enterprise workflow, numbering, revisions, transmittals, and audit
               control.
             </p>

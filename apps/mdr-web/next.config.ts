@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
     "@dtg/authorization",
     "@dtg/database",
     "@dtg/document-control-domain",
+    "@dtg/identity-domain",
     "@dtg/pdf-engine",
   ],
   images: {

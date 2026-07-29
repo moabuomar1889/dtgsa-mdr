@@ -88,6 +88,11 @@ const data = {
       icon: <UsersIcon />,
     },
     {
+      title: "Identity Control",
+      url: "/admin/identity",
+      icon: <UsersIcon />,
+    },
+    {
       title: "Search",
       url: "/search",
       icon: <SearchIcon />,

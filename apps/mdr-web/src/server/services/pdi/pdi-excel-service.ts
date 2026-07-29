@@ -17,8 +17,15 @@ import {
   updatePdiClientDocumentNumber,
 } from "@/server/services/pdi/pdi-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import {
+  assertExternalPortalScope,
+  type requireExternalPortalSession,
+} from "@/server/services/identity/external-portal-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
+type ExternalPortalSession = Awaited<
+  ReturnType<typeof requireExternalPortalSession>
+>
 
 const importWorkbookSchema = z.object({
   projectId: z.string().trim().min(1),
@@ -381,4 +388,143 @@ export async function updatePortalPdiClientDocumentNumber(
   }
 
   return updatePdiClientDocumentNumber(parsed)
+}
+
+function externalPortalPdiWhere(session: ExternalPortalSession) {
+  const scopedPdiItemIds = session.invitation.pdiItems.map(
+    (item) => item.pdiItemId
+  )
+  return {
+    deletedAt: null,
+    project: {
+      clientId: session.clientId,
+      ...(session.projectId ? { id: session.projectId } : {}),
+    },
+    ...(scopedPdiItemIds.length
+      ? {
+          id: {
+            in: scopedPdiItemIds,
+          },
+        }
+      : {}),
+  }
+}
+
+export async function getExternalPortalPdiOverview(
+  session: ExternalPortalSession
+) {
+  const items = await prisma.pdiItem.findMany({
+    where: {
+      ...externalPortalPdiWhere(session),
+      status: {
+        in: [
+          PdiStatus.SentToClient,
+          PdiStatus.ClientNumberPending,
+          PdiStatus.ClientNumberReceived,
+        ],
+      },
+    },
+    orderBy: [{ createdAt: "desc" }],
+    include: {
+      project: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          client: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
+          },
+        },
+      },
+      discipline: { select: { code: true, name: true } },
+      documentTypeCategory: { select: { code: true, name: true } },
+      releasePurpose: { select: { code: true, name: true } },
+    },
+  })
+  return {
+    items,
+    projects: Array.from(
+      new Map(items.map((item) => [item.project.id, item.project])).values()
+    ),
+  }
+}
+
+export async function updateExternalPortalPdiClientDocumentNumber(
+  session: ExternalPortalSession,
+  input: {
+    pdiItemId: unknown
+    clientDocumentNumber: unknown
+  }
+) {
+  const parsed = updatePortalClientNumberSchema.parse(input)
+  const item = await prisma.pdiItem.findUnique({
+    where: { id: parsed.pdiItemId },
+    select: {
+      id: true,
+      projectId: true,
+      deletedAt: true,
+      project: {
+        select: { clientId: true },
+      },
+    },
+  })
+  if (!item || item.deletedAt) {
+    throw new Error("The selected PDI item could not be found.")
+  }
+  assertExternalPortalScope(session, {
+    clientId: item.project.clientId,
+    projectId: item.projectId,
+    pdiItemId: item.id,
+  })
+  return updatePdiClientDocumentNumber(parsed)
+}
+
+export async function exportExternalPortalPdiWorkbook(
+  session: ExternalPortalSession,
+  projectId: string
+) {
+  if (session.projectId && session.projectId !== projectId) {
+    throw new Error("Cross-project portal access is denied.")
+  }
+  const items = await prisma.pdiItem.findMany({
+    where: {
+      ...externalPortalPdiWhere(session),
+      projectId,
+    },
+    orderBy: [{ createdAt: "asc" }],
+    include: {
+      project: {
+        select: {
+          code: true,
+          name: true,
+          client: { select: { code: true, name: true } },
+        },
+      },
+      discipline: { select: { code: true, name: true } },
+      documentTypeCategory: { select: { code: true, name: true } },
+      releasePurpose: { select: { code: true, name: true } },
+    },
+  })
+  return writePdiWorkbook(
+    items.map((item) => ({
+      ProjectCode: item.project.code,
+      ProjectName: item.project.name,
+      ClientCode: item.project.client.code,
+      DtgsaDocumentNumber: item.dtgsaDocumentNumber,
+      ClientDocumentNumber: item.clientDocumentNumber ?? "",
+      DisciplineCode: item.discipline.code,
+      DisciplineName: item.discipline.name,
+      DocumentTypeCode: item.documentTypeCategory?.code ?? "",
+      ReleasePurposeCode: item.releasePurpose?.code ?? "",
+      Title: item.title,
+      Revision: item.revision,
+      Status: item.status,
+      Tags: item.tags.join(", "),
+      Remarks: item.remarks ?? "",
+    }))
+  )
 }

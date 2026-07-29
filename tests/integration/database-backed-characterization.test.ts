@@ -46,6 +46,19 @@ import {
   assertSafeTestDatabaseUrl,
   redactTestDatabaseUrl,
 } from "../helpers/database-safety.mjs"
+import {
+  FakeWorkspaceDirectoryAdapter,
+  hashOpaqueToken,
+} from "../../packages/identity-domain/src/index"
+import {
+  FakePortalInvitationDeliveryAdapter,
+  assertExternalPortalScope,
+  createExternalPortalInvitation,
+  redeemExternalPortalInvitation,
+  revokeExternalInvitation,
+} from "@/server/services/identity/external-portal-service"
+import { synchronizeWorkspaceDirectory } from "@/server/services/identity/directory-sync-service"
+import { upsertGoogleGroupMapping } from "@/server/services/identity/role-mapping-service"
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL
 
@@ -1037,4 +1050,276 @@ test("Phase 3 database constraints protect controlled files, cycles, versions, a
   assert.deepEqual(persistedSnapshot?.content, {
     codes: [{ id: responseCode.id, externalCode: "A" }],
   })
+})
+
+test("Phase 4 identity persistence enforces immutable subjects, isolated invitations, versioned roles, and suspension", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const googleIdentity = await prisma.userIdentity.create({
+    data: {
+      userId: baseline.actor.id,
+      provider: "google_workspace",
+      subject: "immutable-subject-1",
+      emailAtLink: baseline.actor.email,
+    },
+  })
+  const workspaceIdentity = await prisma.googleWorkspaceIdentity.create({
+    data: {
+      userIdentityId: googleIdentity.id,
+      googleSubject: "immutable-subject-1",
+      hostedDomain: "dtg.example",
+    },
+  })
+  await assert.rejects(
+    prisma.googleWorkspaceIdentity.update({
+      where: { id: workspaceIdentity.id },
+      data: { googleSubject: "mutated-subject" },
+    }),
+    /Google subject mappings are immutable/
+  )
+
+  const sessionTokenHash = hashOpaqueToken("phase4-internal-session")
+  const session = await prisma.internalAuthSession.create({
+    data: {
+      userId: baseline.actor.id,
+      tokenHash: sessionTokenHash,
+      csrfTokenHash: hashOpaqueToken("phase4-internal-csrf"),
+      authMode: "GOOGLE_WORKSPACE",
+      authenticatedAt: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+    },
+  })
+  await assert.rejects(
+    prisma.internalAuthSession.create({
+      data: {
+        userId: baseline.actor.id,
+        tokenHash: hashOpaqueToken("invalid-expiry-session"),
+        csrfTokenHash: hashOpaqueToken("invalid-expiry-csrf"),
+        authMode: "GOOGLE_WORKSPACE",
+        authenticatedAt: new Date(),
+        expiresAt: new Date(0),
+      },
+    }),
+    /InternalAuthSession_valid_expiry/
+  )
+
+  const mapping = await upsertGoogleGroupMapping(baseline.actor.id, {
+    groupId: "workspace-reviewers",
+    roleCode: baseline.actor.userRoles[0]!.role.code,
+    projectId: baseline.project.id,
+    isActive: true,
+  })
+  await upsertGoogleGroupMapping(baseline.actor.id, {
+    groupId: "workspace-reviewers",
+    roleCode: baseline.actor.userRoles[0]!.role.code,
+    projectId: baseline.project.id,
+    isActive: false,
+  })
+  const versions = await prisma.googleGroupMappingVersion.findMany({
+    where: { mappingId: mapping.mapping.id },
+    orderBy: { version: "asc" },
+  })
+  assert.deepEqual(
+    versions.map((version) => version.version),
+    [1, 2]
+  )
+  await assert.rejects(
+    prisma.googleGroupMappingVersion.update({
+      where: { id: versions[0]!.id },
+      data: { snapshot: { changed: true } },
+    }),
+    /append-only/
+  )
+
+  const externalContact = await prisma.user.create({
+    data: {
+      email: "client.contact@example.invalid",
+      fullName: "Client Contact",
+    },
+  })
+  const delivery = new FakePortalInvitationDeliveryAdapter()
+  const invitation = await createExternalPortalInvitation(
+    baseline.actor.id,
+    {
+      email: externalContact.email,
+      fullName: externalContact.fullName,
+      clientId: baseline.client.id,
+      projectId: baseline.project.id,
+      usePolicy: "OneTime",
+      expiresInMinutes: 10,
+    },
+    delivery
+  )
+  assert.equal(delivery.deliveries.length, 1)
+  const rawMagicToken = new URL(
+    delivery.deliveries[0]!.magicLink
+  ).searchParams.get("token")
+  assert.ok(rawMagicToken)
+  assert.equal(invitation.tokenHash, hashOpaqueToken(rawMagicToken!))
+  assert.equal(
+    await prisma.externalPortalInvitation.count({
+      where: { tokenHash: rawMagicToken! },
+    }),
+    0
+  )
+
+  const redeemed = await redeemExternalPortalInvitation({
+    rawToken: rawMagicToken!,
+    rateLimitKey: "phase4-redeem",
+  })
+  const portalSession = await prisma.externalPortalSession.findUniqueOrThrow({
+    where: { id: redeemed.session.id },
+    include: {
+      invitation: { include: { pdiItems: true } },
+      identity: {
+        include: {
+          identity: { include: { user: true } },
+        },
+      },
+    },
+  })
+  assert.doesNotThrow(() =>
+    assertExternalPortalScope(portalSession, {
+      clientId: baseline.client.id,
+      projectId: baseline.project.id,
+    })
+  )
+  assert.throws(
+    () =>
+      assertExternalPortalScope(portalSession, {
+        clientId: "another-client",
+        projectId: baseline.project.id,
+      }),
+    /Cross-client portal access is denied/
+  )
+  assert.throws(
+    () =>
+      assertExternalPortalScope(portalSession, {
+        clientId: baseline.client.id,
+        projectId: baseline.otherProject.id,
+      }),
+    /Cross-project portal access is denied/
+  )
+  await assert.rejects(
+    redeemExternalPortalInvitation({
+      rawToken: rawMagicToken!,
+      rateLimitKey: "phase4-replay",
+    }),
+    /already been used/
+  )
+  await revokeExternalInvitation(baseline.actor.id, invitation.id)
+  assert.equal(
+    (
+      await prisma.externalPortalSession.findUniqueOrThrow({
+        where: { id: portalSession.id },
+      })
+    ).revokedAt !== null,
+    true
+  )
+
+  const activeMapping = await upsertGoogleGroupMapping(baseline.actor.id, {
+    groupId: "workspace-approvers",
+    roleCode: baseline.actor.userRoles[0]!.role.code,
+    isActive: true,
+  })
+  const directory = new FakeWorkspaceDirectoryAdapter([
+    {
+      users: [
+        {
+          subject: "directory-subject-1",
+          primaryEmail: "directory.user@dtg.example",
+          fullName: "Directory User",
+          employeeId: "EMP-004",
+          department: "Engineering",
+          jobTitle: "Engineer",
+          suspended: false,
+          groups: [activeMapping.mapping.groupId],
+        },
+      ],
+    },
+  ])
+  const syncRun = await synchronizeWorkspaceDirectory(directory)
+  assert.equal(syncRun.status, "Completed")
+  assert.equal(syncRun.usersSeen, 1)
+  assert.equal(syncRun.groupsSeen, 1)
+  const directoryUser = await prisma.user.findUniqueOrThrow({
+    where: { email: "directory.user@dtg.example" },
+  })
+  assert.equal(directoryUser.isActive, true)
+  assert.equal(
+    await prisma.directoryRoleAssignment.count({
+      where: { userId: directoryUser.id, inactiveAt: null },
+    }),
+    1
+  )
+
+  const directorySession = await prisma.internalAuthSession.create({
+    data: {
+      userId: directoryUser.id,
+      tokenHash: hashOpaqueToken("directory-session"),
+      csrfTokenHash: hashOpaqueToken("directory-csrf"),
+      authMode: "GOOGLE_WORKSPACE",
+      authenticatedAt: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+    },
+  })
+  const assignment = await prisma.workflowAssignment.create({
+    data: {
+      stepInstanceId: "phase4-step",
+      assigneeType: "User",
+      assigneeId: directoryUser.id,
+      snapshot: { userId: directoryUser.id },
+    },
+  })
+  await synchronizeWorkspaceDirectory(
+    new FakeWorkspaceDirectoryAdapter([
+      {
+        users: [
+          {
+            subject: "directory-subject-1",
+            primaryEmail: "directory.user@dtg.example",
+            fullName: "Directory User",
+            suspended: true,
+            groups: [],
+          },
+        ],
+      },
+    ])
+  )
+  assert.equal(
+    (
+      await prisma.user.findUniqueOrThrow({
+        where: { id: directoryUser.id },
+      })
+    ).isActive,
+    false
+  )
+  assert.ok(
+    (
+      await prisma.internalAuthSession.findUniqueOrThrow({
+        where: { id: directorySession.id },
+      })
+    ).revokedAt
+  )
+  assert.ok(
+    (
+      await prisma.workflowAssignment.findUniqueOrThrow({
+        where: { id: assignment.id },
+      })
+    ).reassignmentRequiredAt
+  )
+  assert.equal(
+    await prisma.auditLog.count({
+      where: {
+        action: {
+          in: [
+            "identity.external.invitation.created",
+            "identity.external.login",
+            "identity.directory.user_suspended",
+          ],
+        },
+      },
+    }),
+    3
+  )
+  assert.equal(session.revokedAt, null)
 })

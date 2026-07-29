@@ -219,6 +219,24 @@ enum CommentState {
   Reopened
 }
 
+enum AuthMode {
+  LEGACY_SUPABASE
+  DUAL_TRANSITION
+  GOOGLE_WORKSPACE
+}
+
+enum PortalTokenUsePolicy {
+  OneTime
+  Reusable
+}
+
+enum DirectorySyncStatus {
+  Running
+  Completed
+  Failed
+  DryRun
+}
+
 model SystemSetting {
   id          String   @id @default(cuid())
   group       String
@@ -253,21 +271,27 @@ model User {
   identities            UserIdentity[]
   employeeProfile       EmployeeProfile?
   signatureAppearances  EmployeeSignatureAppearanceVersion[]
+  internalSessions      InternalAuthSession[]
+  recentAuthEvidence    RecentAuthenticationEvidence[]
+  identityRoleOverrides IdentityRoleOverride[]
+  portalInvitations     ExternalPortalInvitation[]           @relation("PortalInvitationCreator")
+  directoryRoleGrants   DirectoryRoleAssignment[]
 
   @@index([isActive])
 }
 
 model Role {
-  id              String            @id @default(cuid())
-  code            String            @unique
+  id              String                    @id @default(cuid())
+  code            String                    @unique
   name            String
   description     String?
-  isSystem        Boolean           @default(false)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  isSystem        Boolean                   @default(false)
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
   userRoles       UserRole[]
   projectRoles    UserProjectRole[]
   rolePermissions RolePermission[]
+  directoryGrants DirectoryRoleAssignment[]
 }
 
 model Permission {
@@ -1119,21 +1143,26 @@ model GoogleWorkspaceIdentity {
 }
 
 model ExternalPortalIdentity {
-  id                  String       @id @default(cuid())
-  userIdentityId      String       @unique
-  tokenHash           String?      @unique
+  id                  String                     @id @default(cuid())
+  userIdentityId      String                     @unique
+  tokenHash           String?                    @unique
   tokenExpiresAt      DateTime?
   lastAuthenticatedAt DateTime?
-  identity            UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Restrict)
+  identity            UserIdentity               @relation(fields: [userIdentityId], references: [id], onDelete: Restrict)
+  invitations         ExternalPortalInvitation[]
+  sessions            ExternalPortalSession[]
 }
 
 model GoogleGroupMapping {
-  id           String   @id @default(cuid())
-  groupId      String   @unique
+  id           String                      @id @default(cuid())
+  groupId      String                      @unique
   roleCode     String
+  projectId    String?
   departmentId String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  isActive     Boolean                     @default(true)
+  createdAt    DateTime                    @default(now())
+  versions     GoogleGroupMappingVersion[]
+  assignments  DirectoryRoleAssignment[]
 }
 
 model EmployeeProfile {
@@ -1206,15 +1235,204 @@ model EmergencyOverrideApproval {
 }
 
 model RecentAuthenticationEvidence {
-  id              String   @id @default(cuid())
-  userId          String
-  provider        String
-  method          String
-  authenticatedAt DateTime
-  expiresAt       DateTime
-  sessionHash     String?
+  id                String               @id @default(cuid())
+  userId            String
+  internalSessionId String?
+  provider          String
+  method            String
+  authenticatedAt   DateTime
+  expiresAt         DateTime
+  sessionHash       String?
+  consumedAt        DateTime?
+  revokedAt         DateTime?
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Restrict)
+  internalSession   InternalAuthSession? @relation(fields: [internalSessionId], references: [id], onDelete: Restrict)
 
   @@index([userId, expiresAt])
+  @@index([internalSessionId, expiresAt])
+}
+
+model InternalAuthSession {
+  id              String                         @id @default(cuid())
+  userId          String
+  tokenHash       String                         @unique
+  authMode        AuthMode
+  authenticatedAt DateTime
+  createdAt       DateTime                       @default(now())
+  expiresAt       DateTime
+  lastSeenAt      DateTime                       @default(now())
+  revokedAt       DateTime?
+  rotatedFromId   String?
+  csrfTokenHash   String
+  ipHash          String?
+  userAgentHash   String?
+  user            User                           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  rotatedFrom     InternalAuthSession?           @relation("SessionRotation", fields: [rotatedFromId], references: [id], onDelete: Restrict)
+  rotatedTo       InternalAuthSession[]          @relation("SessionRotation")
+  recentAuth      RecentAuthenticationEvidence[]
+
+  @@index([userId, expiresAt])
+  @@index([revokedAt, expiresAt])
+}
+
+model OidcAuthorizationTransaction {
+  id                     String    @id @default(cuid())
+  stateHash              String    @unique
+  nonceHash              String
+  codeVerifierCiphertext String
+  codeVerifierIv         String
+  codeVerifierAuthTag    String
+  redirectUri            String
+  returnTo               String?
+  createdAt              DateTime  @default(now())
+  expiresAt              DateTime
+  consumedAt             DateTime?
+
+  @@index([expiresAt, consumedAt])
+}
+
+model ExternalPortalInvitation {
+  id                 String                            @id @default(cuid())
+  externalIdentityId String
+  clientId           String
+  projectId          String?
+  tokenHash          String                            @unique
+  usePolicy          PortalTokenUsePolicy              @default(OneTime)
+  maxAttempts        Int                               @default(5)
+  failedAttempts     Int                               @default(0)
+  useCount           Int                               @default(0)
+  createdAt          DateTime                          @default(now())
+  expiresAt          DateTime
+  lastUsedAt         DateTime?
+  revokedAt          DateTime?
+  replacedById       String?
+  createdByUserId    String
+  identity           ExternalPortalIdentity            @relation(fields: [externalIdentityId], references: [id], onDelete: Restrict)
+  createdBy          User                              @relation("PortalInvitationCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  pdiItems           ExternalPortalInvitationPdiItem[]
+  sessions           ExternalPortalSession[]
+
+  @@index([clientId, projectId, expiresAt])
+  @@index([externalIdentityId, revokedAt])
+}
+
+model ExternalPortalInvitationPdiItem {
+  invitationId String
+  pdiItemId    String
+  invitation   ExternalPortalInvitation @relation(fields: [invitationId], references: [id], onDelete: Restrict)
+
+  @@id([invitationId, pdiItemId])
+  @@index([pdiItemId])
+}
+
+model ExternalPortalSession {
+  id                 String                   @id @default(cuid())
+  externalIdentityId String
+  invitationId       String
+  tokenHash          String                   @unique
+  csrfTokenHash      String
+  clientId           String
+  projectId          String?
+  createdAt          DateTime                 @default(now())
+  expiresAt          DateTime
+  lastSeenAt         DateTime                 @default(now())
+  revokedAt          DateTime?
+  ipHash             String?
+  userAgentHash      String?
+  identity           ExternalPortalIdentity   @relation(fields: [externalIdentityId], references: [id], onDelete: Restrict)
+  invitation         ExternalPortalInvitation @relation(fields: [invitationId], references: [id], onDelete: Restrict)
+
+  @@index([externalIdentityId, expiresAt])
+  @@index([clientId, projectId, expiresAt])
+}
+
+model DirectorySyncRun {
+  id            String              @id @default(cuid())
+  status        DirectorySyncStatus @default(Running)
+  isDryRun      Boolean             @default(false)
+  cursor        String?
+  usersSeen     Int                 @default(0)
+  usersChanged  Int                 @default(0)
+  groupsSeen    Int                 @default(0)
+  groupsChanged Int                 @default(0)
+  errorSummary  String?
+  startedAt     DateTime            @default(now())
+  completedAt   DateTime?
+
+  @@index([status, startedAt])
+}
+
+model GoogleGroupMappingVersion {
+  id              String             @id @default(cuid())
+  mappingId       String
+  version         Int
+  snapshot        Json
+  changedByUserId String
+  createdAt       DateTime           @default(now())
+  mapping         GoogleGroupMapping @relation(fields: [mappingId], references: [id], onDelete: Restrict)
+
+  @@unique([mappingId, version])
+}
+
+model IdentityRoleOverride {
+  id              String    @id @default(cuid())
+  userId          String
+  roleCode        String
+  projectId       String?
+  source          String    @default("Admin")
+  activeFrom      DateTime  @default(now())
+  inactiveAt      DateTime?
+  createdByUserId String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, roleCode, projectId, activeFrom])
+  @@index([userId, activeFrom, inactiveAt])
+}
+
+model DirectoryRoleAssignment {
+  id           String             @id @default(cuid())
+  userId       String
+  mappingId    String
+  roleId       String
+  projectId    String?
+  createdGrant Boolean            @default(false)
+  activeAt     DateTime           @default(now())
+  inactiveAt   DateTime?
+  user         User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  mapping      GoogleGroupMapping @relation(fields: [mappingId], references: [id], onDelete: Restrict)
+  role         Role               @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, mappingId])
+  @@index([userId, inactiveAt])
+}
+
+model IdentityLinkReview {
+  id               String    @id @default(cuid())
+  provider         String
+  subjectHash      String
+  email            String
+  status           String    @default("Pending")
+  candidateUserIds Json
+  requestedAt      DateTime  @default(now())
+  resolvedAt       DateTime?
+  resolvedByUserId String?
+  resolution       Json?
+
+  @@unique([provider, subjectHash, status])
+  @@index([status, requestedAt])
+}
+
+model AuthenticationRateLimit {
+  id          String    @id @default(cuid())
+  scope       String
+  keyHash     String
+  attempts    Int       @default(0)
+  windowStart DateTime
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([scope, keyHash])
+  @@index([lockedUntil])
 }
 
 model FileObject {
@@ -1452,12 +1670,14 @@ model WorkflowStepInstance {
 }
 
 model WorkflowAssignment {
-  id             String   @id @default(cuid())
-  stepInstanceId String
-  assigneeType   String
-  assigneeId     String
-  snapshot       Json
-  assignedAt     DateTime @default(now())
+  id                     String    @id @default(cuid())
+  stepInstanceId         String
+  assigneeType           String
+  assigneeId             String
+  snapshot               Json
+  assignedAt             DateTime  @default(now())
+  reassignmentRequiredAt DateTime?
+  reassignmentReason     String?
 
   @@unique([stepInstanceId, assigneeType, assigneeId])
 }

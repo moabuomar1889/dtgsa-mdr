@@ -113,6 +113,13 @@ Exit criteria:
 
 ## Phase 4 - Identity
 
+Status: CODE_COMPLETE / STAGING_READY on 2026-07-29.
+
+Google Workspace OIDC, transition modes, Directory synchronization, versioned
+role mapping, recent-auth evidence, suspension handling, and the isolated
+external Magic Link portal are implemented. Live verification remains
+`BLOCKED_EXTERNAL_CREDENTIALS`.
+
 Status: CLOSED / NOT_STARTED
 
 Required work:

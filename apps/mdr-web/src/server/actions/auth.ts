@@ -1,11 +1,16 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import {
   setupFirstAdmin,
   signInWithPassword,
   signOutCurrentUser,
 } from "@/server/services/auth/auth-service"
+import {
+  INTERNAL_CSRF_COOKIE,
+  INTERNAL_SESSION_COOKIE,
+} from "@/server/services/identity/session-service"
 
 function readString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -49,5 +54,8 @@ export async function setupFirstAdminAction(formData: FormData) {
 
 export async function signOutAction() {
   await signOutCurrentUser()
+  const cookieStore = await cookies()
+  cookieStore.delete(INTERNAL_SESSION_COOKIE)
+  cookieStore.delete(INTERNAL_CSRF_COOKIE)
   redirect("/sign-in")
 }

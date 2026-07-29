@@ -1,0 +1,21 @@
+# Roadmap
+
+Date: 2026-07-29
+
+## Completed
+
+- Phases 0-3: baseline, characterization, modular foundation, and database
+  foundation.
+- Phase 4: identity and access implementation is code-complete and
+  staging-ready; live Google verification is externally blocked.
+
+## Next
+
+- Phase 5: controlled Google Drive using the Phase 3 file authority and Phase 4
+  employee identity.
+- Phases 6-9: document generation, workflow, approvals, and signing evidence.
+- Phases 10-12: verification, client response, and durable integration work.
+- Phases 13-15: operational hardening, release evidence, and final acceptance.
+
+Production deployment remains outside the modernization phases unless
+explicitly authorized.

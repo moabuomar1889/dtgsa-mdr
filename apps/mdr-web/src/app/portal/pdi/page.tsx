@@ -1,6 +1,8 @@
 import { updatePortalPdiClientDocumentNumberAction } from "@/server/actions/portal"
-import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { getPortalPdiOverview } from "@/server/services/pdi/pdi-excel-service"
+import { requireExternalPortalSession } from "@/server/services/identity/external-portal-service"
+import { EXTERNAL_CSRF_COOKIE } from "@/server/services/identity/external-portal-service"
+import { cookies } from "next/headers"
+import { getExternalPortalPdiOverview } from "@/server/services/pdi/pdi-excel-service"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -23,33 +25,36 @@ import {
 export const dynamic = "force-dynamic"
 
 export default async function ClientPortalPdiPage() {
-  const user = await requireCurrentAppUser()
-  const overview = await getPortalPdiOverview(user)
+  const session = await requireExternalPortalSession()
+  const csrfToken = (await cookies()).get(EXTERNAL_CSRF_COOKIE)?.value ?? ""
+  const overview = await getExternalPortalPdiOverview(session)
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 md:px-6">
       <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+        <CardHeader className="border-border/60 from-primary/12 gap-3 border-b bg-gradient-to-br via-transparent to-transparent">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-primary/15 text-primary hover:bg-primary/15 rounded-full px-3 py-1">
               Portal PDI
             </Badge>
             <Badge variant="outline">{overview.items.length} line items</Badge>
           </div>
           <CardTitle className="text-2xl font-semibold tracking-tight">
-            Client document numbers can now be completed directly in the secure portal.
+            Client document numbers can now be completed directly in the secure
+            portal.
           </CardTitle>
           <CardDescription className="max-w-3xl leading-6">
             This portal is focused on client numbering collaboration. Export the
-            project workbook, complete client document numbers, and save updates back into the platform.
+            project workbook, complete client document numbers, and save updates
+            back into the platform.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3 pt-4">
           {overview.projects.map((project) => (
             <a
               key={project.id}
-              href={`/api/pdi/export?projectId=${project.id}`}
-              className="rounded-lg border border-border/60 px-4 py-2 text-sm font-medium hover:bg-accent"
+              href={`/api/portal/pdi/export?projectId=${project.id}`}
+              className="border-border/60 hover:bg-accent rounded-lg border px-4 py-2 text-sm font-medium"
             >
               Export {project.code} workbook
             </a>
@@ -61,7 +66,8 @@ export default async function ClientPortalPdiPage() {
         <CardHeader>
           <CardTitle className="text-lg">Client numbering queue</CardTitle>
           <CardDescription>
-            Update pending client document numbers for the projects assigned to your client portal access.
+            Update pending client document numbers for the projects assigned to
+            your client portal access.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -84,8 +90,9 @@ export default async function ClientPortalPdiPage() {
                         <span className="font-medium">
                           {item.project.code} - {item.project.name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          {item.project.client.code} - {item.project.client.name}
+                        <span className="text-muted-foreground text-xs">
+                          {item.project.client.code} -{" "}
+                          {item.project.client.name}
                         </span>
                       </div>
                     </TableCell>
@@ -95,9 +102,11 @@ export default async function ClientPortalPdiPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">{item.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {item.discipline.code} / {item.documentTypeCategory?.code ?? "N/A"} /{" "}
-                          {item.releasePurpose?.code ?? "N/A"} / Rev {item.revision}
+                        <span className="text-muted-foreground text-xs">
+                          {item.discipline.code} /{" "}
+                          {item.documentTypeCategory?.code ?? "N/A"} /{" "}
+                          {item.releasePurpose?.code ?? "N/A"} / Rev{" "}
+                          {item.revision}
                         </span>
                       </div>
                     </TableCell>
@@ -107,6 +116,11 @@ export default async function ClientPortalPdiPage() {
                         className="flex min-w-56 flex-col gap-2"
                       >
                         <input type="hidden" name="pdiItemId" value={item.id} />
+                        <input
+                          type="hidden"
+                          name="csrfToken"
+                          value={csrfToken}
+                        />
                         <Input
                           name="clientDocumentNumber"
                           defaultValue={item.clientDocumentNumber ?? ""}
@@ -127,8 +141,9 @@ export default async function ClientPortalPdiPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
-              No PDI items are currently available for client numbering in this portal account.
+            <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-6 text-sm leading-6">
+              No PDI items are currently available for client numbering in this
+              portal account.
             </div>
           )}
         </CardContent>

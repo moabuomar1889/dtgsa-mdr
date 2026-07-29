@@ -102,7 +102,10 @@ test("Phase 3 schema keeps every owning relation explicit and restrictive", asyn
     /^\s+\w+\s+\w+\??\s+@relation\(fields: \[[^\]]+\], references: \[id\], onDelete: Restrict\)$/gm
   )
 
-  assert.equal(owningRelations?.length, 24)
+  assert.ok(
+    (owningRelations?.length ?? 0) >= 24,
+    `Expected at least 24 restrictive owning relations, found ${owningRelations?.length ?? 0}.`
+  )
 })
 
 test("Phase 3 migration contains database-enforced invariants", async () => {

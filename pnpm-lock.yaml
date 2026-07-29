@@ -114,6 +114,9 @@ importers:
       '@dtg/document-control-domain':
         specifier: workspace:*
         version: link:../../packages/document-control-domain
+      '@dtg/identity-domain':
+        specifier: workspace:*
+        version: link:../../packages/identity-domain
       '@dtg/pdf-engine':
         specifier: workspace:*
         version: link:../../packages/pdf-engine
@@ -147,6 +150,9 @@ importers:
       googleapis:
         specifier: ^171.4.0
         version: 171.4.0(supports-color@7.2.0)
+      jose:
+        specifier: ^6.2.4
+        version: 6.2.4
       lucide-react:
         specifier: ^1.7.0
         version: 1.7.0(react@19.2.4)
@@ -294,6 +300,8 @@ importers:
       '@prisma/client':
         specifier: ^7.6.0
         version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+
+  packages/identity-domain: {}
 
   packages/observability: {}
 
@@ -3581,8 +3589,8 @@ packages:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
 
-  jose@6.2.2:
-    resolution: {integrity: sha512-d7kPDd34KO/YnzaDOlikGpOurfF0ByC2sEV4cANCtdqLlTfBlw2p14O/5d/zv40gJPbIQxfES3nSx1/oYNyuZQ==}
+  jose@6.2.4:
+    resolution: {integrity: sha512-N8acGzVsQy6M/fjFcxtysNc4Q379TcM5dM/qKkNtsHFji88yANnXTr7BLeP75iPnFwBfQzM/jg2BZ9+HZrHCZA==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -5617,7 +5625,7 @@ snapshots:
       express: 5.2.1(supports-color@7.2.0)
       express-rate-limit: 8.3.1(express@5.2.1(supports-color@7.2.0))
       hono: 4.12.9
-      jose: 6.2.2
+      jose: 6.2.4
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
@@ -8393,7 +8401,7 @@ snapshots:
 
   jiti@2.6.1: {}
 
-  jose@6.2.2: {}
+  jose@6.2.4: {}
 
   js-tokens@4.0.0: {}
 

@@ -144,6 +144,7 @@ async function runWithDatabase(mode) {
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "synthetic-test-key",
     APP_ENCRYPTION_KEY: "test-encryption-key-32-characters!",
     CRON_SECRET: "test-cron-secret-1234",
+    GOOGLE_WORKSPACE_ALLOWED_DOMAINS: "dtg.example",
     EMAIL_PROVIDER: "",
   }
 
@@ -180,6 +181,10 @@ async function runWithDatabase(mode) {
         "20260729111500_phase3_database_foundation"
       )
       await runSeed(testEnvironment, true)
+      await applyMigrationSql(
+        adminClient,
+        "20260729133000_phase4_identity_and_access"
+      )
       await adminClient.end()
       return
     }
@@ -212,6 +217,7 @@ async function runWithDatabase(mode) {
         : [
             "tests/unit/database-safety.test.ts",
             "tests/unit/phase-3-database-foundation.test.ts",
+            "tests/unit/phase-4-identity-and-access.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",

@@ -10,10 +10,13 @@ const emptyStringToUndefined = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : undefined
 }
 
-const optionalString = z.preprocess(emptyStringToUndefined, z.string().optional())
+const optionalString = z.preprocess(
+  emptyStringToUndefined,
+  z.string().optional()
+)
 const optionalEmail = z.preprocess(
   emptyStringToUndefined,
-  z.string().email().optional(),
+  z.string().email().optional()
 )
 const optionalPositiveInt = z.preprocess((value) => {
   const normalized = emptyStringToUndefined(value)
@@ -66,18 +69,30 @@ const serverEnvSchema = z.object({
   GOOGLE_CLIENT_ID: optionalString,
   GOOGLE_CLIENT_SECRET: optionalString,
   GOOGLE_REDIRECT_URI: optionalString,
+  AUTH_MODE: z
+    .enum(["LEGACY_SUPABASE", "DUAL_TRANSITION", "GOOGLE_WORKSPACE"])
+    .default("LEGACY_SUPABASE"),
+  AUTH_COOKIE_DOMAIN: optionalString,
+  GOOGLE_WORKSPACE_ALLOWED_DOMAINS: optionalString,
+  INTERNAL_SESSION_TTL_MINUTES: z.coerce.number().int().positive().default(480),
+  EXTERNAL_SESSION_TTL_MINUTES: z.coerce.number().int().positive().default(60),
+  OIDC_TRANSACTION_TTL_MINUTES: z.coerce.number().int().positive().default(10),
+  RECENT_AUTH_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
+  MAGIC_LINK_TTL_MINUTES: z.coerce.number().int().positive().default(30),
+  MAGIC_LINK_SECRET: optionalString,
+  GOOGLE_DIRECTORY_SYNC_ENABLED: z.enum(["true", "false"]).default("false"),
   GOOGLE_ADMIN_EMAIL: optionalEmail,
   TOKEN_ENCRYPTION_KEY: optionalString,
   EMAIL_PROVIDER: z.preprocess(
     emptyStringToUndefined,
-    z.enum(["resend", "smtp"]).optional(),
+    z.enum(["resend", "smtp"]).optional()
   ),
   RESEND_API_KEY: optionalString,
   SMTP_HOST: optionalString,
   SMTP_PORT: optionalPositiveInt,
   SMTP_SECURE: z.preprocess(
     emptyStringToUndefined,
-    z.enum(["true", "false"]).optional(),
+    z.enum(["true", "false"]).optional()
   ),
   SMTP_USER: optionalString,
   SMTP_PASS: optionalString,
@@ -95,7 +110,7 @@ const supabasePublishableKey =
 
 if (!supabasePublishableKey) {
   throw new Error(
-    "A Supabase publishable key is required. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY, or NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+    "A Supabase publishable key is required. Set NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY, or NEXT_PUBLIC_SUPABASE_ANON_KEY."
   )
 }
 
@@ -108,11 +123,17 @@ export const env = {
     typeof parsedServerEnv.SMTP_SECURE === "undefined"
       ? undefined
       : parsedServerEnv.SMTP_SECURE === "true",
+  GOOGLE_WORKSPACE_ALLOWED_DOMAINS:
+    parsedServerEnv.GOOGLE_WORKSPACE_ALLOWED_DOMAINS?.split(",")
+      .map((domain) => domain.trim().toLowerCase())
+      .filter(Boolean) ?? [],
+  GOOGLE_DIRECTORY_SYNC_ENABLED:
+    parsedServerEnv.GOOGLE_DIRECTORY_SYNC_ENABLED === "true",
 }
 
 export const hasSupabaseServiceRole = Boolean(env.SUPABASE_SERVICE_ROLE_KEY)
 export const hasGoogleDriveServiceAccount = Boolean(
-  env.GOOGLE_DRIVE_CLIENT_EMAIL && env.GOOGLE_DRIVE_PRIVATE_KEY,
+  env.GOOGLE_DRIVE_CLIENT_EMAIL && env.GOOGLE_DRIVE_PRIVATE_KEY
 )
 
 export type ServerEnv = typeof env
