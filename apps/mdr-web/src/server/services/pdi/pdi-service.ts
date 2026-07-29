@@ -11,6 +11,7 @@ import { z } from "zod"
 import { prisma } from "@/lib/prisma/client"
 import {
   assertPdiPromotionAvailable,
+  assertPdiTransition,
   resolvePdiSentStatus,
 } from "@/lib/pdi/policy"
 import { generateDocumentNumber } from "@/server/services/numbering/document-numbering-service"
@@ -320,15 +321,33 @@ export async function markPdiItemSentToClient(input: unknown) {
       throw new Error("The selected PDI item could not be found.")
     }
 
-    const nextStatus = resolvePdiSentStatus(item.clientDocumentNumber)
+    if (
+      item.status === PdiStatus.ClientNumberPending ||
+      item.status === PdiStatus.ClientNumberReceived
+    ) {
+      return item
+    }
 
-    const updated = await tx.pdiItem.update({
+    assertPdiTransition(item.status, PdiStatus.SentToClient)
+    const nextStatus = resolvePdiSentStatus(item.clientDocumentNumber)
+    assertPdiTransition(PdiStatus.SentToClient, nextStatus)
+
+    const result = await tx.pdiItem.updateMany({
       where: {
         id: item.id,
+        status: item.status,
       },
       data: {
         status: nextStatus,
       },
+    })
+
+    if (result.count !== 1) {
+      throw new Error("The PDI item changed before it could be sent.")
+    }
+
+    const updated = await tx.pdiItem.findUniqueOrThrow({
+      where: { id: item.id },
     })
 
     await tx.auditLog.create({
@@ -370,14 +389,34 @@ export async function updatePdiClientDocumentNumber(input: unknown) {
       throw new Error("The selected PDI item could not be found.")
     }
 
-    const updated = await tx.pdiItem.update({
+    if (
+      item.status === PdiStatus.ClientNumberReceived &&
+      item.clientDocumentNumber === parsed.clientDocumentNumber.trim()
+    ) {
+      return item
+    }
+
+    assertPdiTransition(item.status, PdiStatus.ClientNumberReceived)
+
+    const result = await tx.pdiItem.updateMany({
       where: {
         id: item.id,
+        status: item.status,
       },
       data: {
         clientDocumentNumber: parsed.clientDocumentNumber.trim(),
         status: PdiStatus.ClientNumberReceived,
       },
+    })
+
+    if (result.count !== 1) {
+      throw new Error(
+        "The PDI item changed before the client number was saved."
+      )
+    }
+
+    const updated = await tx.pdiItem.findUniqueOrThrow({
+      where: { id: item.id },
     })
 
     await tx.auditLog.create({
@@ -425,7 +464,7 @@ export async function promotePdiItemToMdr(input: unknown) {
       throw new Error("The selected PDI item could not be found.")
     }
 
-    assertPdiPromotionAvailable(item.mdrDocument)
+    assertPdiPromotionAvailable(item.mdrDocument, item.status)
 
     const document = await tx.mdrDocument.create({
       data: {
@@ -466,14 +505,20 @@ export async function promotePdiItemToMdr(input: unknown) {
       },
     })
 
-    await tx.pdiItem.update({
+    assertPdiTransition(item.status, PdiStatus.ConvertedToMdr)
+    const promotionUpdate = await tx.pdiItem.updateMany({
       where: {
         id: item.id,
+        status: PdiStatus.ClientNumberReceived,
       },
       data: {
         status: PdiStatus.ConvertedToMdr,
       },
     })
+
+    if (promotionUpdate.count !== 1) {
+      throw new Error("The PDI item changed before it could be promoted.")
+    }
 
     await tx.auditLog.create({
       data: {

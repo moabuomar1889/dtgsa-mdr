@@ -16,13 +16,17 @@ The same value is recorded in `STANDARD_VERSION`. The inspected standards
 commit exposes only a high-level README, so this report does not claim
 compliance with unavailable detailed policies.
 
-## Applied Phase 2 Controls
+## Applied Controls Through Phase 3
 
 - Preserve the working MDR product through characterization tests.
 - Use a dedicated implementation branch and one authoritative workspace.
 - Maintain one pnpm lockfile and explicit package ownership.
 - Enforce package direction, application isolation, public exports, and cycles.
 - Keep Prisma schema and migration history authoritative at the root.
+- Use additive migrations and preserve all legacy models.
+- Enforce critical controlled-file, approval-cycle, published-version, and
+  audit invariants in PostgreSQL.
+- Keep database role templates password-free and least-privileged.
 - Use loopback-only disposable PostgreSQL with redacted diagnostics and cleanup.
 - Keep secrets out of Git, examples, logs, and operational responses.
 - Do not claim live integrations or production deployment.
@@ -30,20 +34,22 @@ compliance with unavailable detailed policies.
 
 ## Validation
 
-Phase 2 provides non-interactive commands for lint, strict typecheck, unit,
+The repository provides non-interactive commands for lint, strict typecheck, unit,
 characterization, integration, full CI tests, architecture rules,
 documentation, all deployment-unit builds, Prisma validation, and migration
 validation.
 
-The full expected suite is 73 tests: the previous 65 plus eight Phase 2
-architecture/foundation tests. No test is intentionally skipped.
+The exact Phase 3 test counts and command results are recorded in
+`docs/reports/PHASE_3_DATABASE_FOUNDATION_REPORT.md`. No test is intentionally
+skipped.
 
 ## Security and External Systems
 
-Supabase remains the current MDR authentication and storage authority. Google
+Supabase remains the current MDR authentication and storage authority. Phase 3
+adds target database structures but does not activate them. Google
 Workspace identity, controlled Google Drive, signature evidence, package
-manifests, verification, production seals, Coolify, DNS, backup, and live
-deployment are not implemented or connected in Phase 2.
+manifest production generation, verification runtime, production seals,
+Coolify, DNS, backup, and live deployment are not implemented or connected.
 
 The API exposes only health, readiness, and version metadata. The worker has no
 jobs and makes no external calls. Approval and verification are truthful
@@ -58,7 +64,7 @@ foundation shells.
 
 ## Remaining Gaps
 
-Phases 3 through 15 own the target data model, identity, controlled storage,
+Phases 4 through 15 own identity, controlled storage,
 manifest and evidence, configurable workflow, cover design, approval product,
 worker jobs, responses and revisions, verification, integrations, operations,
 security acceptance, and final consolidation.

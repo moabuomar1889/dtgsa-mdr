@@ -30,7 +30,8 @@ const roleDefinitions: Record<
   },
   [ROLE_CODES.systemAdmin]: {
     name: "System Admin",
-    description: "Administrative control over users, settings, masters, and templates.",
+    description:
+      "Administrative control over users, settings, masters, and templates.",
     isSystem: true,
   },
   [ROLE_CODES.documentControlAdmin]: {
@@ -74,7 +75,8 @@ const permissionDescriptions: Record<
   [PERMISSIONS.platformManage]: {
     name: "Manage Platform",
     group: "platform",
-    description: "Manage global platform behavior and high-level administration.",
+    description:
+      "Manage global platform behavior and high-level administration.",
   },
   [PERMISSIONS.usersManage]: {
     name: "Manage Users",
@@ -94,12 +96,14 @@ const permissionDescriptions: Record<
   [PERMISSIONS.projectsManage]: {
     name: "Manage Projects",
     group: "projects",
-    description: "Create and maintain projects, mappings, and project settings.",
+    description:
+      "Create and maintain projects, mappings, and project settings.",
   },
   [PERMISSIONS.mastersManage]: {
     name: "Manage Masters",
     group: "masters",
-    description: "Maintain disciplines, document types, release purposes, and review codes.",
+    description:
+      "Maintain disciplines, document types, release purposes, and review codes.",
   },
   [PERMISSIONS.numberingManage]: {
     name: "Manage Numbering Rules",
@@ -109,7 +113,8 @@ const permissionDescriptions: Record<
   [PERMISSIONS.templatesManage]: {
     name: "Manage Templates",
     group: "templates",
-    description: "Manage cover sheets, transmittal templates, and generated outputs.",
+    description:
+      "Manage cover sheets, transmittal templates, and generated outputs.",
   },
   [PERMISSIONS.auditView]: {
     name: "View Audit Logs",
@@ -119,7 +124,8 @@ const permissionDescriptions: Record<
   [PERMISSIONS.pdiManage]: {
     name: "Manage PDI",
     group: "pdi",
-    description: "Maintain the project document index and related collaboration state.",
+    description:
+      "Maintain the project document index and related collaboration state.",
   },
   [PERMISSIONS.pdiCollaborate]: {
     name: "Collaborate on PDI",
@@ -129,7 +135,8 @@ const permissionDescriptions: Record<
   [PERMISSIONS.mdrManage]: {
     name: "Manage MDR",
     group: "mdr",
-    description: "Create and maintain operational document records and metadata.",
+    description:
+      "Create and maintain operational document records and metadata.",
   },
   [PERMISSIONS.workflowPrepare]: {
     name: "Prepare Workflow",
@@ -486,10 +493,77 @@ async function seedDefaultNumberingRule() {
   })
 }
 
+async function seedPhase3DevelopmentFixtures() {
+  await prisma.retentionRule.upsert({
+    where: {
+      recordClass_version: {
+        recordClass: "development-controlled-file",
+        version: 1,
+      },
+    },
+    update: {
+      retentionDays: 365,
+      disposition: "review",
+      isActive: true,
+    },
+    create: {
+      recordClass: "development-controlled-file",
+      version: 1,
+      retentionDays: 365,
+      disposition: "review",
+      isActive: true,
+    },
+  })
+
+  await prisma.configurationVersion.upsert({
+    where: {
+      scope_scopeId_version: {
+        scope: "development",
+        scopeId: "phase-3",
+        version: 1,
+      },
+    },
+    update: {
+      content: { fixture: "phase-3-foundation" },
+      contentHash: "development-phase-3-foundation-v1",
+    },
+    create: {
+      scope: "development",
+      scopeId: "phase-3",
+      version: 1,
+      content: { fixture: "phase-3-foundation" },
+      contentHash: "development-phase-3-foundation-v1",
+    },
+  })
+
+  await prisma.publicVerificationPolicy.upsert({
+    where: {
+      projectId_version: {
+        projectId: "development-phase-3",
+        version: 1,
+      },
+    },
+    update: {
+      fields: { documentNumber: true, revision: true },
+      isActive: true,
+    },
+    create: {
+      projectId: "development-phase-3",
+      version: 1,
+      fields: { documentNumber: true, revision: true },
+      isActive: true,
+    },
+  })
+}
+
 async function main() {
   await seedRolesAndPermissions()
   await seedMasters()
   await seedDefaultNumberingRule()
+
+  if (process.env.SEED_PHASE3_FOUNDATION === "true") {
+    await seedPhase3DevelopmentFixtures()
+  }
 
   console.log("Foundation seed completed.")
 }

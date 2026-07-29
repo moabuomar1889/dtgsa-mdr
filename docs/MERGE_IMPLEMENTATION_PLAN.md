@@ -95,7 +95,7 @@ Exit criteria:
 
 ## Phase 3 - Database Foundation
 
-Status: CLOSED / NOT_STARTED
+Status: COMPLETE
 
 Required work:
 
@@ -105,13 +105,15 @@ Required work:
 
 Exit criteria:
 
-- Prisma validates.
-- Empty-database migration succeeds.
-- No destructive external database reset is performed without owner approval.
+- PASS: Prisma validates and generates successfully.
+- PASS: Baseline plus Phase 3 migrations apply to disposable PostgreSQL.
+- PASS: Database invariants and role templates are tested.
+- PASS: PDI defects 001, 002, and 003 are corrected with explicit tests.
+- PASS: No external database was connected, reset, or modified.
 
 ## Phase 4 - Identity
 
-Status: NOT_STARTED
+Status: CLOSED / NOT_STARTED
 
 Required work:
 

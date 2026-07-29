@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Phase 3 - Database Foundation
+
+- Added additive identity, controlled-file, workflow, cover, evidence, client
+  response, comment, job, integration, retention, and audit foundation models.
+- Added database-enforced one-Main-File and one-active-cycle invariants.
+- Added published-version immutability and append-only audit triggers.
+- Added password-free least-privilege database role templates.
+- Corrected PDI defects 001, 002, and 003 with explicit policy and integration
+  tests while retaining defect 004 for the workflow-engine phase.
+- Preserved legacy models and current runtime compatibility paths.
+
 ### Phase 2 - Modular Monorepo Foundation
 
 - Moved the existing MDR application to `apps/mdr-web` with all routes intact.

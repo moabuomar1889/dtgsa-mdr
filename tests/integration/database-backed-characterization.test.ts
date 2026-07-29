@@ -3,10 +3,12 @@ import { after, beforeEach, test } from "node:test"
 import {
   ClientReplyNextAction,
   ClientReplyState,
+  FoundationRecordStatus,
   NotificationChannel,
   NotificationStatus,
   PdiStatus,
   RevisionStatus,
+  StorageProvider,
   TransmittalStatus,
   WorkflowStatus,
   WorkflowStepStatus,
@@ -180,10 +182,42 @@ test("numbering transactions preserve atomic allocation, scope, constraints, and
   )
 })
 
-test("PDI persistence promotes atomically while preserving current ungated status behavior", async () => {
+test("PDI persistence enforces transitions, idempotency, and promotion eligibility", async () => {
   const baseline = await createCharacterizationBaseline()
   const pdi = await createPdiItem(pdiInput(baseline, "Ungated promotion"))
   assert.equal(pdi.status, PdiStatus.Draft)
+
+  await assert.rejects(
+    promotePdiItemToMdr({ pdiItemId: pdi.id }),
+    /only after the official client document number/
+  )
+
+  const stateWrite = await markPdiItemSentToClient({ pdiItemId: pdi.id })
+  assert.equal(stateWrite.status, PdiStatus.ClientNumberPending)
+  const repeatedSend = await markPdiItemSentToClient({ pdiItemId: pdi.id })
+  assert.equal(repeatedSend.status, PdiStatus.ClientNumberPending)
+  assert.equal(
+    await prisma.auditLog.count({
+      where: { action: "pdi.item.sent_to_client", entityId: pdi.id },
+    }),
+    1
+  )
+
+  const numbered = await updatePdiClientDocumentNumber({
+    pdiItemId: pdi.id,
+    clientDocumentNumber: "CLIENT-001",
+  })
+  assert.equal(numbered.status, PdiStatus.ClientNumberReceived)
+  await updatePdiClientDocumentNumber({
+    pdiItemId: pdi.id,
+    clientDocumentNumber: "CLIENT-001",
+  })
+  assert.equal(
+    await prisma.auditLog.count({
+      where: { action: "pdi.item.client_number.update", entityId: pdi.id },
+    }),
+    1
+  )
 
   const document = await promotePdiItemToMdr({ pdiItemId: pdi.id })
   const stored = await prisma.mdrDocument.findUniqueOrThrow({
@@ -211,17 +245,19 @@ test("PDI persistence promotes atomically while preserving current ungated statu
   )
   assert.equal(await prisma.mdrDocument.count(), 1)
 
-  const stateWrite = await markPdiItemSentToClient({ pdiItemId: pdi.id })
-  assert.equal(stateWrite.status, PdiStatus.ClientNumberPending)
-  const numbered = await updatePdiClientDocumentNumber({
-    pdiItemId: pdi.id,
-    clientDocumentNumber: "CLIENT-001",
-  })
-  assert.equal(numbered.status, PdiStatus.ClientNumberReceived)
+  await assert.rejects(
+    markPdiItemSentToClient({ pdiItemId: pdi.id }),
+    /not allowed/
+  )
 
   const rollbackItem = await createPdiItem(
     pdiInput(baseline, "Promotion rollback")
   )
+  await markPdiItemSentToClient({ pdiItemId: rollbackItem.id })
+  await updatePdiClientDocumentNumber({
+    pdiItemId: rollbackItem.id,
+    clientDocumentNumber: "CLIENT-ROLLBACK",
+  })
   await prisma.mdrDocument.create({
     data: {
       projectId: baseline.project.id,
@@ -239,7 +275,7 @@ test("PDI persistence promotes atomically while preserving current ungated statu
   assert.equal(
     (await prisma.pdiItem.findUniqueOrThrow({ where: { id: rollbackItem.id } }))
       .status,
-    PdiStatus.Draft
+    PdiStatus.ClientNumberReceived
   )
 })
 
@@ -764,4 +800,241 @@ test("database-backed read models return scoped business results and empty-state
       (document) => document.id !== other.document.id
     )
   )
+})
+
+test("Phase 3 database constraints protect controlled files, cycles, versions, audit, and idempotency", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const fixture = await createDocumentFixture(baseline)
+  const firstFile = await prisma.fileObject.create({
+    data: {
+      storageProvider: StorageProvider.Temporary,
+      providerKey: "phase3/main-1.pdf",
+      fileName: "main-1.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: 100n,
+      checksum: "a".repeat(64),
+    },
+  })
+  await prisma.controlledMainFile.create({
+    data: {
+      revisionId: fixture.revision.id,
+      fileObjectId: firstFile.id,
+    },
+  })
+  const secondFile = await prisma.fileObject.create({
+    data: {
+      storageProvider: StorageProvider.Temporary,
+      providerKey: "phase3/main-2.pdf",
+      fileName: "main-2.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: 200n,
+      checksum: "b".repeat(64),
+    },
+  })
+  await assert.rejects(
+    prisma.controlledMainFile.create({
+      data: {
+        revisionId: fixture.revision.id,
+        fileObjectId: secondFile.id,
+      },
+    }),
+    /Unique constraint/
+  )
+
+  const definition = await prisma.workflowDefinition.create({
+    data: { code: "DEFAULT", name: "Default workflow" },
+  })
+  const version = await prisma.workflowDefinitionVersion.create({
+    data: {
+      definitionId: definition.id,
+      version: 1,
+      status: FoundationRecordStatus.Published,
+      publishedAt: new Date(),
+    },
+  })
+  const snapshot = await prisma.workflowSnapshot.create({
+    data: {
+      definitionVersionId: version.id,
+      snapshotHash: "workflow-snapshot-1",
+      content: { steps: [] },
+    },
+  })
+  await assert.rejects(
+    prisma.workflowDefinitionVersion.update({
+      where: { id: version.id },
+      data: { publishedAt: new Date() },
+    }),
+    /Published version records are immutable/
+  )
+  const draftVersion = await prisma.workflowDefinitionVersion.create({
+    data: {
+      definitionId: definition.id,
+      version: 2,
+    },
+  })
+  await prisma.workflowDefinitionVersion.delete({
+    where: { id: draftVersion.id },
+  })
+  assert.equal(
+    await prisma.workflowDefinitionVersion.findUnique({
+      where: { id: draftVersion.id },
+    }),
+    null
+  )
+
+  await prisma.approvalCycle.create({
+    data: {
+      revisionId: fixture.revision.id,
+      snapshotId: snapshot.id,
+      cycleNumber: 1,
+      contentHash: "content-1",
+    },
+  })
+  await assert.rejects(
+    prisma.approvalCycle.create({
+      data: {
+        revisionId: fixture.revision.id,
+        snapshotId: snapshot.id,
+        cycleNumber: 2,
+        contentHash: "content-2",
+      },
+    }),
+    /Unique constraint/
+  )
+
+  const audit = await prisma.auditLog.create({
+    data: {
+      action: "phase3.constraint.test",
+      entityType: "DocumentRevision",
+      entityId: fixture.revision.id,
+      currentAuditHash: "audit-phase3-1",
+    },
+  })
+  await assert.rejects(
+    prisma.auditLog.update({
+      where: { id: audit.id },
+      data: { action: "phase3.constraint.changed" },
+    }),
+    /AuditLog is append-only/
+  )
+
+  await prisma.idempotencyRecord.create({
+    data: {
+      clientId: "integration-client",
+      scope: "approval",
+      key: "request-1",
+      requestHash: "hash-1",
+      expiresAt: new Date(Date.now() + 60_000),
+    },
+  })
+  await assert.rejects(
+    prisma.idempotencyRecord.create({
+      data: {
+        clientId: "integration-client",
+        scope: "approval",
+        key: "request-1",
+        requestHash: "hash-2",
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    }),
+    /Unique constraint/
+  )
+
+  await prisma.verificationCode.create({
+    data: {
+      manifestId: "manifest-1",
+      codeHash: "verification-code-hash",
+    },
+  })
+  await assert.rejects(
+    prisma.verificationCode.create({
+      data: {
+        manifestId: "manifest-2",
+        codeHash: "verification-code-hash",
+      },
+    }),
+    /Unique constraint/
+  )
+
+  const manifest = await prisma.packageManifest.create({
+    data: {
+      revisionId: fixture.revision.id,
+      schemaVersion: "1",
+      canonicalizationVersion: "1",
+      manifestJson: { documentNumber: fixture.document.documentNumber },
+    },
+  })
+  await assert.rejects(
+    prisma.packageManifest.create({
+      data: {
+        revisionId: fixture.revision.id,
+        schemaVersion: "1",
+        canonicalizationVersion: "1",
+        manifestJson: { duplicate: true },
+      },
+    }),
+    /Unique constraint/
+  )
+  await prisma.packageHash.create({
+    data: {
+      manifestId: manifest.id,
+      algorithm: "SHA-256",
+      value: "c".repeat(64),
+    },
+  })
+
+  const codeSet = await prisma.clientResponseCodeSet.create({
+    data: {
+      clientId: baseline.client.id,
+      code: "PHASE3",
+      name: "Phase 3 response policy",
+    },
+  })
+  const codeSetVersion = await prisma.clientResponseCodeSetVersion.create({
+    data: {
+      codeSetId: codeSet.id,
+      version: 1,
+    },
+  })
+  const responseCode = await prisma.clientResponseCode.create({
+    data: {
+      versionId: codeSetVersion.id,
+      externalCode: "A",
+      exactWording: "Approved",
+      internalLabel: "Approved",
+      outcomeClass: "approved",
+      countsAsApproved: true,
+    },
+  })
+  const policySnapshot = await prisma.clientResponsePolicySnapshot.create({
+    data: {
+      projectId: baseline.project.id,
+      codeSetVersionId: codeSetVersion.id,
+      snapshotHash: "client-response-policy-snapshot-1",
+      content: {
+        codes: [{ id: responseCode.id, externalCode: "A" }],
+      },
+    },
+  })
+  await prisma.clientResponseCodeSetVersion.update({
+    where: { id: codeSetVersion.id },
+    data: {
+      status: FoundationRecordStatus.Published,
+      publishedAt: new Date(),
+    },
+  })
+  await assert.rejects(
+    prisma.clientResponseCode.update({
+      where: { id: responseCode.id },
+      data: { exactWording: "Changed after publication" },
+    }),
+    /Published response-code content is immutable/
+  )
+  const persistedSnapshot =
+    await prisma.clientResponsePolicySnapshot.findUnique({
+      where: { id: policySnapshot.id },
+    })
+  assert.deepEqual(persistedSnapshot?.content, {
+    codes: [{ id: responseCode.id, externalCode: "A" }],
+  })
 })

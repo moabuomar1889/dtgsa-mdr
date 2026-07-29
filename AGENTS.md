@@ -23,3 +23,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Keep the root Prisma schema and migration history authoritative until a later approved phase.
 - Run `pnpm check:architecture` after changing workspace dependencies, imports, or MDR routes.
 - Preserve Phase 2 compatibility re-exports until their documented removal phase.
+
+## Phase 3 Database Foundation
+
+- Keep one authoritative Prisma schema and additive migration history at the repository root.
+- Never edit an applied migration; create a new additive migration.
+- Preserve legacy models and compatibility relations until a later parity-approved phase.
+- Keep one active controlled Main PDF and one active approval cycle per revision database-enforced.
+- Keep published workflow, cover, and response-code versions immutable.
+- Treat `AuditLog` as append-only for normal runtime roles and repository operations.
+- Use immutable provider identifiers and hashes as authority; paths and filenames are descriptive only.
+- Run Prisma validation, disposable migration validation, and database-backed integration tests after schema changes.

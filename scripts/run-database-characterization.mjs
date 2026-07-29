@@ -73,6 +73,30 @@ async function readPackageBin(packageName) {
   return join(dirname(packagePath), relativeBin)
 }
 
+async function applyMigrationSql(client, migrationName) {
+  const migrationPath = join(
+    repositoryRoot,
+    "prisma",
+    "migrations",
+    migrationName,
+    "migration.sql"
+  )
+  const migrationSql = await readFile(migrationPath, "utf8")
+  await client.query(migrationSql)
+  console.log(`Applied upgrade migration ${migrationName}.`)
+}
+
+async function runSeed(environment, includePhase3Fixtures = false) {
+  const tsxBin = await readPackageBin("tsx")
+  await run(
+    process.execPath,
+    [tsxBin, "scripts/seed-foundation.ts"],
+    includePhase3Fixtures
+      ? { ...environment, SEED_PHASE3_FOUNDATION: "true" }
+      : environment
+  )
+}
+
 async function cleanDatabaseRoot() {
   const resolvedRoot = resolve(databaseRoot)
   const expectedParent = resolve(repositoryRoot)
@@ -141,13 +165,26 @@ async function runWithDatabase(mode) {
     const versionResult = await adminClient.query(
       "select current_setting('server_version') as version"
     )
-    await adminClient.end()
     console.log(`PostgreSQL version ${versionResult.rows[0].version} is ready.`)
 
     if (mode === "database-check") {
+      await adminClient.end()
       return
     }
 
+    if (mode === "upgrade-check") {
+      await applyMigrationSql(adminClient, "20260329143000_init_foundation")
+      await runSeed(testEnvironment)
+      await applyMigrationSql(
+        adminClient,
+        "20260729111500_phase3_database_foundation"
+      )
+      await runSeed(testEnvironment, true)
+      await adminClient.end()
+      return
+    }
+
+    await adminClient.end()
     const prismaBin = await readPackageBin("prisma")
     await run(
       process.execPath,
@@ -159,12 +196,22 @@ async function runWithDatabase(mode) {
       return
     }
 
+    if (mode === "seed-check") {
+      await runSeed(testEnvironment, true)
+      return
+    }
+
+    if (mode === "all") {
+      await runSeed(testEnvironment, true)
+    }
+
     const tsxBin = await readPackageBin("tsx")
     const testFiles =
       mode === "integration"
         ? ["tests/integration/database-backed-characterization.test.ts"]
         : [
             "tests/unit/database-safety.test.ts",
+            "tests/unit/phase-3-database-foundation.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",
@@ -193,7 +240,14 @@ const mode = process.argv[2] ?? "integration"
 if (mode === "clean") {
   await cleanDatabaseRoot()
 } else if (
-  ["all", "integration", "database-check", "migration-check"].includes(mode)
+  [
+    "all",
+    "integration",
+    "database-check",
+    "migration-check",
+    "seed-check",
+    "upgrade-check",
+  ].includes(mode)
 ) {
   await runWithDatabase(mode)
 } else {

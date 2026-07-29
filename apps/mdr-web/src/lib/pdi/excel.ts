@@ -51,9 +51,30 @@ export function writePdiWorkbook(rows: PdiWorkbookRow[]) {
 export function readPdiWorkbookRows(
   workbookBytes: ArrayBuffer | Uint8Array | Buffer
 ) {
-  const workbook = XLSX.read(workbookBytes, {
-    type: "array",
-  })
+  const bytes = new Uint8Array(
+    workbookBytes instanceof ArrayBuffer
+      ? workbookBytes
+      : workbookBytes.buffer.slice(
+          workbookBytes.byteOffset,
+          workbookBytes.byteOffset + workbookBytes.byteLength
+        )
+  )
+
+  if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) {
+    throw new Error(
+      "The uploaded PDI file is not a valid XLSX workbook. Export the template and try again."
+    )
+  }
+
+  let workbook: XLSX.WorkBook
+
+  try {
+    workbook = XLSX.read(bytes, { type: "array" })
+  } catch {
+    throw new Error(
+      "The uploaded PDI file could not be read as an XLSX workbook."
+    )
+  }
   const worksheet = workbook.Sheets[workbook.SheetNames[0]]
 
   if (!worksheet) {

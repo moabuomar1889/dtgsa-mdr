@@ -189,6 +189,36 @@ enum StorageProvider {
   Temporary
 }
 
+enum FoundationRecordStatus {
+  Draft
+  Published
+  Superseded
+  Archived
+}
+
+enum IntegrityStatus {
+  Pending
+  Verified
+  Mismatch
+  Missing
+}
+
+enum JobState {
+  Pending
+  Running
+  Completed
+  Failed
+  DeadLetter
+}
+
+enum CommentState {
+  Open
+  Resolved
+  Verified
+  Closed
+  Reopened
+}
+
 model SystemSetting {
   id          String   @id @default(cuid())
   group       String
@@ -202,15 +232,15 @@ model SystemSetting {
 }
 
 model User {
-  id                    String                        @id @default(cuid())
-  authUserId            String?                       @unique
-  email                 String                        @unique
+  id                    String                               @id @default(cuid())
+  authUserId            String?                              @unique
+  email                 String                               @unique
   fullName              String
   jobTitle              String?
-  timezone              String                        @default("Asia/Riyadh")
-  isActive              Boolean                       @default(true)
-  createdAt             DateTime                      @default(now())
-  updatedAt             DateTime                      @updatedAt
+  timezone              String                               @default("Asia/Riyadh")
+  isActive              Boolean                              @default(true)
+  createdAt             DateTime                             @default(now())
+  updatedAt             DateTime                             @updatedAt
   deletedAt             DateTime?
   signatureProfile      SignatureProfile?
   userRoles             UserRole[]
@@ -218,8 +248,11 @@ model User {
   disciplineAssignments ProjectDisciplineAssignment[]
   signatureEvents       SignatureEvent[]
   notifications         Notification[]
-  auditLogs             AuditLog[]                    @relation("AuditActor")
-  systemLogs            SystemLog[]                   @relation("SystemActor")
+  auditLogs             AuditLog[]                           @relation("AuditActor")
+  systemLogs            SystemLog[]                          @relation("SystemActor")
+  identities            UserIdentity[]
+  employeeProfile       EmployeeProfile?
+  signatureAppearances  EmployeeSignatureAppearanceVersion[]
 
   @@index([isActive])
 }
@@ -740,37 +773,40 @@ model MdrDocument {
 }
 
 model DocumentRevision {
-  id                  String              @id @default(cuid())
+  id                  String               @id @default(cuid())
   documentId          String
   revisionLabel       String
   revisionIndex       Int
-  workflowStatus      WorkflowStatus      @default(Draft)
-  revisionStatus      RevisionStatus      @default(Original)
-  clientReplyState    ClientReplyState    @default(WaitingClientReply)
+  workflowStatus      WorkflowStatus       @default(Draft)
+  revisionStatus      RevisionStatus       @default(Original)
+  clientReplyState    ClientReplyState     @default(WaitingClientReply)
   reviewCodeId        String?
   parentRevisionId    String?
   sourceClientReplyId String?
   reasonForRevision   String?
-  isCurrent           Boolean             @default(false)
+  isCurrent           Boolean              @default(false)
   submittedToClientAt DateTime?
   closedAt            DateTime?
   lockedAt            DateTime?
   createdByUserId     String?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   deletedAt           DateTime?
-  document            MdrDocument         @relation("DocumentRevisions", fields: [documentId], references: [id], onDelete: Cascade)
-  currentForDocument  MdrDocument?        @relation("CurrentDocumentRevision")
-  reviewCode          ReviewCode?         @relation("RevisionReviewCode", fields: [reviewCodeId], references: [id], onDelete: SetNull)
-  parentRevision      DocumentRevision?   @relation("RevisionLineage", fields: [parentRevisionId], references: [id], onDelete: SetNull)
-  childRevisions      DocumentRevision[]  @relation("RevisionLineage")
-  sourceClientReply   ClientReply?        @relation("ReplyTriggeredRevisions", fields: [sourceClientReplyId], references: [id], onDelete: SetNull)
-  clientReplies       ClientReply[]       @relation("SubmittedRevisionReply")
+  document            MdrDocument          @relation("DocumentRevisions", fields: [documentId], references: [id], onDelete: Cascade)
+  currentForDocument  MdrDocument?         @relation("CurrentDocumentRevision")
+  reviewCode          ReviewCode?          @relation("RevisionReviewCode", fields: [reviewCodeId], references: [id], onDelete: SetNull)
+  parentRevision      DocumentRevision?    @relation("RevisionLineage", fields: [parentRevisionId], references: [id], onDelete: SetNull)
+  childRevisions      DocumentRevision[]   @relation("RevisionLineage")
+  sourceClientReply   ClientReply?         @relation("ReplyTriggeredRevisions", fields: [sourceClientReplyId], references: [id], onDelete: SetNull)
+  clientReplies       ClientReply[]        @relation("SubmittedRevisionReply")
   files               DocumentFile[]
   workflowSteps       WorkflowStep[]
   workflowActions     WorkflowAction[]
   generatedDocuments  GeneratedDocument[]
   transmittalItems    TransmittalItem[]
+  controlledMainFiles ControlledMainFile[]
+  approvalCycles      ApprovalCycle[]
+  packageManifests    PackageManifest[]
 
   @@unique([documentId, revisionLabel])
   @@index([documentId, isCurrent])
@@ -1028,27 +1064,946 @@ model Notification {
 }
 
 model AuditLog {
-  id             String          @id @default(cuid())
-  actorUserId    String?
-  action         String
-  entityType     String
-  entityId       String
-  projectId      String?
-  clientId       String?
-  beforeSnapshot Json?
-  afterSnapshot  Json?
-  metadata       Json?
-  severity       AuditSeverity   @default(Info)
-  isHidden       Boolean         @default(false)
-  createdAt      DateTime        @default(now())
-  actorUser      User?           @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
-  project        Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  client         Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  signatureEvent SignatureEvent?
+  id                String          @id @default(cuid())
+  actorUserId       String?
+  action            String
+  entityType        String
+  entityId          String
+  projectId         String?
+  clientId          String?
+  beforeSnapshot    Json?
+  afterSnapshot     Json?
+  metadata          Json?
+  severity          AuditSeverity   @default(Info)
+  isHidden          Boolean         @default(false)
+  correlationId     String?
+  previousAuditHash String?
+  currentAuditHash  String?         @unique
+  actorSnapshot     Json?
+  relevantHashes    Json?
+  createdAt         DateTime        @default(now())
+  actorUser         User?           @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  project           Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  client            Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  signatureEvent    SignatureEvent?
 
   @@index([entityType, entityId])
   @@index([projectId, createdAt])
   @@index([clientId, createdAt])
+}
+
+model UserIdentity {
+  id            String                   @id @default(cuid())
+  userId        String
+  provider      String
+  subject       String
+  emailAtLink   String?
+  linkedAt      DateTime                 @default(now())
+  deactivatedAt DateTime?
+  metadata      Json?
+  user          User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  google        GoogleWorkspaceIdentity?
+  external      ExternalPortalIdentity?
+
+  @@unique([provider, subject])
+  @@index([userId])
+}
+
+model GoogleWorkspaceIdentity {
+  id             String       @id @default(cuid())
+  userIdentityId String       @unique
+  googleSubject  String       @unique
+  hostedDomain   String?
+  lastVerifiedAt DateTime?
+  identity       UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Restrict)
+}
+
+model ExternalPortalIdentity {
+  id                  String       @id @default(cuid())
+  userIdentityId      String       @unique
+  tokenHash           String?      @unique
+  tokenExpiresAt      DateTime?
+  lastAuthenticatedAt DateTime?
+  identity            UserIdentity @relation(fields: [userIdentityId], references: [id], onDelete: Restrict)
+}
+
+model GoogleGroupMapping {
+  id           String   @id @default(cuid())
+  groupId      String   @unique
+  roleCode     String
+  departmentId String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model EmployeeProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  employeeCode  String?   @unique
+  departmentId  String?
+  managerUserId String?
+  activeFrom    DateTime  @default(now())
+  inactiveAt    DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+}
+
+model EmployeeSignatureAppearanceVersion {
+  id                   String    @id @default(cuid())
+  userId               String
+  version              Int
+  fileObjectId         String?
+  initialsFileObjectId String?
+  publishedAt          DateTime?
+  retiredAt            DateTime?
+  createdAt            DateTime  @default(now())
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, version])
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  parentId  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Delegation {
+  id              String    @id @default(cuid())
+  delegatorUserId String
+  delegateUserId  String
+  scope           String
+  startsAt        DateTime
+  endsAt          DateTime
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([delegatorUserId, startsAt, endsAt])
+}
+
+model EmergencyOverrideRequest {
+  id              String   @id @default(cuid())
+  requesterUserId String
+  scope           String
+  reason          String
+  status          String   @default("Pending")
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+}
+
+model EmergencyOverrideApproval {
+  id             String   @id @default(cuid())
+  requestId      String
+  approverUserId String
+  decision       String
+  comments       String?
+  decidedAt      DateTime @default(now())
+
+  @@unique([requestId, approverUserId])
+}
+
+model RecentAuthenticationEvidence {
+  id              String   @id @default(cuid())
+  userId          String
+  provider        String
+  method          String
+  authenticatedAt DateTime
+  expiresAt       DateTime
+  sessionHash     String?
+
+  @@index([userId, expiresAt])
+}
+
+model FileObject {
+  id                  String                 @id @default(cuid())
+  storageProvider     StorageProvider
+  providerKey         String
+  fileName            String
+  mimeType            String
+  sizeBytes           BigInt
+  checksum            String
+  checksumAlgorithm   String                 @default("SHA-256")
+  pageCount           Int?
+  createdAt           DateTime               @default(now())
+  deletedAt           DateTime?
+  controlledMainFiles ControlledMainFile[]
+  attachments         ControlledAttachment[]
+
+  @@unique([storageProvider, providerKey])
+  @@index([checksum])
+}
+
+model SourceFileReference {
+  id           String   @id @default(cuid())
+  revisionId   String
+  fileObjectId String
+  sourceKind   String
+  capturedAt   DateTime @default(now())
+
+  @@index([revisionId])
+}
+
+model DriveFileIdentity {
+  id             String    @id @default(cuid())
+  fileObjectId   String    @unique
+  driveFileId    String    @unique
+  sharedDriveId  String?
+  parentFolderId String?
+  nameSnapshot   String?
+  modifiedTime   DateTime?
+}
+
+model ControlledMainFile {
+  id              String           @id @default(cuid())
+  revisionId      String
+  fileObjectId    String           @unique
+  isActive        Boolean          @default(true)
+  integrityStatus IntegrityStatus  @default(Pending)
+  controlledAt    DateTime         @default(now())
+  supersededAt    DateTime?
+  revision        DocumentRevision @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+  fileObject      FileObject       @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
+
+  @@index([revisionId, isActive])
+}
+
+model ControlledAttachment {
+  id             String     @id @default(cuid())
+  revisionId     String
+  fileObjectId   String     @unique
+  attachmentKind String
+  createdAt      DateTime   @default(now())
+  fileObject     FileObject @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
+
+  @@index([revisionId])
+}
+
+model ClientResponseFile {
+  id               String   @id @default(cuid())
+  clientResponseId String
+  fileObjectId     String   @unique
+  fileKind         String
+  receivedAt       DateTime @default(now())
+
+  @@index([clientResponseId])
+}
+
+model GeneratedArtifactRecord {
+  id            String    @id @default(cuid())
+  revisionId    String?
+  fileObjectId  String    @unique
+  artifactKind  String
+  authoritative Boolean   @default(false)
+  generatedAt   DateTime  @default(now())
+  expiresAt     DateTime?
+}
+
+model FileIntegrityCheck {
+  id           String          @id @default(cuid())
+  fileObjectId String
+  status       IntegrityStatus
+  expectedHash String
+  observedHash String?
+  checkedAt    DateTime        @default(now())
+  details      Json?
+
+  @@index([fileObjectId, checkedAt])
+}
+
+model StorageFolderRule {
+  id          String   @id @default(cuid())
+  scopeType   String
+  scopeId     String?
+  folderKind  String
+  providerKey String
+  version     Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([scopeType, scopeId, folderKind, version])
+}
+
+model UploadSession {
+  id                String    @id @default(cuid())
+  userId            String
+  projectId         String?
+  status            String    @default("Pending")
+  expectedSizeBytes BigInt?
+  expiresAt         DateTime
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+}
+
+model ReconciliationRun {
+  id            String    @id @default(cuid())
+  scope         String
+  status        String
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  checkedCount  Int       @default(0)
+  mismatchCount Int       @default(0)
+  details       Json?
+}
+
+model WorkflowDefinition {
+  id          String                      @id @default(cuid())
+  code        String                      @unique
+  name        String
+  description String?
+  createdAt   DateTime                    @default(now())
+  versions    WorkflowDefinitionVersion[]
+}
+
+model WorkflowDefinitionVersion {
+  id           String                   @id @default(cuid())
+  definitionId String
+  version      Int
+  status       FoundationRecordStatus   @default(Draft)
+  publishedAt  DateTime?
+  createdAt    DateTime                 @default(now())
+  definition   WorkflowDefinition       @relation(fields: [definitionId], references: [id], onDelete: Restrict)
+  steps        WorkflowDefinitionStep[]
+  snapshots    WorkflowSnapshot[]
+
+  @@unique([definitionId, version])
+}
+
+model WorkflowDefinitionStep {
+  id              String                    @id @default(cuid())
+  versionId       String
+  stepKey         String
+  stepOrder       Int
+  assignmentType  String
+  assignmentValue String?
+  required        Boolean                   @default(true)
+  quorum          Int                       @default(1)
+  parallelGroupId String?
+  version         WorkflowDefinitionVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, stepKey])
+}
+
+model WorkflowParallelGroup {
+  id        String   @id @default(cuid())
+  versionId String
+  groupKey  String
+  quorum    Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@unique([versionId, groupKey])
+}
+
+model WorkflowSnapshot {
+  id                  String                    @id @default(cuid())
+  definitionVersionId String
+  snapshotHash        String                    @unique
+  content             Json
+  createdAt           DateTime                  @default(now())
+  version             WorkflowDefinitionVersion @relation(fields: [definitionVersionId], references: [id], onDelete: Restrict)
+  steps               WorkflowSnapshotStep[]
+  cycles              ApprovalCycle[]
+}
+
+model WorkflowSnapshotStep {
+  id                 String           @id @default(cuid())
+  snapshotId         String
+  stepKey            String
+  stepOrder          Int
+  assignmentSnapshot Json
+  required           Boolean
+  quorum             Int
+  snapshot           WorkflowSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
+
+  @@unique([snapshotId, stepKey])
+}
+
+model ApprovalCycle {
+  id          String                 @id @default(cuid())
+  revisionId  String
+  snapshotId  String
+  cycleNumber Int
+  status      String                 @default("Active")
+  isActive    Boolean                @default(true)
+  contentHash String
+  startedAt   DateTime               @default(now())
+  completedAt DateTime?
+  revision    DocumentRevision       @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+  snapshot    WorkflowSnapshot       @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
+  steps       WorkflowStepInstance[]
+
+  @@unique([revisionId, cycleNumber])
+  @@index([revisionId, isActive])
+}
+
+model WorkflowStepInstance {
+  id                   String        @id @default(cuid())
+  approvalCycleId      String
+  stepKey              String
+  status               String        @default("Pending")
+  expectedStateVersion Int           @default(0)
+  startedAt            DateTime?
+  completedAt          DateTime?
+  cycle                ApprovalCycle @relation(fields: [approvalCycleId], references: [id], onDelete: Restrict)
+
+  @@unique([approvalCycleId, stepKey])
+}
+
+model WorkflowAssignment {
+  id             String   @id @default(cuid())
+  stepInstanceId String
+  assigneeType   String
+  assigneeId     String
+  snapshot       Json
+  assignedAt     DateTime @default(now())
+
+  @@unique([stepInstanceId, assigneeType, assigneeId])
+}
+
+model ApprovalDecision {
+  id                   String   @id @default(cuid())
+  stepInstanceId       String
+  actorUserId          String
+  decision             String
+  expectedStateVersion Int
+  idempotencyKey       String   @unique
+  comments             String?
+  decidedAt            DateTime @default(now())
+
+  @@index([stepInstanceId, decidedAt])
+}
+
+model ReviewSession {
+  id             String    @id @default(cuid())
+  stepInstanceId String
+  userId         String
+  contentHash    String
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  @@index([stepInstanceId, userId])
+}
+
+model SignerReassignment {
+  id              String   @id @default(cuid())
+  stepInstanceId  String
+  fromUserId      String?
+  toUserId        String
+  reason          String
+  changedByUserId String
+  createdAt       DateTime @default(now())
+}
+
+model DelegationUse {
+  id             String   @id @default(cuid())
+  delegationId   String
+  stepInstanceId String
+  usedByUserId   String
+  usedAt         DateTime @default(now())
+
+  @@unique([delegationId, stepInstanceId])
+}
+
+model SeparationOfDutiesEvaluation {
+  id                   String   @id @default(cuid())
+  approvalCycleId      String
+  result               String
+  evaluatedAssignments Json
+  overrideRequestId    String?
+  evaluatedAt          DateTime @default(now())
+
+  @@index([approvalCycleId])
+}
+
+model CoverTemplate {
+  id        String                 @id @default(cuid())
+  code      String                 @unique
+  name      String
+  createdAt DateTime               @default(now())
+  versions  CoverTemplateVersion[]
+}
+
+model CoverTemplateVersion {
+  id             String                 @id @default(cuid())
+  templateId     String
+  version        Int
+  status         FoundationRecordStatus @default(Draft)
+  pageSize       String
+  orientation    String
+  publishedAt    DateTime?
+  createdAt      DateTime               @default(now())
+  template       CoverTemplate          @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  elements       CoverLayoutElement[]
+  bindings       CoverFieldBinding[]
+  signatureBoxes SignatureBox[]
+
+  @@unique([templateId, version])
+}
+
+model CoverLayoutElement {
+  id          String               @id @default(cuid())
+  versionId   String
+  elementType String
+  x           Decimal
+  y           Decimal
+  width       Decimal
+  height      Decimal
+  properties  Json?
+  version     CoverTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+}
+
+model CoverFieldBinding {
+  id          String               @id @default(cuid())
+  versionId   String
+  fieldKey    String
+  bindingPath String
+  formatting  Json?
+  version     CoverTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, fieldKey])
+}
+
+model SignatureBox {
+  id              String               @id @default(cuid())
+  versionId       String
+  boxKey          String
+  roleCode        String
+  workflowStepKey String?
+  x               Decimal
+  y               Decimal
+  width           Decimal
+  height          Decimal
+  version         CoverTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, boxKey])
+}
+
+model GeneratedCover {
+  id                 String   @id @default(cuid())
+  revisionId         String
+  templateVersionId  String
+  workflowSnapshotId String?
+  fileObjectId       String
+  contentHash        String
+  generatedAt        DateTime @default(now())
+
+  @@index([revisionId])
+}
+
+model CoverTemplateInheritanceRule {
+  id         String  @id @default(cuid())
+  templateId String
+  scopeType  String
+  scopeId    String?
+  priority   Int     @default(0)
+  isActive   Boolean @default(true)
+
+  @@unique([templateId, scopeType, scopeId])
+}
+
+model PackageManifest {
+  id                      String                @id @default(cuid())
+  revisionId              String
+  schemaVersion           String
+  canonicalizationVersion String
+  manifestJson            Json
+  createdAt               DateTime              @default(now())
+  revision                DocumentRevision      @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+  items                   PackageManifestItem[]
+  hashes                  PackageHash[]
+
+  @@unique([revisionId, schemaVersion, canonicalizationVersion])
+}
+
+model PackageManifestItem {
+  id         String          @id @default(cuid())
+  manifestId String
+  itemType   String
+  itemKey    String
+  checksum   String
+  metadata   Json?
+  manifest   PackageManifest @relation(fields: [manifestId], references: [id], onDelete: Restrict)
+
+  @@unique([manifestId, itemKey])
+}
+
+model PackageHash {
+  id         String          @id @default(cuid())
+  manifestId String
+  algorithm  String
+  value      String
+  createdAt  DateTime        @default(now())
+  manifest   PackageManifest @relation(fields: [manifestId], references: [id], onDelete: Restrict)
+
+  @@unique([manifestId, algorithm])
+}
+
+model ApprovalEvidence {
+  id                 String   @id @default(cuid())
+  approvalDecisionId String   @unique
+  reviewSessionId    String?
+  stepInstanceId     String
+  identitySnapshot   Json
+  roleSnapshot       Json
+  declaration        String
+  contentHash        String
+  packageHash        String
+  createdAt          DateTime @default(now())
+}
+
+model PlatformSeal {
+  id               String          @id @default(cuid())
+  manifestId       String
+  provider         String
+  algorithm        String
+  keyId            String
+  signature        Bytes
+  status           IntegrityStatus @default(Pending)
+  providerMetadata Json?
+  sealedAt         DateTime        @default(now())
+
+  @@index([manifestId])
+}
+
+model TimestampEvidence {
+  id             String          @id @default(cuid())
+  platformSealId String
+  provider       String
+  token          Bytes?
+  timestamp      DateTime
+  status         IntegrityStatus @default(Pending)
+}
+
+model VerificationRecord {
+  id                     String          @id @default(cuid())
+  manifestId             String
+  result                 IntegrityStatus
+  checkedHashes          Json
+  verifiedAt             DateTime        @default(now())
+  requestFingerprintHash String?
+
+  @@index([manifestId, verifiedAt])
+}
+
+model VerificationCode {
+  id         String    @id @default(cuid())
+  manifestId String
+  codeHash   String    @unique
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([manifestId])
+}
+
+model PublicVerificationPolicy {
+  id        String   @id @default(cuid())
+  projectId String?
+  version   Int
+  fields    Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, version])
+}
+
+model ClientResponseCodeSet {
+  id        String                         @id @default(cuid())
+  clientId  String
+  code      String
+  name      String
+  createdAt DateTime                       @default(now())
+  versions  ClientResponseCodeSetVersion[]
+
+  @@unique([clientId, code])
+}
+
+model ClientResponseCodeSetVersion {
+  id            String                 @id @default(cuid())
+  codeSetId     String
+  version       Int
+  status        FoundationRecordStatus @default(Draft)
+  publishedAt   DateTime?
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  codeSet       ClientResponseCodeSet  @relation(fields: [codeSetId], references: [id], onDelete: Restrict)
+  codes         ClientResponseCode[]
+
+  @@unique([codeSetId, version])
+}
+
+model ClientResponseCode {
+  id                           String                       @id @default(cuid())
+  versionId                    String
+  externalCode                 String
+  exactWording                 String
+  internalLabel                String
+  outcomeClass                 String
+  countsAsApproved             Boolean                      @default(false)
+  finalApproval                Boolean                      @default(false)
+  requiresCommentRectification Boolean                      @default(false)
+  requiresNewRevision          Boolean                      @default(false)
+  requiresInternalReapproval   Boolean                      @default(false)
+  requiresResubmission         Boolean                      @default(false)
+  allowsTemporaryUse           Boolean                      @default(false)
+  allowsLifecycleClosure       Boolean                      @default(false)
+  requiresNewDocumentNumber    Boolean                      @default(false)
+  requiresReturnedFile         Boolean                      @default(false)
+  expectedPrimaryFileKind      String?
+  displayOrder                 Int                          @default(0)
+  color                        String?
+  version                      ClientResponseCodeSetVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+
+  @@unique([versionId, externalCode])
+}
+
+model ProjectResponseCodeConfiguration {
+  id               String   @id @default(cuid())
+  projectId        String   @unique
+  codeSetVersionId String
+  configuredAt     DateTime @default(now())
+}
+
+model ClientResponsePolicySnapshot {
+  id               String   @id @default(cuid())
+  projectId        String
+  codeSetVersionId String
+  snapshotHash     String   @unique
+  content          Json
+  createdAt        DateTime @default(now())
+}
+
+model ClientResponse {
+  id                  String   @id @default(cuid())
+  revisionId          String
+  policySnapshotId    String
+  responseCodeId      String
+  receivedAt          DateTime @default(now())
+  comments            String?
+  primaryFileObjectId String?
+
+  @@index([revisionId, receivedAt])
+}
+
+model ClientResponseAttachment {
+  id               String   @id @default(cuid())
+  clientResponseId String
+  fileObjectId     String
+  attachmentKind   String
+  createdAt        DateTime @default(now())
+
+  @@unique([clientResponseId, fileObjectId])
+}
+
+model ClientSubmission {
+  id               String   @id @default(cuid())
+  revisionId       String
+  manifestId       String
+  transmittalId    String?
+  submissionNumber Int
+  submittedAt      DateTime @default(now())
+
+  @@unique([revisionId, submissionNumber])
+}
+
+model Comment {
+  id                String       @id @default(cuid())
+  revisionId        String
+  packageManifestId String?
+  authorUserId      String
+  body              String
+  blocking          Boolean      @default(false)
+  state             CommentState @default(Open)
+  dueAt             DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([revisionId, state])
+}
+
+model CommentLocation {
+  id           String  @id @default(cuid())
+  commentId    String  @unique
+  locationType String
+  pageNumber   Int?
+  coordinates  Json?
+  selectedText String?
+}
+
+model CommentAssignment {
+  id           String   @id @default(cuid())
+  commentId    String
+  assigneeType String
+  assigneeId   String
+  assignedAt   DateTime @default(now())
+
+  @@unique([commentId, assigneeType, assigneeId])
+}
+
+model CommentStatusEvent {
+  id          String        @id @default(cuid())
+  commentId   String
+  fromState   CommentState?
+  toState     CommentState
+  actorUserId String
+  createdAt   DateTime      @default(now())
+
+  @@index([commentId, createdAt])
+}
+
+model CommentAttachment {
+  id           String   @id @default(cuid())
+  commentId    String
+  fileObjectId String
+  createdAt    DateTime @default(now())
+
+  @@unique([commentId, fileObjectId])
+}
+
+model OutboxEvent {
+  id            String    @id @default(cuid())
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  correlationId String?
+  state         JobState  @default(Pending)
+  availableAt   DateTime  @default(now())
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([state, availableAt])
+}
+
+model BackgroundJob {
+  id             String    @id @default(cuid())
+  jobType        String
+  payload        Json
+  state          JobState  @default(Pending)
+  priority       Int       @default(0)
+  attemptCount   Int       @default(0)
+  nextAttemptAt  DateTime  @default(now())
+  leaseOwner     String?
+  leaseExpiresAt DateTime?
+  correlationId  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([state, nextAttemptAt, priority])
+}
+
+model JobAttempt {
+  id            String    @id @default(cuid())
+  jobId         String
+  attemptNumber Int
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  outcome       String?
+  error         Json?
+
+  @@unique([jobId, attemptNumber])
+}
+
+model DeliveryAttempt {
+  id               String    @id @default(cuid())
+  channel          String
+  targetHash       String
+  idempotencyKey   String    @unique
+  state            JobState  @default(Pending)
+  attemptedAt      DateTime?
+  responseMetadata Json?
+  createdAt        DateTime  @default(now())
+}
+
+model IdempotencyRecord {
+  id          String   @id @default(cuid())
+  clientId    String
+  scope       String
+  key         String
+  requestHash String
+  response    Json?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@unique([clientId, scope, key])
+}
+
+model IntegrationClient {
+  id         String    @id @default(cuid())
+  clientKey  String    @unique
+  name       String
+  secretHash String
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+}
+
+model IntegrationScope {
+  id                  String   @id @default(cuid())
+  integrationClientId String
+  scope               String
+  createdAt           DateTime @default(now())
+
+  @@unique([integrationClientId, scope])
+}
+
+model WebhookEndpoint {
+  id                  String   @id @default(cuid())
+  integrationClientId String
+  url                 String
+  secretHash          String
+  eventTypes          String[]
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+}
+
+model WebhookDelivery {
+  id            String   @id @default(cuid())
+  endpointId    String
+  outboxEventId String
+  state         JobState @default(Pending)
+  attemptCount  Int      @default(0)
+  nextAttemptAt DateTime @default(now())
+  responseCode  Int?
+  createdAt     DateTime @default(now())
+
+  @@unique([endpointId, outboxEventId])
+}
+
+model RetentionRule {
+  id            String   @id @default(cuid())
+  recordClass   String
+  version       Int
+  retentionDays Int
+  disposition   String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  @@unique([recordClass, version])
+}
+
+model ConfigurationVersion {
+  id          String    @id @default(cuid())
+  scope       String
+  scopeId     String?
+  version     Int
+  content     Json
+  contentHash String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([scope, scopeId, version])
+}
+
+model AuditIntegrityCheckpoint {
+  id             String   @id @default(cuid())
+  lastAuditLogId String
+  lastAuditHash  String
+  checkpointHash String   @unique
+  createdAt      DateTime @default(now())
+  metadata       Json?
 }
 
 model SystemLog {

@@ -67,6 +67,9 @@ test("PDI workbook reader returns an empty list for a readable empty worksheet",
   assert.deepEqual(readPdiWorkbookRows(writePdiWorkbook([])), [])
 })
 
-test("PDI workbook reader currently treats arbitrary text as an empty workbook", () => {
-  assert.deepEqual(readPdiWorkbookRows(Buffer.from("not-an-xlsx-workbook")), [])
+test("PDI workbook reader rejects arbitrary text with an actionable error", () => {
+  assert.throws(
+    () => readPdiWorkbookRows(Buffer.from("not-an-xlsx-workbook")),
+    /not a valid XLSX workbook/
+  )
 })
