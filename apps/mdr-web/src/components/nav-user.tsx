@@ -1,12 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { signOutAction } from "@/server/actions/auth"
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+  BellIcon,
+  ChevronDownIcon,
+  CircleUserRoundIcon,
+  LogOutIcon,
+  Settings2Icon,
+} from "lucide-react"
+import { signOutAction } from "@/server/actions/auth"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,19 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
-import {
-  BellIcon,
-  CircleUserRoundIcon,
-  EllipsisVerticalIcon,
-  LogOutIcon,
-  Settings2Icon,
-} from "lucide-react"
 
 function getInitials(name: string) {
   return name
@@ -48,87 +38,86 @@ export function NavUser({
     avatar: string
   }
 }) {
-  const { isMobile } = useSidebar()
-
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {user.email}
-                </span>
-              </div>
-              <EllipsisVerticalIcon className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">
-                    {getInitials(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {user.email}
-                  </span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <Link href="/profile">
-                  <CircleUserRoundIcon />
-                  Account
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">
-                  <Settings2Icon />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/notifications">
-                  <BellIcon />
-                  Notifications
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <form action={signOutAction} className="w-full">
-                <button type="submit" className="flex w-full items-center gap-2">
-                  <LogOutIcon />
-                  Sign out
-                </button>
-              </form>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-[7px] px-1 py-0.5 text-left"
+          data-h
+        >
+          <Avatar className="size-[23px]">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback className="bg-accent-bg text-accent-txt text-[9.5px] font-semibold">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="hidden max-w-32 leading-[1.15] lg:block">
+            <span className="text-text block truncate text-[11.5px] font-medium">
+              {user.name}
+            </span>
+            <span className="text-dim block truncate text-[9.5px]">
+              Document Control
+            </span>
+          </span>
+          <ChevronDownIcon className="text-dim hidden size-3 lg:block" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="min-w-60"
+        side="bottom"
+        align="end"
+        sideOffset={8}
+      >
+        <DropdownMenuLabel className="p-0 font-normal">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left">
+            <Avatar className="size-7">
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback className="bg-accent-bg text-accent-txt text-[9.5px]">
+                {getInitials(user.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid min-w-0 flex-1 text-left leading-tight">
+              <span className="truncate text-[11.5px] font-medium">
+                {user.name}
+              </span>
+              <span className="text-dim truncate text-[10px]">
+                {user.email}
+              </span>
+            </div>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link href="/profile">
+              <CircleUserRoundIcon />
+              Account
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/settings">
+              <Settings2Icon />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/notifications">
+              <BellIcon />
+              Notifications
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <form action={signOutAction} className="w-full">
+            <button type="submit" className="flex w-full items-center gap-2">
+              <LogOutIcon />
+              Sign out
+            </button>
+          </form>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

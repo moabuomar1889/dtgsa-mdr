@@ -1,15 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { usePathname } from "next/navigation"
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { BellIcon, FolderPlusIcon } from "lucide-react"
+import { FolderPlusIcon } from "lucide-react"
 
 export function NavMain({
   items,
@@ -20,35 +21,42 @@ export function NavMain({
     icon?: React.ReactNode
   }[]
 }) {
+  const pathname = usePathname()
+
   return (
-    <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
+    <SidebarGroup className="p-0">
+      <SidebarGroupLabel className="text-dim h-auto px-2 py-1.5 text-[9.5px] font-medium tracking-[0.09em] uppercase">
+        Project
+      </SidebarGroupLabel>
+      <SidebarGroupContent className="flex flex-col gap-1">
         <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
+          <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               tooltip="Quick Create"
-              className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+              isActive={pathname === "/projects/new"}
+              className="border-accent-line bg-accent-bg text-accent-txt hover:border-accent hover:bg-accent-bg2 h-8 rounded-[7px] border px-2.5 text-[11.5px] font-medium"
             >
               <Link href="/projects/new">
-                <FolderPlusIcon />
+                <FolderPlusIcon className="size-3.5" />
                 <span>New Project</span>
               </Link>
             </SidebarMenuButton>
-            <Button
-              size="icon"
-              className="size-8 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <BellIcon />
-              <span className="sr-only">Notifications</span>
-            </Button>
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title}>
+              <SidebarMenuButton
+                asChild
+                tooltip={item.title}
+                isActive={
+                  pathname === item.url ||
+                  (item.url !== "/dashboard" &&
+                    pathname.startsWith(`${item.url}/`))
+                }
+                className="text-muted data-active:bg-accent-bg data-active:text-text hover:bg-accent-bg2 hover:text-text [&_svg]:text-soft data-active:[&_svg]:text-accent h-8 rounded-[7px] px-2.5 text-[11.5px] data-active:font-medium data-active:shadow-[inset_2px_0_0_var(--accent)] [&_svg]:size-3.5"
+              >
                 <Link href={item.url}>
                   {item.icon}
                   <span>{item.title}</span>

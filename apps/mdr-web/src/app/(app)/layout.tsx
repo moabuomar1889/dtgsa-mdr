@@ -10,28 +10,34 @@ type AppLayoutProps = {
 
 export default async function AppLayout({ children }: AppLayoutProps) {
   const user = await requireCurrentAppUser()
+  const shellUser = {
+    name: user.fullName,
+    email: user.email,
+    avatar: "",
+  }
 
   return (
     <SidebarProvider
+      className="bg-bg block min-h-0"
       style={
         {
-          "--sidebar-width": "18rem",
-          "--header-height": "4.25rem",
+          "--sidebar-width": "208px",
+          "--header-height": "50px",
         } as CSSProperties
       }
     >
-      <AppSidebar
-        variant="inset"
-        user={{
-          name: user.fullName,
-          email: user.email,
-          avatar: "",
-        }}
-      />
-      <SidebarInset className="bg-transparent">
-        <SiteHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
-      </SidebarInset>
+      <div className="flex h-svh min-h-0 w-full flex-col overflow-hidden">
+        <SiteHeader user={shellUser} />
+        <div className="flex min-h-0 flex-1">
+          <AppSidebar
+            className="border-line top-[50px] bottom-0 h-auto border-r"
+            user={shellUser}
+          />
+          <SidebarInset className="bg-bg min-h-0 overflow-y-auto">
+            <div className="flex min-h-full flex-col">{children}</div>
+          </SidebarInset>
+        </div>
+      </div>
     </SidebarProvider>
   )
 }

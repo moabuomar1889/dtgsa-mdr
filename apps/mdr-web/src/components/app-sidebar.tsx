@@ -3,20 +3,10 @@
 import * as React from "react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter } from "@/components/ui/sidebar"
 import {
   BookCheckIcon,
   Building2Icon,
-  CommandIcon,
   FileBadge2Icon,
   FileChartColumnIcon,
   FileCog2Icon,
@@ -140,28 +130,26 @@ type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
-              <a href="/dashboard">
-                <CommandIcon className="size-5!" />
-                <span className="text-base font-semibold">DTGSA MDR</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="bg-panel2 gap-0 px-2.5 py-3">
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navOperations} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavSecondary label="Operations" items={data.navOperations} />
+        <NavSecondary label="Platform" items={data.navSecondary} />
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user} />
+      <SidebarFooter className="border-line bg-panel2 border-t p-2.5">
+        <div className="border-line bg-raise rounded-[8px] border p-2.5">
+          <p className="text-dim text-[9.5px] tracking-[0.09em] uppercase">
+            Workspace
+          </p>
+          <p className="text-muted mt-1 truncate text-[11px] font-medium">
+            {user.name}
+          </p>
+          <p className="text-dim mt-0.5 truncate font-mono text-[9.5px]">
+            {user.email}
+          </p>
+          <div className="bg-track mt-2 h-1 overflow-hidden rounded-[2px]">
+            <div className="bg-accent h-full w-[68%]" />
+          </div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   )
