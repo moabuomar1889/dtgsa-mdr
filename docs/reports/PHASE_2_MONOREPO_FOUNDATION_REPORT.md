@@ -25,9 +25,11 @@ The history contains required baseline
 
 ## 4. Final Commit
 
-The Phase 2 implementation commit is recorded in sections 44 and 45 after the
-implementation commit is created. A documentation-finalization commit may
-follow only to insert that immutable SHA.
+Phase 2 implementation commit:
+`fd2ba73dc14dea7b4246d1c2fc86e60660f1cd01`.
+
+A documentation-finalization commit follows only to record this immutable SHA
+and the observed clean status.
 
 ## 5. Baseline Validation
 
@@ -287,11 +289,10 @@ and the clean Phase 2 commit are reviewed. No Phase 3 model was added.
 
 ## 44. Git Status
 
-The implementation tree is expectedly dirty while this pre-commit report is
-written. This section is updated after the Phase 2 implementation commit and
-clean-status verification.
+**COMPLETE.** `git status --short` returned no output immediately after the
+Phase 2 implementation commit. The documentation-finalization commit contains
+only this immutable evidence update.
 
 ## 45. Commit SHA
 
-Pending immutable Phase 2 implementation commit. This placeholder is replaced
-only after the implementation commit exists.
+`fd2ba73dc14dea7b4246d1c2fc86e60660f1cd01`
