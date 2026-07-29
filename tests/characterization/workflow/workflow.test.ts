@@ -12,7 +12,7 @@ import {
   canSubmitForDcCheck,
   canSubmitToClient,
   isDocumentLocked,
-} from "../../../src/lib/workflow/constants"
+} from "@/lib/workflow/constants"
 
 test("workflow sequence preserves the current fixed statuses and rejection states", () => {
   assert.deepEqual(INTERNAL_WORKFLOW_SEQUENCE, [

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Phase 2 - Modular Monorepo Foundation
+
+- Moved the existing MDR application to `apps/mdr-web` with all routes intact.
+- Added truthful approval, verification, API, and worker foundation units.
+- Added eight meaningful `@dtg/*` packages and compatibility exports.
+- Added workspace-cycle, import-boundary, route-inventory, operational endpoint,
+  worker lifecycle, and root-orchestration tests.
+- Preserved the Prisma schema and sole existing migration without model changes.
+- Recorded `MDR-DEFECT-004` without changing workflow behavior.
+
 ### Phase 1.5 - Database-Backed Characterization Closure
 
 - Added pinned, disposable PostgreSQL 17.10 test lifecycle tooling.

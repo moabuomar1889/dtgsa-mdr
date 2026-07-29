@@ -165,6 +165,7 @@ async function runWithDatabase(mode) {
         ? ["tests/integration/database-backed-characterization.test.ts"]
         : [
             "tests/unit/database-safety.test.ts",
+            "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",
           ]

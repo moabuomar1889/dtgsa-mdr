@@ -6,7 +6,7 @@ import {
   formatSequenceValue,
   renderDocumentNumber,
   type NumberingTokenInput,
-} from "../../../src/lib/numbering/engine"
+} from "@/lib/numbering/engine"
 
 function token(
   key: string,

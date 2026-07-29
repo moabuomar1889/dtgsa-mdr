@@ -54,8 +54,7 @@ Exit criteria:
 
 Phase 2 gate:
 
-- CLOSED pending owner review of `docs/reports/PHASE_1_5_DATABASE_CHARACTERIZATION_REPORT.md`.
-- No monorepo, package extraction, authentication, storage, workflow, signature, deployment, or new domain-model work has started.
+- SATISFIED by owner authorization after Phase 1.5 report review.
 
 ## Phase 1.5 - Database-Backed Characterization Closure
 
@@ -73,11 +72,11 @@ Completed:
 
 Phase 2 gate:
 
-- CLOSED until explicit owner approval after report review.
+- SATISFIED by explicit owner approval.
 
 ## Phase 2 - Monorepo Foundation
 
-Status: NOT_STARTED
+Status: COMPLETE
 
 Required work:
 
@@ -89,13 +88,14 @@ Required work:
 
 Exit criteria:
 
-- Existing MDR build still passes.
-- New apps compile as minimal deployable shells.
-- Shared packages have clear ownership and no circular imports.
+- PASS: Existing MDR build and route parity pass.
+- PASS: New apps compile as truthful minimal deployable foundations.
+- PASS: Shared packages have explicit ownership and no workspace cycles.
+- PASS: Phase 2 report records the exact validation evidence.
 
 ## Phase 3 - Database Foundation
 
-Status: NOT_STARTED
+Status: CLOSED / NOT_STARTED
 
 Required work:
 

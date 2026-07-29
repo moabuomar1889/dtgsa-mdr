@@ -3,7 +3,7 @@ import test from "node:test"
 import {
   createEmptySearchResult,
   normalizeSearchQuery,
-} from "../../../src/lib/search/query"
+} from "@/lib/search/query"
 
 test("search query normalization trims input and handles null values", () => {
   assert.equal(normalizeSearchQuery("  DTG-001  "), "DTG-001")

@@ -6,7 +6,7 @@ import {
   normalizePdiImportRow,
   readPdiWorkbookRows,
   writePdiWorkbook,
-} from "../../../src/lib/pdi/excel"
+} from "@/lib/pdi/excel"
 import { createSamplePdiWorkbook } from "../../fixtures/excel/sample-pdi-workbook"
 
 test("PDI workbook round-trip preserves the exported column order and row values", () => {

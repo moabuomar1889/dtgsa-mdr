@@ -8,7 +8,7 @@ import {
   rotatePdfPages,
   splitPdfBuffer,
   stampPdfWithText,
-} from "../../../src/lib/pdf/toolkit"
+} from "@/lib/pdf/toolkit"
 import { createSamplePdf } from "../../fixtures/pdf/sample-pdf"
 
 async function pageCount(buffer: Uint8Array | Buffer) {

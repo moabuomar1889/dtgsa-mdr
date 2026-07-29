@@ -10,7 +10,7 @@ import {
   PERMISSIONS,
   ROLE_CODES,
   ROLE_PERMISSION_MAP,
-} from "../src/lib/permissions/rbac"
+} from "@/lib/permissions/rbac"
 
 const GLOBAL_SCOPE_KEY = "system"
 const prisma = new PrismaClient({

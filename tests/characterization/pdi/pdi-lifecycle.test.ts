@@ -4,7 +4,7 @@ import { PdiStatus } from "@prisma/client"
 import {
   assertPdiPromotionAvailable,
   resolvePdiSentStatus,
-} from "../../../src/lib/pdi/policy"
+} from "@/lib/pdi/policy"
 
 test("sending a PDI item without a client number enters ClientNumberPending", () => {
   assert.equal(resolvePdiSentStatus(null), PdiStatus.ClientNumberPending)

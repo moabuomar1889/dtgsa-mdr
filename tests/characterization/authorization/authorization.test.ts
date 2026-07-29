@@ -6,8 +6,8 @@ import {
   expandPermissionsFromRoles,
   hasAnyPermission,
   hasPermission,
-} from "../../../src/lib/permissions/rbac"
-import { assertUserHasAnyPermission } from "../../../src/server/services/auth/permission-service"
+} from "@/lib/permissions/rbac"
+import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
 
 test("super administrators receive the complete permission vocabulary", () => {
   assert.deepEqual(

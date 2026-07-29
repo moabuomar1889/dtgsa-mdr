@@ -7,7 +7,7 @@ import {
   resolveRejectedIdentifier,
   resolveReplyState,
   sanitizeFileName,
-} from "../../../src/server/services/replies/client-reply-policy"
+} from "@/server/services/replies/client-reply-policy"
 
 test("client reply state gives finalization precedence over other flags", () => {
   assert.equal(

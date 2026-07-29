@@ -1,5 +1,7 @@
 packages:
-  - .
+  - "apps/*"
+  - "packages/*"
+disallowWorkspaceCycles: true
 allowBuilds:
   "@embedded-postgres/windows-x64": true
   "@prisma/engines": false

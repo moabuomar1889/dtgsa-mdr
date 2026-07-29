@@ -1,0 +1,8 @@
+// Phase 2 compatibility export. Remove after consumers migrate in Phase 3.
+export {
+  buildApplicableReviewCodes,
+  getNextRevisionLabel,
+  resolveRejectedIdentifier,
+  resolveReplyState,
+  sanitizeFileName,
+} from "@dtg/document-control-domain"

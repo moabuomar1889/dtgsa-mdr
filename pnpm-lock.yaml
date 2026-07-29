@@ -8,6 +8,91 @@ importers:
 
   .:
     dependencies:
+      '@prisma/adapter-pg':
+        specifier: ^7.6.0
+        version: 7.6.0
+      '@prisma/client':
+        specifier: ^7.6.0
+        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+      dotenv:
+        specifier: ^17.3.1
+        version: 17.3.1
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.2.2
+      '@types/node':
+        specifier: ^20
+        version: 20.19.37
+      '@types/nodemailer':
+        specifier: ^7.0.11
+        version: 7.0.11
+      '@types/react':
+        specifier: ^19
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.2.3(@types/react@19.2.14)
+      embedded-postgres:
+        specifier: 17.10.0-beta.17
+        version: 17.10.0-beta.17
+      eslint:
+        specifier: ^9
+        version: 9.39.4(jiti@2.6.1)(supports-color@7.2.0)
+      eslint-config-next:
+        specifier: 16.2.1
+        version: 16.2.1(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.1
+      prettier-plugin-tailwindcss:
+        specifier: ^0.7.2
+        version: 0.7.2(prettier@3.8.1)
+      prisma:
+        specifier: ^7.6.0
+        version: 7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      tailwindcss:
+        specifier: ^4
+        version: 4.2.2
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      xlsx:
+        specifier: ^0.18.5
+        version: 0.18.5
+
+  apps/approve-web:
+    dependencies:
+      '@dtg/configuration':
+        specifier: workspace:*
+        version: link:../../packages/configuration
+      '@dtg/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@dtg/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: 16.2.1
+        version: 16.2.1(@babel/core@7.29.0(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+
+  apps/mdr-web:
+    dependencies:
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -20,6 +105,18 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.4)
+      '@dtg/authorization':
+        specifier: workspace:*
+        version: link:../../packages/authorization
+      '@dtg/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@dtg/document-control-domain':
+        specifier: workspace:*
+        version: link:../../packages/document-control-domain
+      '@dtg/pdf-engine':
+        specifier: workspace:*
+        version: link:../../packages/pdf-engine
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.72.0(react@19.2.4))
@@ -47,9 +144,6 @@ importers:
       docxtemplater:
         specifier: ^3.68.3
         version: 3.68.3
-      dotenv:
-        specifier: ^17.3.1
-        version: 17.3.1
       googleapis:
         specifier: ^171.4.0
         version: 171.4.0(supports-color@7.2.0)
@@ -68,9 +162,6 @@ importers:
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
-      pg:
-        specifier: ^8.20.0
-        version: 8.20.0
       pizzip:
         specifier: ^3.2.0
         version: 3.2.0
@@ -116,49 +207,113 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
+
+  apps/platform-api:
+    dependencies:
+      '@dtg/configuration':
+        specifier: workspace:*
+        version: link:../../packages/configuration
+      '@dtg/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@dtg/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
     devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4
-        version: 4.2.2
       '@types/node':
         specifier: ^20
         version: 20.19.37
-      '@types/nodemailer':
-        specifier: ^7.0.11
-        version: 7.0.11
-      '@types/react':
-        specifier: ^19
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19
-        version: 19.2.3(@types/react@19.2.14)
-      embedded-postgres:
-        specifier: 17.10.0-beta.17
-        version: 17.10.0-beta.17
-      eslint:
-        specifier: ^9
-        version: 9.39.4(jiti@2.6.1)(supports-color@7.2.0)
-      eslint-config-next:
-        specifier: 16.2.1
-        version: 16.2.1(@typescript-eslint/parser@8.57.2(eslint@9.39.4(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.9.3)
-      prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
-      prettier-plugin-tailwindcss:
-        specifier: ^0.7.2
-        version: 0.7.2(prettier@3.8.1)
-      prisma:
-        specifier: ^7.6.0
-        version: 7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
-      tailwindcss:
-        specifier: ^4
-        version: 4.2.2
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  apps/verify-web:
+    dependencies:
+      '@dtg/configuration':
+        specifier: workspace:*
+        version: link:../../packages/configuration
+      '@dtg/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@dtg/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: 16.2.1
+        version: 16.2.1(@babel/core@7.29.0(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+
+  apps/worker:
+    dependencies:
+      '@dtg/configuration':
+        specifier: workspace:*
+        version: link:../../packages/configuration
+      '@dtg/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.37
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/authorization: {}
+
+  packages/configuration:
+    dependencies:
+      '@dtg/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
+  packages/contracts: {}
+
+  packages/database:
+    dependencies:
+      '@prisma/adapter-pg':
+        specifier: ^7.6.0
+        version: 7.6.0
+      '@prisma/client':
+        specifier: ^7.6.0
+        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+
+  packages/document-control-domain:
+    dependencies:
+      '@prisma/client':
+        specifier: ^7.6.0
+        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+
+  packages/observability: {}
+
+  packages/pdf-engine:
+    dependencies:
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
+
+  packages/ui:
+    devDependencies:
+      '@types/react':
+        specifier: ^19
+        version: 19.2.14
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
 
 packages:
 

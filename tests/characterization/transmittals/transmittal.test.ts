@@ -5,7 +5,7 @@ import {
   extractEmailRecipients,
   pickPreferredAttachmentFile,
   resolveTransmittalMaxBytes,
-} from "../../../src/server/services/transmittals/transmittal-policy"
+} from "@/server/services/transmittals/transmittal-policy"
 
 test("transmittals prefer merged files, then revision source, source, and preview", () => {
   const files = [

@@ -5,10 +5,12 @@
 - Phase 0: Graphify and repository baseline.
 - Phase 1: Characterization test foundation and deterministic behavior coverage.
 - Phase 1.5: Disposable PostgreSQL migration and database-backed characterization closure.
+- Phase 2: Modular monorepo, deployable boundaries, shared packages, and
+  architecture validation.
 
 ## Gated
 
-- Phase 2: Monorepo foundation remains closed pending owner review of the Phase 1.5 database characterization report and explicit authorization.
+- Phase 3: Closed and not started until Phase 2 report and commit review.
 
 ## Planned
 

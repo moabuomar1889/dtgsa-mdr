@@ -2,7 +2,7 @@
 
 Date: 2026-07-29
 
-These records preserve observed MDR behavior. Phase 1.5 characterizes the
+These records preserve observed MDR behavior. Phase 2 characterizes the
 behavior but does not change it.
 
 ## MDR-DEFECT-001 - Arbitrary Text Is Accepted As An Empty PDI Workbook
@@ -40,3 +40,18 @@ behavior but does not change it.
 - Recommended correction: Add an explicit transition matrix, expected-state
   conditions, idempotency rules, and conflict responses.
 - Target phase: Phase 3, alongside additive database constraints.
+
+## MDR-DEFECT-004 - Repeated Workflow Decisions Are Accepted
+
+- Status: Characterized, not fixed.
+- Severity: High.
+- Current behavior: A repeated review decision is accepted and creates
+  additional `WorkflowAction` and `SignatureEvent` records.
+- Business risk: Retries or duplicate submissions can produce conflicting
+  evidence and make the workflow history overstate distinct decisions.
+- Evidence: `tests/integration/database-backed-characterization.test.ts`
+  records a repeated workflow decision and confirms the additional persisted
+  action and signature event.
+- Recommended correction: Require expected-state compare-and-set behavior and
+  an idempotency key for every decision command.
+- Target phase: Phase 7 - Workflow Engine.

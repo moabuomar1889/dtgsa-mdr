@@ -1,4 +1,4 @@
-import { writePdiWorkbook } from "../../../src/lib/pdi/excel"
+import { writePdiWorkbook } from "@/lib/pdi/excel"
 
 export function createSamplePdiWorkbook() {
   return writePdiWorkbook([
