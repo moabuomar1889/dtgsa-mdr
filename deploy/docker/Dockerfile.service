@@ -1,0 +1,25 @@
+FROM node:24.4.1-bookworm-slim AS base
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
+RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
+WORKDIR /workspace
+
+FROM base AS builder
+COPY . .
+RUN pnpm install --frozen-lockfile
+ARG APP
+RUN test "$APP" = "platform-api" -o "$APP" = "worker"
+RUN pnpm --filter "@dtg/${APP}" build && pnpm exec prisma generate
+
+FROM node:24.4.1-bookworm-slim AS runtime
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NODE_ENV=production
+RUN corepack enable && corepack prepare pnpm@11.17.0 --activate \
+ && groupadd --system --gid 1001 dtg && useradd --system --uid 1001 --gid dtg dtg
+WORKDIR /workspace
+COPY --from=builder --chown=dtg:dtg /workspace ./
+ARG APP
+ENV SERVICE_APP=${APP}
+USER dtg
+EXPOSE 3003
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD if [ "$SERVICE_APP" = "platform-api" ]; then node -e "fetch('http://127.0.0.1:3003/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"; else node -e "process.exit(0)"; fi
+CMD ["sh", "-c", "exec pnpm --filter @dtg/${SERVICE_APP} start"]
+

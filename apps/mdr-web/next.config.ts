@@ -17,6 +17,7 @@ if (supabaseUrl) {
 }
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   transpilePackages: [
     "@dtg/authorization",
     "@dtg/controlled-storage-domain",

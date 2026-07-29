@@ -1,0 +1,36 @@
+version: 1
+project: dtg-signature-platform
+network: dtg-signature-private
+database:
+  mode: shared-postgresql
+  database: dtg_signature_platform
+  public_port: false
+services:
+  - name: mdr-web
+    dockerfile: deploy/docker/Dockerfile.web
+    build_args: { APP: mdr-web }
+    port: 3000
+    health: /api/health
+    domain: ${MDR_DOMAIN}
+  - name: approve-web
+    dockerfile: deploy/docker/Dockerfile.web
+    build_args: { APP: approve-web }
+    port: 3000
+    health: /api/health
+    domain: approve.dtgapps.cc
+  - name: verify-web
+    dockerfile: deploy/docker/Dockerfile.web
+    build_args: { APP: verify-web }
+    port: 3000
+    health: /api/health
+    domain: verify.dtgapps.cc
+  - name: platform-api
+    dockerfile: deploy/docker/Dockerfile.service
+    build_args: { APP: platform-api }
+    port: 3003
+    health: /health
+    exposure: private-by-default
+  - name: worker
+    dockerfile: deploy/docker/Dockerfile.service
+    build_args: { APP: worker }
+    exposure: private

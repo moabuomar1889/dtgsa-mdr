@@ -1,0 +1,22 @@
+groups:
+  - name: dtg-signature-platform
+    rules:
+      - alert: DtgApplicationDown
+        expr: up{service=~"mdr-web|approve-web|verify-web|platform-api|worker"} == 0
+        for: 5m
+        labels: { severity: critical }
+      - alert: DtgApiErrorRate
+        expr: rate(dtg_http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 10m
+        labels: { severity: warning }
+      - alert: DtgWorkerDeadLetters
+        expr: dtg_worker_dead_letters > 0
+        for: 5m
+        labels: { severity: critical }
+      - alert: DtgBackupStale
+        expr: time() - dtg_backup_last_success_timestamp > 93600
+        labels: { severity: critical }
+      - alert: DtgPostgresConnectionsHigh
+        expr: dtg_postgres_connections / dtg_postgres_connection_limit > 0.8
+        for: 15m
+        labels: { severity: warning }

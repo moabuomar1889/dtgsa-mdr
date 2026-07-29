@@ -1,0 +1,46 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main, codex/dtg-signature-platform-merge]
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.17.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.4.1, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm check:architecture
+      - run: pnpm docs:validate
+      - run: pnpm audit --audit-level high
+      - run: pnpm -r --workspace-concurrency=1 --if-present build
+  containers:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { file: deploy/docker/Dockerfile.web, app: mdr-web }
+          - { file: deploy/docker/Dockerfile.web, app: approve-web }
+          - { file: deploy/docker/Dockerfile.web, app: verify-web }
+          - { file: deploy/docker/Dockerfile.service, app: platform-api }
+          - { file: deploy/docker/Dockerfile.service, app: worker }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          build-args: APP=${{ matrix.app }}
+          push: false
+          tags: dtg-signature/${{ matrix.app }}:${{ github.sha }}
+          sbom: true
+          provenance: true

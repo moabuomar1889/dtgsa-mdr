@@ -26,6 +26,9 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 13: COMPLETE / LOCALLY_VERIFIED.
 - Phase 13 live webhook destinations, secret manager, and deployment adapters:
   `STAGING_REQUIRED`.
+- Phase 14: CODE_CONFIG_COMPLETE / LOCALLY_VERIFIED.
+- Phase 14 container execution, staging recovery, domains, and production:
+  `BLOCKED_EXTERNAL_ENVIRONMENT_AND_AUTHORIZATION`.
 
 ## Authoritative Workspace
 
@@ -156,3 +159,12 @@ The approval application owns versioned General Request forms, seven initial
 templates, attachments, search/history, audit/outbox records, and durable PDF
 summary generation. Live external webhook and storage verification remains a
 Phase 14 staging gate.
+
+# Phase 14 Operations
+
+Five non-root deployment units, Coolify topology, production migration lock,
+CI gates, monitoring alerts, encrypted PostgreSQL backup/restore scripts,
+security operations, and disaster-recovery runbooks are prepared. Docker is not
+installed in the local verification environment, and no staging/production
+credentials or authorization were supplied; images, live restore, DNS, and
+deployment remain externally blocked.

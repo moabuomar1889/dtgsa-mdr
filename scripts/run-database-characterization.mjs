@@ -269,6 +269,7 @@ async function runWithDatabase(mode) {
             "tests/unit/phase-11-client-responses.test.ts",
             "tests/unit/phase-12-verification-portal.test.ts",
             "tests/unit/phase-13-integrations.test.ts",
+            "tests/unit/phase-14-operations.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",
