@@ -13,7 +13,8 @@ skips. Phase 2 remains closed for owner review.
 
 - Branch: `codex/dtg-signature-platform-merge`
 - Starting commit: `224d9f4909a2a1668b7fd7995080454baefd9a4d`
-- Phase implementation commit: recorded in section 31 after commit creation.
+- Phase implementation commit:
+  `eb80f0ae83519a823a6bbd7ffd052685088f6581`
 
 ## 3. Disposable Database Architecture
 
@@ -218,10 +219,17 @@ approves progression.
 
 ## 31. Commit SHA
 
-Pending creation of the Phase 1.5 implementation commit. This section is
-finalized immediately after that commit.
+The Phase 1.5 implementation and validation evidence were committed as:
+
+```text
+eb80f0ae83519a823a6bbd7ffd052685088f6581
+```
+
+The subsequent documentation-only finalization commit records this immutable
+implementation SHA.
 
 ## 32. Final Git Status
 
-The implementation is prepared for commit. Final clean status is verified and
-recorded after report finalization and push.
+PASS. `git status --short` was empty immediately after the implementation
+commit. It is verified again after the documentation-only finalization commit
+and push.
