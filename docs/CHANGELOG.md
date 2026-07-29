@@ -19,3 +19,7 @@
   rate limiting, replay prevention, revocation, replacement, and admin tools.
 - Added additive Phase 4 schema migration, deterministic security tests,
   disposable-database integration tests, environment contracts, and runbooks.
+# 2026-07-29 - Phase 6
+
+Added deterministic package manifests, approval evidence, Ed25519 application
+seals, verification statuses, artifact evidence, and audit hash chains.

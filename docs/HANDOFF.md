@@ -31,3 +31,8 @@ Document generation may read only verified controlled files through the
 platform delivery/storage contract. It must not expose Drive IDs, bypass
 integrity status, replace the workflow engine, implement final signing, deploy
 to production, or weaken Phase 4/5 controls.
+# Phase 6 Handoff
+
+Use `@dtg/trust-domain` for canonical manifests, evidence, seals, timestamps,
+verification, and audit chains. Do not treat signature images or legacy
+Signature Events as trusted file-bound evidence.

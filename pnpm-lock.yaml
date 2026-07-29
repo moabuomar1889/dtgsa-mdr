@@ -326,6 +326,15 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1
 
+  packages/trust-domain:
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.37
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
   packages/ui:
     devDependencies:
       '@types/react':

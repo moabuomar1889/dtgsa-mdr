@@ -44,3 +44,10 @@ range validation, no-store headers, resumable-part checksums, malware scanning
 contract, and idempotent copy jobs. Residual risk remains in owner-controlled
 Drive policy, delegated credentials, provider audit retention, malware
 provider selection, and live large-file behavior.
+# Phase 6 Cryptographic Threats
+
+Canonicalization prevents representation ambiguity; protected field changes
+alter Package Hash; key status is verified; insecure providers fail closed in
+production; hashed audit rows are append-only under database controls. KMS/HSM,
+PAdES, and trusted timestamp risks remain open until real providers are
+configured and verified.

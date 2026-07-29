@@ -70,3 +70,8 @@ and delegated Directory credentials are tested in staging. Supabase
 compatibility remains intentionally present for rollback. Controlled Drive,
 the replacement workflow engine, final signing, sealing, and production
 deployment remain later-phase work.
+# Phase 6 Trust Foundation
+
+Deterministic package manifests, application seals, approval-evidence
+contracts, structured verification, and tamper-evident audit chains are now
+implemented. Production KMS/HSM, PAdES, and trusted timestamps remain deferred.

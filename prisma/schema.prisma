@@ -1108,15 +1108,29 @@ model AuditLog {
   currentAuditHash  String?         @unique
   actorSnapshot     Json?
   relevantHashes    Json?
+  auditStream       String?
+  auditSequence     BigInt?
   createdAt         DateTime        @default(now())
   actorUser         User?           @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
   project           Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
   client            Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
   signatureEvent    SignatureEvent?
 
+  @@unique([auditStream, auditSequence])
   @@index([entityType, entityId])
   @@index([projectId, createdAt])
   @@index([clientId, createdAt])
+}
+
+model AuditCheckpoint {
+  id          String   @id @default(cuid())
+  auditStream String
+  sequence    BigInt
+  currentHash String
+  eventCount  Int
+  createdAt   DateTime @default(now())
+
+  @@unique([auditStream, sequence])
 }
 
 model UserIdentity {
@@ -1527,13 +1541,21 @@ model ClientResponseFile {
 }
 
 model GeneratedArtifactRecord {
-  id            String    @id @default(cuid())
-  revisionId    String?
-  fileObjectId  String    @unique
-  artifactKind  String
-  authoritative Boolean   @default(false)
-  generatedAt   DateTime  @default(now())
-  expiresAt     DateTime?
+  id               String    @id @default(cuid())
+  revisionId       String?
+  fileObjectId     String    @unique
+  artifactKind     String
+  authoritative    Boolean   @default(false)
+  generatedAt      DateTime  @default(now())
+  expiresAt        DateTime?
+  sourceManifestId String?
+  assemblyProfile  Json?
+  pdfEngineVersion String?
+  artifactSha256   String?
+  sizeBytes        BigInt?
+  requesterUserId  String?
+  cleanupStatus    String    @default("Pending")
+  cleanedAt        DateTime?
 }
 
 model FileIntegrityCheck {
@@ -1903,6 +1925,10 @@ model PackageManifest {
   schemaVersion           String
   canonicalizationVersion String
   manifestJson            Json
+  canonicalBytes          Bytes?
+  manifestDigest          String?
+  packageVersion          Int                   @default(1)
+  invalidatedAt           DateTime?
   createdAt               DateTime              @default(now())
   revision                DocumentRevision      @relation(fields: [revisionId], references: [id], onDelete: Restrict)
   items                   PackageManifestItem[]
@@ -1935,39 +1961,55 @@ model PackageHash {
 }
 
 model ApprovalEvidence {
-  id                 String   @id @default(cuid())
-  approvalDecisionId String   @unique
-  reviewSessionId    String?
-  stepInstanceId     String
-  identitySnapshot   Json
-  roleSnapshot       Json
-  declaration        String
-  contentHash        String
-  packageHash        String
-  createdAt          DateTime @default(now())
+  id                           String   @id @default(cuid())
+  approvalDecisionId           String   @unique
+  reviewSessionId              String?
+  stepInstanceId               String
+  identitySnapshot             Json
+  roleSnapshot                 Json
+  declaration                  String
+  contentHash                  String
+  packageHash                  String
+  evidenceVersion              String   @default("1")
+  canonicalPayload             Bytes?
+  googleSubjectId              String?
+  employeeSnapshot             Json?
+  workflowSnapshot             Json?
+  approvalCycleId              String?
+  decision                     String?
+  declarationHash              String?
+  recentAuthEvidenceId         String?
+  requestMetadata              Json?
+  signatureAppearanceVersionId String?
+  createdAt                    DateTime @default(now())
 }
 
 model PlatformSeal {
-  id               String          @id @default(cuid())
-  manifestId       String
-  provider         String
-  algorithm        String
-  keyId            String
-  signature        Bytes
-  status           IntegrityStatus @default(Pending)
-  providerMetadata Json?
-  sealedAt         DateTime        @default(now())
+  id                   String          @id @default(cuid())
+  manifestId           String
+  provider             String
+  algorithm            String
+  keyId                String
+  signature            Bytes
+  status               IntegrityStatus @default(Pending)
+  providerMetadata     Json?
+  publicKeyReference   String?
+  signedPayloadVersion String          @default("1")
+  verificationStatus   String          @default("Pending")
+  sealedAt             DateTime        @default(now())
 
   @@index([manifestId])
 }
 
 model TimestampEvidence {
-  id             String          @id @default(cuid())
-  platformSealId String
-  provider       String
-  token          Bytes?
-  timestamp      DateTime
-  status         IntegrityStatus @default(Pending)
+  id                        String          @id @default(cuid())
+  platformSealId            String
+  provider                  String
+  token                     Bytes?
+  timestamp                 DateTime
+  status                    IntegrityStatus @default(Pending)
+  timestampType             String          @default("PLATFORM_UTC")
+  authenticatedDatabaseTime DateTime?
 }
 
 model VerificationRecord {
