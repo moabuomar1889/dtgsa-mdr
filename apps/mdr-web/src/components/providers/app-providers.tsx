@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { ThemeProvider } from "@/components/providers/theme-provider"
-import { Toaster } from "@/components/ui/sonner"
+import { AppThemeProvider } from "@/components/dtg/theme-provider"
+import { Toaster } from "@/components/dtg/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 type AppProvidersProps = {
@@ -11,16 +11,11 @@ type AppProvidersProps = {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <AppThemeProvider>
       <TooltipProvider delayDuration={150}>
         {children}
-        <Toaster closeButton richColors position="top-right" />
+        <Toaster closeButton position="bottom-center" />
       </TooltipProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   )
 }

@@ -1,0 +1,191 @@
+:root {
+  --default-accent: #9184d9;
+  --accent-seed: var(--default-accent);
+
+  --bg: #161826;
+  --panel: #1b1d2b;
+  --panel2: #191b28;
+  --head: #1a1c2a;
+  --raise: #1e2030;
+  --sel: #22243a;
+  --line: #2c2f3d;
+  --line2: #212330;
+  --edge: #3f424d;
+  --text: #e9e9ed;
+  --muted: #b2b6ca;
+  --soft: #9397ab;
+  --dim: #75798c;
+  --track: #2f3242;
+  --ok: #7fc9a1;
+  --warn: #d9c184;
+  --bad: #d98d84;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+
+  --accent: var(--accent-seed);
+  --accent-txt: color-mix(in oklab, var(--accent-seed) 62%, #ffffff 38%);
+  --accent-line: color-mix(in oklab, var(--accent-seed) 62%, var(--bg) 38%);
+  --accent-bg: color-mix(in oklab, var(--accent-seed) 14%, transparent);
+  --accent-bg2: color-mix(in oklab, var(--accent-seed) 8%, transparent);
+  --on-accent: var(--bg);
+
+  --r-sm: 5px;
+  --r: 7px;
+  --r-md: 8px;
+  --r-lg: 9px;
+  --r-xl: 10px;
+  --font: var(--font-inter), sans-serif;
+  --mono: var(--font-mono), ui-monospace, Menlo, monospace;
+}
+
+[data-theme="light"] {
+  --bg: #f2f3f8;
+  --panel: #ffffff;
+  --panel2: #f7f8fc;
+  --head: #ffffff;
+  --raise: #fbfbfe;
+  --sel: #f0eefb;
+  --line: #e2e4ee;
+  --line2: #edeef5;
+  --edge: #d3d6e2;
+  --text: #1b1d2b;
+  --muted: #4d5162;
+  --soft: #6c7183;
+  --dim: #8b90a2;
+  --track: #e7e8f1;
+  --ok: #3d8f6a;
+  --warn: #96701c;
+  --bad: #b4544a;
+  --shadow: 0 16px 40px rgba(27, 29, 43, 0.14);
+
+  --accent: color-mix(in oklab, var(--accent-seed) 82%, #000000 18%);
+  --accent-txt: color-mix(in oklab, var(--accent-seed) 70%, #000000 30%);
+  --accent-line: color-mix(in oklab, var(--accent-seed) 45%, #ffffff 55%);
+  --accent-bg: color-mix(in oklab, var(--accent-seed) 12%, transparent);
+  --accent-bg2: color-mix(in oklab, var(--accent-seed) 6%, transparent);
+  --on-accent: #ffffff;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-txt);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent-bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: var(--edge);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-h],
+[data-r],
+[data-b] {
+  cursor: pointer;
+}
+
+[data-h]:hover,
+[data-r]:hover {
+  background: var(--accent-bg2);
+}
+
+[data-b] {
+  user-select: none;
+}
+
+[data-b]:hover {
+  border-color: var(--accent);
+  color: var(--accent-txt);
+}
+
+[data-mono],
+.font-mono,
+.tabular-nums {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes nocturne-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
