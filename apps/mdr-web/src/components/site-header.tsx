@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { useTheme } from "@/components/dtg/theme-provider"
 import { NavUser } from "@/components/nav-user"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger } from "@/components/dtg/sidebar"
 
 type HeaderUser = {
   name: string

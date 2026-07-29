@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { CLIENT_RESPONSE_FILE_KINDS } from "@dtg/client-response-domain"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/dtg/badge"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
+import { Textarea } from "@/components/dtg/textarea"
 
 type Effects = {
   outcomeClass: string

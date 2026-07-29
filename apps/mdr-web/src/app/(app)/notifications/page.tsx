@@ -3,14 +3,14 @@ import { markNotificationReadAction } from "@/server/actions/notifications"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getNotificationsForUser } from "@/server/services/notifications/notification-service"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/dtg/card"
 
 export const dynamic = "force-dynamic"
 

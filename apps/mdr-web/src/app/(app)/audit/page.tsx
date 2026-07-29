@@ -1,13 +1,13 @@
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getAuditOverview } from "@/server/services/audit/audit-overview"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/dtg/card"
 import {
   Table,
   TableBody,
@@ -15,8 +15,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/components/dtg/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dtg/tabs"
 
 export const dynamic = "force-dynamic"
 

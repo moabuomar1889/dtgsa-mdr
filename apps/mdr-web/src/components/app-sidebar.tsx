@@ -3,7 +3,7 @@
 import * as React from "react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
-import { Sidebar, SidebarContent, SidebarFooter } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarFooter } from "@/components/dtg/sidebar"
 import {
   BookCheckIcon,
   Building2Icon,

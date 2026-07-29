@@ -1,15 +1,15 @@
 import Link from "next/link"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { searchPlatform } from "@/server/services/search/global-search-service"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+} from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
 
 export const dynamic = "force-dynamic"
 

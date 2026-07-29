@@ -17,16 +17,16 @@ import {
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getMdrOverview } from "@/server/services/mdr/mdr-service"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/dtg/badge"
+import { Button } from "@/components/dtg/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+} from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
 import {
   Table,
   TableBody,
@@ -34,7 +34,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/dtg/table"
 
 export const dynamic = "force-dynamic"
 const approvalOrigin =

@@ -8,16 +8,16 @@ import {
 } from "@/server/actions/identity-admin"
 import { getIdentityAdminOverview } from "@/server/services/identity/identity-admin-service"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
 
 export const dynamic = "force-dynamic"
 

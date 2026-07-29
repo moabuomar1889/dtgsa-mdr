@@ -1,9 +1,9 @@
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getInternalVerification } from "@/server/services/verification/internal-verification-service"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/dtg/badge"
+import { Button } from "@/components/dtg/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
 
 export const dynamic = "force-dynamic"
 

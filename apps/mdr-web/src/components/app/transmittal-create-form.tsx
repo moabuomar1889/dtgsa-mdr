@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/dtg/badge"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
 import {
   Select,
   SelectContent,
@@ -14,8 +14,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/dtg/select"
+import { Textarea } from "@/components/dtg/textarea"
 
 type ProjectOption = {
   id: string

@@ -4,15 +4,15 @@ import { EXTERNAL_CSRF_COOKIE } from "@/server/services/identity/external-portal
 import { cookies } from "next/headers"
 import { getExternalPortalPdiOverview } from "@/server/services/pdi/pdi-excel-service"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+} from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/dtg/table"
 
 export const dynamic = "force-dynamic"
 

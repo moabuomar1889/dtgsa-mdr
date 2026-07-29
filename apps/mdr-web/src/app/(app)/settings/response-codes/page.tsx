@@ -15,10 +15,10 @@ import {
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getResponsePolicyAdministration } from "@/server/services/replies/client-response-policy-service"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/dtg/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
 
 export const dynamic = "force-dynamic"
 

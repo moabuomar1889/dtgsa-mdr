@@ -10,16 +10,16 @@ import { importPdiWorkbookAction } from "@/server/actions/pdi-import"
 import { getPdiOverview } from "@/server/services/pdi/pdi-service"
 import { PdiItemForm } from "@/components/app/pdi-item-form"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/dtg/badge"
+import { Button } from "@/components/dtg/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+} from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
 import {
   Table,
   TableBody,
@@ -27,7 +27,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/dtg/table"
 
 export const dynamic = "force-dynamic"
 

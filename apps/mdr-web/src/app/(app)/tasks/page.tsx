@@ -1,13 +1,13 @@
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getTaskDashboard } from "@/server/services/tasks/task-dashboard-service"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/dtg/card"
 
 export const dynamic = "force-dynamic"
 

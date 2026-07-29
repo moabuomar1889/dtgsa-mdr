@@ -9,9 +9,9 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/dtg/select"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
 import { SubmitButton } from "@/components/app/submit-button"
 
 type ClientOption = {

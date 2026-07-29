@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/dtg/checkbox"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
+import { Textarea } from "@/components/dtg/textarea"
 import { SubmitButton } from "@/components/app/submit-button"
 
 type ReviewCodeFormProps = {

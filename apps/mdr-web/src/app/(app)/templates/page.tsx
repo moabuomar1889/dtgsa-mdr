@@ -9,17 +9,17 @@ import { assertUserHasAnyPermission } from "@/server/services/auth/permission-se
 import { getTemplateManagementOverview } from "@/server/services/templates/template-management-service"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/dtg/tabs"
+import { Textarea } from "@/components/dtg/textarea"
 
 export const dynamic = "force-dynamic"
 

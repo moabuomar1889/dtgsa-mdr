@@ -2,17 +2,17 @@ import Link from "next/link"
 import { createClientAction } from "@/server/actions/platform-admin"
 import { listClients } from "@/server/services/clients/client-management"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/dtg/badge"
+import { Button } from "@/components/dtg/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/dtg/card"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
 import {
   Table,
   TableBody,
@@ -20,8 +20,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/dtg/table"
+import { Textarea } from "@/components/dtg/textarea"
 
 export const dynamic = "force-dynamic"
 

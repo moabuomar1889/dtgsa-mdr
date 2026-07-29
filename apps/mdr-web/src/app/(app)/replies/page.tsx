@@ -10,14 +10,14 @@ import { getClientRepliesOverview } from "@/server/services/replies/client-reply
 import { getConfigurableClientResponseOverview } from "@/server/services/replies/client-response-service"
 import { ClientResponseForm } from "@/components/app/client-response-form"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/dtg/card"
 import {
   Table,
   TableBody,
@@ -25,9 +25,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from "@/components/dtg/table"
+import { Button } from "@/components/dtg/button"
+import { Input } from "@/components/dtg/input"
 
 export const dynamic = "force-dynamic"
 

@@ -1,15 +1,15 @@
 import Link from "next/link"
 import { listProjects } from "@/server/services/projects/project-management"
 import { discoverSharedDriveProjectFolders } from "@/server/services/projects/shared-drive-project-discovery"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/dtg/badge"
+import { Button } from "@/components/dtg/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/dtg/card"
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/dtg/table"
 
 export const dynamic = "force-dynamic"
 

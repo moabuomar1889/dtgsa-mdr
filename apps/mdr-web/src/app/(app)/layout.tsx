@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/dtg/sidebar"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type AppLayoutProps = {

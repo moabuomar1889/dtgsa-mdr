@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation"
 import { getCurrentAuthUser } from "@/server/services/auth/auth-service"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from "@/components/dtg/card"
+import { Button } from "@/components/dtg/button"
 import { getIdentityConfig } from "@/server/services/identity/identity-config"
 
 export const dynamic = "force-dynamic"

@@ -9,9 +9,9 @@ import {
 } from "lucide-react"
 import { env, hasGoogleDriveServiceAccount } from "@/lib/config/env"
 import { getDashboardOverview } from "@/server/services/dashboard/dashboard-overview"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/dtg/badge"
+import { Button } from "@/components/dtg/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/dtg/card"
 
 export const dynamic = "force-dynamic"
 

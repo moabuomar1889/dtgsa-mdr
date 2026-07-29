@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { SubmitButton } from "@/components/app/submit-button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@/components/dtg/input"
+import { Label } from "@/components/dtg/label"
 import {
   Select,
   SelectContent,
@@ -12,8 +12,8 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/dtg/select"
+import { Textarea } from "@/components/dtg/textarea"
 
 type Option = {
   id: string

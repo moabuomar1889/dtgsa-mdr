@@ -3,7 +3,7 @@ import {
   DEFAULT_COVER_TEMPLATE,
   type CoverTemplateDocument,
 } from "@dtg/cover-designer"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/dtg/badge"
 import { CoverDesignerWorkspace } from "@/components/cover-designer/cover-designer-workspace"
 import { createVisualCoverDraftAction } from "@/server/actions/templates"
 import { PERMISSIONS } from "@/lib/permissions/rbac"

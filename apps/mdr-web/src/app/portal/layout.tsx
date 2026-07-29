@@ -1,5 +1,5 @@
 import { getCurrentExternalPortalSession } from "@/server/services/identity/external-portal-service"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/dtg/button"
 
 export default async function PortalLayout({
   children,

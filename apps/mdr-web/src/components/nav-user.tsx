@@ -9,7 +9,7 @@ import {
   Settings2Icon,
 } from "lucide-react"
 import { signOutAction } from "@/server/actions/auth"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/dtg/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/dtg/dropdown-menu"
 
 function getInitials(name: string) {
   return name

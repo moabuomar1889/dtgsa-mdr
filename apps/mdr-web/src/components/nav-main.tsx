@@ -9,7 +9,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/dtg/sidebar"
 import { FolderPlusIcon } from "lucide-react"
 
 export function NavMain({

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { AppThemeProvider } from "@/components/dtg/theme-provider"
 import { Toaster } from "@/components/dtg/toaster"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@/components/dtg/tooltip"
 
 type AppProvidersProps = {
   children: React.ReactNode
