@@ -28,7 +28,8 @@ Starting commit: `8e351c627d0328c368a8f1073aacf53f45a57f8a`.
 
 ## 6. Final Commit
 
-Recorded after the final Phase 16L commit. See section 52.
+Phase 16L implementation commit:
+`a5652f20378f293536846156cf905327d21a234f`.
 
 ## 7. Local Architecture
 
@@ -291,10 +292,13 @@ readiness.
 
 ## 52. Commit History
 
-Phase 15 baseline: `8e351c6`. Phase 16 final commit is recorded after commit
-creation without rewriting this historical baseline.
+Phase 15 baseline: `8e351c6`. Phase 16L implementation:
+`a5652f20378f293536846156cf905327d21a234f`. A follow-up documentation-only
+commit records this immutable implementation SHA without amending it.
 
 ## 53. Git Status
 
-The final requirement is a clean working tree after commit and push on
-`codex/dtg-signature-platform-merge`. No merge to main and no force push.
+The working tree was clean immediately after the Phase 16L implementation
+commit. The local runtime was stopped with demonstration data preserved. The
+documentation finalization commit is pushed on
+`codex/dtg-signature-platform-merge`; no merge to main or force push occurred.
