@@ -7,10 +7,8 @@ import {
   replaceExternalPortalInvitation,
   revokeExternalInvitation,
 } from "@/server/services/identity/external-portal-service"
-import {
-  GoogleWorkspaceDirectoryAdapter,
-  synchronizeWorkspaceDirectory,
-} from "@/server/services/identity/directory-sync-service"
+import { synchronizeWorkspaceDirectory } from "@/server/services/identity/directory-sync-service"
+import { createDirectoryAdapter } from "@/server/services/local/local-provider-factory"
 import {
   requireIdentityAdministrator,
   resolveIdentityLinkReview,
@@ -35,7 +33,7 @@ export async function saveGoogleGroupMappingAction(formData: FormData) {
 
 export async function synchronizeDirectoryAction(formData: FormData) {
   await requireIdentityAdministrator()
-  const adapter = new GoogleWorkspaceDirectoryAdapter()
+  const adapter = createDirectoryAdapter()
   await synchronizeWorkspaceDirectory(adapter, {
     dryRun: formData.get("dryRun") !== null,
   })

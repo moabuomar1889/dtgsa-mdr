@@ -13,6 +13,7 @@ node_modules/
 # testing
 /coverage
 /.test-postgres/
+/.local-runtime/
 
 # next.js
 /.next/

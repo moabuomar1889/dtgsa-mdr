@@ -1,5 +1,8 @@
 import "server-only"
+import { randomUUID } from "node:crypto"
+import { resolve } from "node:path"
 import nodemailer from "nodemailer"
+import { LocalEmailSink } from "@dtg/local-acceptance"
 import { SystemSeverity } from "@prisma/client"
 import { env } from "@/lib/config/env"
 import { prisma } from "@/lib/prisma/client"
@@ -69,13 +72,35 @@ async function sendViaResend(input: SendEmailInput) {
 
   if (!response.ok) {
     const body = await response.text()
-    throw new Error(body || `Resend request failed with status ${response.status}.`)
+    throw new Error(
+      body || `Resend request failed with status ${response.status}.`
+    )
   }
 }
 
 export async function sendEmail(input: SendEmailInput) {
   if (!env.EMAIL_PROVIDER) {
     throw new Error("EMAIL_PROVIDER is not configured.")
+  }
+
+  if (env.EMAIL_PROVIDER === "local") {
+    const runtimeRoot = process.env.LOCAL_RUNTIME_ROOT?.trim()
+    if (!runtimeRoot) {
+      throw new Error("LOCAL_RUNTIME_ROOT is required for local email.")
+    }
+    const sink = new LocalEmailSink({
+      root: resolve(runtimeRoot, "email"),
+      runtimeRoot,
+    })
+    for (const recipient of normalizeRecipients(input.to)) {
+      await sink.deliver({
+        to: recipient,
+        subject: input.subject,
+        text: input.text,
+        correlationId: randomUUID(),
+      })
+    }
+    return
   }
 
   if (env.EMAIL_PROVIDER === "smtp") {
@@ -98,7 +123,9 @@ export async function queueAndSendEmailNotification(input: SendEmailInput) {
         source: "email",
         action: "send.failed",
         message:
-          error instanceof Error ? error.message : "Unknown email delivery failure.",
+          error instanceof Error
+            ? error.message
+            : "Unknown email delivery failure.",
         projectId: input.projectId ?? null,
         clientId: input.clientId ?? null,
         severity: SystemSeverity.Warning,

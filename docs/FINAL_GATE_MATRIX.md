@@ -26,7 +26,9 @@ Allowed classifications are `COMPLETE`, `PARTIALLY_COMPLETE`,
 | Phase 15  | PARTIALLY_COMPLETE | Consolidation, security updates, acceptance evidence, final report | External staging and production activation remain blocked            |
 
 No phase is classified `FAILED` or `NOT_STARTED`. No external gate is converted
-to a pass based on a mock. The final readiness verdict is `STAGING_READY`.
+to a pass based on a mock. The current local verdict is
+`FULL_LOCAL_ACCEPTANCE_COMPLETE`; external integrations and deployment remain
+unverified and not started.
 
 ## Acceptance Summary
 

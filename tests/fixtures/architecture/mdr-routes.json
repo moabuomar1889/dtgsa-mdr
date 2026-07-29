@@ -17,6 +17,8 @@
   "/dashboard",
   "/masters",
   "/mdr",
+  "/local-acceptance",
+  "/local-acceptance/session",
   "/notifications",
   "/pdf-tools",
   "/pdi",

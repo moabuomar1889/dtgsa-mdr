@@ -1,5 +1,10 @@
 import "server-only"
 import { z } from "zod"
+import { assertLocalProviderConfiguration } from "@dtg/local-acceptance"
+
+if (process.env.LOCAL_ACCEPTANCE_MODE === "true") {
+  assertLocalProviderConfiguration(process.env)
+}
 
 const emptyStringToUndefined = (value: unknown) => {
   if (typeof value !== "string") {
@@ -85,7 +90,7 @@ const serverEnvSchema = z.object({
   TOKEN_ENCRYPTION_KEY: optionalString,
   EMAIL_PROVIDER: z.preprocess(
     emptyStringToUndefined,
-    z.enum(["resend", "smtp"]).optional()
+    z.enum(["resend", "smtp", "local"]).optional()
   ),
   RESEND_API_KEY: optionalString,
   SMTP_HOST: optionalString,

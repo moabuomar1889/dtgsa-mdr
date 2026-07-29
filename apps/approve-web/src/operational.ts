@@ -1,8 +1,10 @@
 import { loadFoundationConfiguration } from "@dtg/configuration"
-import {
-  createHealthResponse,
-  createReadinessResponse,
-} from "@dtg/contracts"
+import { assertLocalProviderConfiguration } from "@dtg/local-acceptance"
+import { createHealthResponse, createReadinessResponse } from "@dtg/contracts"
+
+if (process.env.LOCAL_ACCEPTANCE_MODE === "true") {
+  assertLocalProviderConfiguration(process.env)
+}
 
 export const approveConfiguration = loadFoundationConfiguration(
   "approve-web",

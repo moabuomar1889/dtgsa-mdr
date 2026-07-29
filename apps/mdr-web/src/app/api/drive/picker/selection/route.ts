@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getCurrentAppUser } from "@/server/services/auth/auth-service"
 import { reserveControlledMainFile } from "@/server/services/drive/controlled-drive-service"
-import { GoogleDriveStorageAdapter } from "@/server/services/drive/drive-storage-adapter"
+import { createSourceDriveAdapter } from "@/server/services/local/local-provider-factory"
 
 export const dynamic = "force-dynamic"
 
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       revisionId: body.revisionId,
       rawNonce: body.nonce,
       selectedFileId: body.fileId,
-      adapter: new GoogleDriveStorageAdapter(),
+      adapter: createSourceDriveAdapter(),
     })
     return NextResponse.json(reserved, { status: 202 })
   } catch {

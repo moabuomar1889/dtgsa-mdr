@@ -14,6 +14,7 @@
     "@dtg/database": "workspace:*",
     "@dtg/identity-domain": "workspace:*",
     "@dtg/integration-domain": "workspace:*",
+    "@dtg/local-acceptance": "workspace:*",
     "@dtg/review-domain": "workspace:*",
     "@dtg/ui": "workspace:*",
     "@prisma/client": "^7.6.0",

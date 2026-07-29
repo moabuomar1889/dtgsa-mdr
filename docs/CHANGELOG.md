@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-29 - Phase 16L
+
+- Added a Docker-free local runtime for all five deployment units and
+  persistent embedded PostgreSQL.
+- Added fail-closed local identity, Drive, email, webhook, signing, and malware
+  simulators with synthetic data.
+- Added Playwright browser acceptance, portable qpdf large-file execution, and
+  encrypted local PostgreSQL backup/restore.
+- Added local manual/user guides and the Phase 16L acceptance report.
+
 ## 2026-07-29 - Phase 15 Final Consolidation
 
 - Added final gate, Graphify, legacy retirement, security, performance, and

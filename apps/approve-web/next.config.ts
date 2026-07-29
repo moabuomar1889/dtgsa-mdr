@@ -21,6 +21,7 @@ const nextConfig: NextConfig = {
     "@dtg/configuration",
     "@dtg/contracts",
     "@dtg/identity-domain",
+    "@dtg/local-acceptance",
     "@dtg/review-domain",
     "@dtg/ui",
   ],

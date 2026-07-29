@@ -5,7 +5,13 @@ import {
   StorageProvider,
   type PrismaClient,
 } from "@prisma/client"
+import { resolve } from "node:path"
+import { Readable } from "node:stream"
 import { google, type drive_v3 } from "googleapis"
+import {
+  LocalFilesystemDriveAdapter,
+  assertLocalAcceptanceMode,
+} from "@dtg/local-acceptance"
 import {
   JOB_TYPES,
   NonRetryableJobError,
@@ -105,6 +111,65 @@ export function createWorkerStorage(
   prisma: PrismaClient,
   env: NodeJS.ProcessEnv = process.env
 ): WorkerStorage {
+  if (env.LOCAL_ACCEPTANCE_MODE === "true") {
+    assertLocalAcceptanceMode(env)
+    const runtimeRoot = env.LOCAL_RUNTIME_ROOT?.trim()
+    if (!runtimeRoot) throw new Error("LOCAL_RUNTIME_ROOT is required.")
+    const adapter = new LocalFilesystemDriveAdapter({
+      root: resolve(runtimeRoot, "controlled-documents"),
+      runtimeRoot,
+      driveId: "local-controlled-drive",
+      env,
+    })
+    const toBuffer = async (stream: NodeJS.ReadableStream) => {
+      const chunks: Buffer[] = []
+      for await (const chunk of stream) chunks.push(Buffer.from(chunk))
+      return Buffer.concat(chunks)
+    }
+    return {
+      async read(fileObjectId) {
+        const file = await prisma.fileObject.findUnique({
+          where: { id: fileObjectId },
+          include: { driveIdentity: true },
+        })
+        if (!file || file.deletedAt) {
+          throw new NonRetryableJobError(
+            "FILE_MISSING",
+            "An assembly component is missing."
+          )
+        }
+        const fileId =
+          file.driveIdentity?.driveFileId ??
+          file.providerKey.replace(/^local-drive:/, "")
+        const bytes = await toBuffer(await adapter.read(fileId))
+        if (sha256(bytes) !== file.checksum) {
+          throw new NonRetryableJobError(
+            "TAMPER_DETECTED",
+            "An assembly component failed its SHA-256 integrity check."
+          )
+        }
+        return bytes
+      },
+      async writeTemporary(input) {
+        const uploaded = await adapter.uploadResumable({
+          folderId: "local-worker-artifacts",
+          opaqueName: `${input.cacheKey}.pdf`,
+          mimeType: "application/pdf",
+          bytes: Readable.from(input.bytes),
+        })
+        return {
+          provider: StorageProvider.Temporary,
+          providerKey: `local-drive:${uploaded.fileId}`,
+          fileName: `signed-internally-${input.cacheKey.slice(0, 12)}.pdf`,
+          mimeType: "application/pdf",
+        }
+      },
+      async delete(providerKey) {
+        await adapter.deleteTemporary(providerKey.replace(/^local-drive:/, ""))
+      },
+    }
+  }
+
   let drive: drive_v3.Drive | null = null
 
   const privateStorageRequest = async (

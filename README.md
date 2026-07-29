@@ -29,6 +29,16 @@ pnpm dev:api       Integration API on port 3003
 pnpm dev:worker    Durable background worker
 ```
 
+For the complete Docker-free local acceptance environment:
+
+```powershell
+pnpm local:setup
+pnpm local:demo
+pnpm local:status
+```
+
+Open `http://127.0.0.1:3100/local-acceptance` and select a synthetic user.
+
 Production mode uses Google Workspace identity for internal employees and
 isolated Magic Links for external clients. Live Google, Drive, signing,
 provider, and deployment credentials are not required for local deterministic
@@ -61,6 +71,8 @@ See `docs/MONOREPO_ARCHITECTURE.md`, `docs/PACKAGE_OWNERSHIP.md`,
 
 ## Readiness
 
-The final consolidation verdict is `STAGING_READY`. This does not authorize or
-claim a production deployment. Follow the deployment, security operations,
-backup, disaster recovery, and final gate documents before activation.
+The current verdict is `FULL_LOCAL_ACCEPTANCE_COMPLETE` with
+`EXTERNAL_INTEGRATIONS_UNVERIFIED` and `SERVER_DEPLOYMENT_NOT_STARTED`. This
+does not authorize staging or production. The owner must complete
+`docs/LOCAL_MANUAL_ACCEPTANCE_GUIDE.md` before considering a separate
+deployment phase.

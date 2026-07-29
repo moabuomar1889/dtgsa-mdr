@@ -8,10 +8,15 @@ Branch: `codex/dtg-signature-platform-merge`
 
 ## Phase Status
 
+- Phase 16L: `FULL_LOCAL_ACCEPTANCE_COMPLETE`.
+- External integrations: `EXTERNAL_INTEGRATIONS_UNVERIFIED`.
+- Server deployment: `SERVER_DEPLOYMENT_NOT_STARTED`.
+- Owner manual UAT: pending.
+
 - Phases 0, 1, 1.5, 2, and 3: COMPLETE.
-- Phase 4: CODE_COMPLETE / STAGING_READY.
+- Phase 4 historical boundary: CODE_COMPLETE / LOCALLY_VERIFIED.
 - Phase 4 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
-- Phase 5: CODE_COMPLETE / STAGING_READY.
+- Phase 5 historical boundary: CODE_COMPLETE / LOCALLY_VERIFIED.
 - Phase 5 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
 - Phases 6, 7, and 8: COMPLETE / LOCALLY_VERIFIED.
 - Phase 9: COMPLETE / LOCALLY_VERIFIED.
@@ -29,7 +34,7 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 14: CODE_CONFIG_COMPLETE / LOCALLY_VERIFIED.
 - Phase 14 container execution, staging recovery, domains, and production:
   `BLOCKED_EXTERNAL_ENVIRONMENT_AND_AUTHORIZATION`.
-- Phase 15: CONSOLIDATED / LOCALLY_VERIFIED / STAGING_READY.
+- Phase 15: CONSOLIDATED / LOCALLY_VERIFIED.
 - Phase 15 production activation:
   `BLOCKED_EXTERNAL_ENVIRONMENT_AND_AUTHORIZATION`.
 
@@ -181,7 +186,8 @@ Docxtemplater, Sharp, Supabase clients, PostCSS, and transitive dependencies
 were upgraded. The vulnerable unmaintained XLSX implementation was replaced
 with a patched fork while preserving characterized PDI import/export behavior.
 
-The final verdict is `STAGING_READY`. Google Workspace, Controlled Drive,
-Coolify, Docker/container scan, live backup/restore, qpdf capacity, malware
-provider, KMS/HSM, public domains, and production deployment remain external
-gates. PAdES remains explicitly deferred.
+The historical Phase 15 report remains unchanged. The current Phase 16L verdict
+is `FULL_LOCAL_ACCEPTANCE_COMPLETE`. Google Workspace, live Drive, external
+email/webhooks, production malware/signing providers, KMS/HSM, public domains,
+and server deployment remain unverified external or deferred gates. PAdES
+remains explicitly deferred.

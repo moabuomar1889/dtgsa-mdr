@@ -1,5 +1,6 @@
 import { pathToFileURL } from "node:url"
 import { hostname } from "node:os"
+import { assertLocalProviderConfiguration } from "@dtg/local-acceptance"
 import { createPrismaClient } from "@dtg/database"
 import { createWorkerRuntime } from "./runtime.js"
 import { createPrismaJobStore } from "./prisma-job-store.js"
@@ -8,6 +9,9 @@ import { createPhase10Handlers } from "./handlers.js"
 export { createWorkerRuntime } from "./runtime.js"
 
 function main() {
+  if (process.env.LOCAL_ACCEPTANCE_MODE === "true") {
+    assertLocalProviderConfiguration(process.env)
+  }
   const databaseUrl = process.env.DATABASE_URL
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is required for the durable worker.")

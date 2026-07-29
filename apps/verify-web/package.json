@@ -12,6 +12,7 @@
     "@dtg/configuration": "workspace:*",
     "@dtg/contracts": "workspace:*",
     "@dtg/database": "workspace:*",
+    "@dtg/local-acceptance": "workspace:*",
     "@dtg/ui": "workspace:*",
     "@dtg/verification-domain": "workspace:*",
     "next": "16.2.12",

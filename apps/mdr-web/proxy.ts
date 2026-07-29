@@ -8,6 +8,12 @@ const EXTERNAL_SESSION_COOKIE = "dtg_external_session"
 
 function routeAudience(pathname: string) {
   if (
+    process.env.LOCAL_ACCEPTANCE_MODE === "true" &&
+    pathname.startsWith("/local-acceptance")
+  ) {
+    return "auth"
+  }
+  if (
     pathname === "/sign-in" ||
     pathname === "/portal/access" ||
     pathname.startsWith("/api/auth/") ||

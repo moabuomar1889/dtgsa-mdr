@@ -44,9 +44,15 @@ importers:
       '@dtg/job-engine':
         specifier: workspace:*
         version: link:packages/job-engine
+      '@dtg/local-acceptance':
+        specifier: workspace:*
+        version: link:packages/local-acceptance
       '@dtg/verification-domain':
         specifier: workspace:*
         version: link:packages/verification-domain
+      '@playwright/test':
+        specifier: 1.62.0
+        version: 1.62.0
       '@tailwindcss/postcss':
         specifier: ^4.3.3
         version: 4.3.3
@@ -110,6 +116,9 @@ importers:
       '@dtg/integration-domain':
         specifier: workspace:*
         version: link:../../packages/integration-domain
+      '@dtg/local-acceptance':
+        specifier: workspace:*
+        version: link:../../packages/local-acceptance
       '@dtg/review-domain':
         specifier: workspace:*
         version: link:../../packages/review-domain
@@ -121,7 +130,7 @@ importers:
         version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
       next:
         specifier: 16.2.12
-        version: 16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@playwright/test@1.62.0)(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       pdfjs-dist:
         specifier: ^5.4.624
         version: 5.7.284
@@ -170,6 +179,9 @@ importers:
       '@dtg/job-engine':
         specifier: workspace:*
         version: link:../../packages/job-engine
+      '@dtg/local-acceptance':
+        specifier: workspace:*
+        version: link:../../packages/local-acceptance
       '@dtg/pdf-engine':
         specifier: workspace:*
         version: link:../../packages/pdf-engine
@@ -220,7 +232,7 @@ importers:
         version: 1.7.0(react@19.2.8)
       next:
         specifier: 16.2.12
-        version: 16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@playwright/test@1.62.0)(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -287,6 +299,9 @@ importers:
       '@dtg/integration-domain':
         specifier: workspace:*
         version: link:../../packages/integration-domain
+      '@dtg/local-acceptance':
+        specifier: workspace:*
+        version: link:../../packages/local-acceptance
       '@dtg/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -315,6 +330,9 @@ importers:
       '@dtg/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@dtg/local-acceptance':
+        specifier: workspace:*
+        version: link:../../packages/local-acceptance
       '@dtg/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -323,7 +341,7 @@ importers:
         version: link:../../packages/verification-domain
       next:
         specifier: 16.2.12
-        version: 16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@playwright/test@1.62.0)(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -345,6 +363,9 @@ importers:
       '@dtg/job-engine':
         specifier: workspace:*
         version: link:../../packages/job-engine
+      '@dtg/local-acceptance':
+        specifier: workspace:*
+        version: link:../../packages/local-acceptance
       '@dtg/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -432,6 +453,22 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.19.37
+
+  packages/local-acceptance:
+    dependencies:
+      '@dtg/controlled-storage-domain':
+        specifier: workspace:*
+        version: link:../controlled-storage-domain
+      '@dtg/identity-domain':
+        specifier: workspace:*
+        version: link:../identity-domain
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.37
+      typescript:
+        specifier: ^5
+        version: 5.9.3
 
   packages/observability: {}
 
@@ -1391,6 +1428,11 @@ packages:
 
   '@pdf-lib/upng@1.0.1':
     resolution: {integrity: sha512-dQK2FUMQtowVP00mtIksrlZhdFXQZPC+taih1q4CvPZ5vqdxR/LKBaFg0oAfzd1GlHZXXSPdQfzQnt+ViGvEIQ==}
+
+  '@playwright/test@1.62.0':
+    resolution: {integrity: sha512-9zOJ6ZQRAena31MpOH9VSzIz8Ou3YJ/wtY/eQm5T2uhfhG7/U3COrMS8xOtUrZrp9OgdmzEnIYODye3nY1VqzA==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@prisma/adapter-pg@7.6.0':
     resolution: {integrity: sha512-BjHNmJqqa42NqJSDPnXUfwUofWo8LJY7Ui2gqxN4DmAOb+H/gGKv+hln2Xq/1kSJXPW5AXMXuNiPDMpywvyIOw==}
@@ -3412,6 +3454,11 @@ packages:
     resolution: {integrity: sha512-CTXd6rk/M3/ULNQj8FBqBWHYBVYybQ3VPBw0xGKFe3tuH7ytT6ACnvzpIQ3UZtB8yvUKC2cXn1a+x+5EVQLovA==}
     engines: {node: '>=14.14'}
 
+  fsevents@2.3.2:
+    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -4397,6 +4444,16 @@ packages:
 
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
+
+  playwright-core@1.62.0:
+    resolution: {integrity: sha512-nsNRyq0r2zsG8AcRHWknc9QRA5XCueC7gWMrs+Gx2tlZn9hcl8zudfh00lhJPY1DE7NmZ6bDsT9g2yey8mXljA==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.62.0:
+    resolution: {integrity: sha512-Z14dG305dgaLu6foB1TXQagFiW8JfSUIUaUuPaKQ6NtBPKF1P/qXcqfh6c6K/icPqdy37JmjbiBXf6JNg6Sylw==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   pngjs@5.0.0:
     resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
@@ -6057,6 +6114,10 @@ snapshots:
   '@pdf-lib/upng@1.0.1':
     dependencies:
       pako: 1.0.11
+
+  '@playwright/test@1.62.0':
+    dependencies:
+      playwright: 1.62.0
 
   '@prisma/adapter-pg@7.6.0':
     dependencies:
@@ -8328,6 +8389,9 @@ snapshots:
       jsonfile: 6.2.0
       universalify: 2.0.1
 
+  fsevents@2.3.2:
+    optional: true
+
   fsevents@2.3.3:
     optional: true
 
@@ -8990,7 +9054,7 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  next@16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  next@16.2.12(@babel/core@7.29.0(supports-color@7.2.0))(@playwright/test@1.62.0)(@types/node@20.19.37)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@next/env': 16.2.12
       '@swc/helpers': 0.5.15
@@ -9009,6 +9073,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 16.2.12
       '@next/swc-win32-arm64-msvc': 16.2.12
       '@next/swc-win32-x64-msvc': 16.2.12
+      '@playwright/test': 1.62.0
       sharp: 0.35.3(@types/node@20.19.37)
     transitivePeerDependencies:
       - '@babel/core'
@@ -9269,6 +9334,14 @@ snapshots:
       confbox: 0.2.4
       exsolve: 1.0.8
       pathe: 2.0.3
+
+  playwright-core@1.62.0: {}
+
+  playwright@1.62.0:
+    dependencies:
+      playwright-core: 1.62.0
+    optionalDependencies:
+      fsevents: 2.3.2
 
   pngjs@5.0.0: {}
 

@@ -11,19 +11,24 @@ Date: 2026-07-29
   General Requests, and operations configuration are complete locally.
 - Final dependency remediation, security headers, acceptance matrix, legacy
   retirement decision, and documentation consolidation are complete.
+- Phase 16L local runtime, provider simulation, qpdf, browser automation, and
+  encrypted backup/restore are complete.
 
 ## Next
 
-- Activate a controlled staging environment with owner-authorized credentials.
+- Owner completes the local manual acceptance guide and reports defects.
+- Only after separate explicit authorization, plan a controlled deployment
+  phase with owner-authorized credentials.
 - Build and scan all containers.
 - Exercise Google Workspace, Drive, providers, public domains, and webhooks.
-- Run large-file, concurrency, connection, memory, CPU, and temporary-disk tests.
-- Perform encrypted backup/restore and post-restore evidence verification.
+- Repeat environment-specific capacity and recovery tests after deployment is
+  separately authorized.
 - Reconcile legacy identities, files, workflow cases, and evidence before any
   compatibility removal.
 - Obtain explicit authorization before production deployment.
 
-The readiness verdict is `STAGING_READY`; production is not yet accepted.
+The current verdict is `FULL_LOCAL_ACCEPTANCE_COMPLETE`,
+`EXTERNAL_INTEGRATIONS_UNVERIFIED`, and `SERVER_DEPLOYMENT_NOT_STARTED`.
 
 # Phase 6 Status
 

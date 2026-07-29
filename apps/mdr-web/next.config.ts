@@ -1,6 +1,7 @@
 import type { NextConfig } from "next"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const localAcceptance = process.env.LOCAL_ACCEPTANCE_MODE === "true"
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -9,9 +10,9 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  `img-src 'self' data: blob:${localAcceptance ? "" : " https:"}`,
   "font-src 'self' data:",
-  "connect-src 'self' https:",
+  `connect-src 'self'${localAcceptance ? "" : " https:"}`,
   "worker-src 'self' blob:",
 ].join("; ")
 
@@ -51,6 +52,7 @@ const nextConfig: NextConfig = {
     "@dtg/database",
     "@dtg/document-control-domain",
     "@dtg/identity-domain",
+    "@dtg/local-acceptance",
     "@dtg/pdf-engine",
   ],
   images: {

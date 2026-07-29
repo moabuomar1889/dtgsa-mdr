@@ -21,6 +21,7 @@ const eslintConfig = defineConfig([
     "apps/*/dist/**",
     "packages/*/dist/**",
     ".test-postgres/**",
+    ".local-runtime/**",
     "graphify-out/**",
     "out/**",
     "build/**",

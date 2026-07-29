@@ -1,16 +1,24 @@
 import { pathToFileURL } from "node:url"
+import { assertLocalProviderConfiguration } from "@dtg/local-acceptance"
 import { writeLog } from "@dtg/observability"
 import { apiConfiguration, createPlatformApiServer } from "./server.js"
 
 export async function startPlatformApi() {
+  if (process.env.LOCAL_ACCEPTANCE_MODE === "true") {
+    assertLocalProviderConfiguration(process.env)
+  }
   const server = createPlatformApiServer()
 
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject)
-    server.listen(apiConfiguration.port, () => {
-      server.off("error", reject)
-      resolve()
-    })
+    server.listen(
+      apiConfiguration.port,
+      process.env.HOST?.trim() || "127.0.0.1",
+      () => {
+        server.off("error", reject)
+        resolve()
+      }
+    )
   })
 
   writeLog({

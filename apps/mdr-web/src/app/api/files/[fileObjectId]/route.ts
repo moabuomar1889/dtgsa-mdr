@@ -2,7 +2,7 @@ import { Readable } from "node:stream"
 import { NextResponse } from "next/server"
 import { getCurrentAppUser } from "@/server/services/auth/auth-service"
 import { openControlledFile } from "@/server/services/drive/controlled-file-delivery"
-import { GoogleDriveStorageAdapter } from "@/server/services/drive/drive-storage-adapter"
+import { createControlledDriveAdapter } from "@/server/services/local/local-provider-factory"
 
 export const dynamic = "force-dynamic"
 
@@ -20,7 +20,7 @@ export async function GET(
       actor,
       fileObjectId,
       rangeHeader: request.headers.get("range"),
-      adapter: new GoogleDriveStorageAdapter(),
+      adapter: createControlledDriveAdapter(),
     })
     return new NextResponse(
       Readable.toWeb(opened.stream as Readable) as ReadableStream,

@@ -21,6 +21,7 @@
     "@dtg/document-control-domain": "workspace:*",
     "@dtg/identity-domain": "workspace:*",
     "@dtg/job-engine": "workspace:*",
+    "@dtg/local-acceptance": "workspace:*",
     "@dtg/pdf-engine": "workspace:*",
     "@dtg/trust-domain": "workspace:*",
     "@dtg/workflow-engine-domain": "workspace:*",

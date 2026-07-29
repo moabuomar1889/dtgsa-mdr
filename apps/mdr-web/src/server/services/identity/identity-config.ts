@@ -3,12 +3,16 @@ import { assertAuthModeAllowed, type AuthMode } from "@dtg/identity-domain"
 import { env } from "@/lib/config/env"
 
 export function getIdentityConfig() {
+  const localAcceptance =
+    process.env.LOCAL_ACCEPTANCE_MODE === "true" &&
+    process.env.NODE_ENV !== "production"
   const authMode = assertAuthModeAllowed(
     env.AUTH_MODE as AuthMode,
     process.env.NODE_ENV
   )
   const googleEnabled =
-    authMode === "GOOGLE_WORKSPACE" || authMode === "DUAL_TRANSITION"
+    !localAcceptance &&
+    (authMode === "GOOGLE_WORKSPACE" || authMode === "DUAL_TRANSITION")
 
   if (googleEnabled) {
     if (
