@@ -14,6 +14,7 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 5: CODE_COMPLETE / STAGING_READY.
 - Phase 5 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
 - Phases 6, 7, and 8: COMPLETE / LOCALLY_VERIFIED.
+- Phase 9: COMPLETE / LOCALLY_VERIFIED.
 
 ## Authoritative Workspace
 
@@ -54,6 +55,7 @@ The additive migration inventory is:
 20260729170000_phase6_manifest_and_evidence
 20260729190000_phase7_workflow_engine
 20260729210000_phase8_cover_designer
+20260729230000_phase9_approval_application
 ```
 
 Phase 4 adds internal and external sessions, OIDC transactions, invitation
@@ -96,3 +98,10 @@ Published layouts and generated-cover snapshots are immutable, rendering is
 deterministic, Prepared By Manager is formal and visible, and project response
 legends are dynamic. Managed DOCX/PDF generation remains a compatibility
 fallback.
+
+# Phase 9 Approval Application
+
+The approval app now owns the assignment inbox, exact-package PDF.js review,
+truthful review sessions, comments and annotations, atomic decisions, signature
+evidence snapshots, returns, and DC outcomes. Controlled file bytes remain
+behind authorized range delivery.

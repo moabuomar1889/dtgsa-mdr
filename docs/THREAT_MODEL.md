@@ -44,6 +44,7 @@ range validation, no-store headers, resumable-part checksums, malware scanning
 contract, and idempotent copy jobs. Residual risk remains in owner-controlled
 Drive policy, delegated credentials, provider audit retention, malware
 provider selection, and live large-file behavior.
+
 # Phase 6 Cryptographic Threats
 
 Canonicalization prevents representation ambiguity; protected field changes
@@ -51,3 +52,13 @@ alter Package Hash; key status is verified; insecure providers fail closed in
 production; hashed audit rows are append-only under database controls. KMS/HSM,
 PAdES, and trusted timestamp risks remain open until real providers are
 configured and verified.
+
+# Phase 9 Approval Review Addendum
+
+The approval application treats every Server Action and range route as directly
+reachable. Authentication, assignment, project scope, current Package Hash,
+recent authentication, review completion, declaration, blocking comments, and
+state version are checked server-side. File requests proxy through controlled
+delivery and never disclose Drive identity. Review event inflation is limited
+to bounded active-time increments and remains truthful approximate evidence,
+not proof that every page was read.

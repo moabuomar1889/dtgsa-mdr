@@ -13,7 +13,9 @@ Date: 2026-07-29
 
 ## Next
 
-- Phase 9: central approval and document review application.
+- Phase 9: central approval and document review application is complete
+  locally.
+- Phase 10: durable worker, package assembly, and on-demand delivery.
 - Phases 10-12: verification, client response, and durable integration work.
 - Phases 13-15: operational hardening, release evidence, and final acceptance.
 
@@ -35,3 +37,9 @@ cover design while preserving Package Manifest and workflow snapshots.
 The visual cover designer and deterministic renderer are complete locally.
 Phase 9 may build the central approval viewer against immutable workflow and
 cover snapshots.
+
+# Phase 9 Status
+
+The central approval inbox, controlled viewer, comments, review evidence, and
+decision surface are complete locally. Phase 10 may consume durable outbox work
+without changing decision authority.

@@ -11,8 +11,13 @@
   "dependencies": {
     "@dtg/configuration": "workspace:*",
     "@dtg/contracts": "workspace:*",
+    "@dtg/database": "workspace:*",
+    "@dtg/identity-domain": "workspace:*",
+    "@dtg/review-domain": "workspace:*",
     "@dtg/ui": "workspace:*",
+    "@prisma/client": "^7.6.0",
     "next": "16.2.1",
+    "pdfjs-dist": "^5.4.624",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   }

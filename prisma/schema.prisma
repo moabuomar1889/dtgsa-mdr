@@ -1815,19 +1815,37 @@ model ApprovalDecision {
 }
 
 model ReviewSession {
-  id                    String    @id @default(cuid())
-  stepInstanceId        String
-  userId                String
-  contentHash           String
-  startedAt             DateTime  @default(now())
-  completedAt           DateTime?
-  expiresAt             DateTime?
-  packageHash           String?
-  declarationAcceptedAt DateTime?
-  downloadedAt          DateTime?
-  revokedAt             DateTime?
+  id                       String            @id @default(cuid())
+  stepInstanceId           String
+  userId                   String
+  contentHash              String
+  startedAt                DateTime          @default(now())
+  firstOpenedAt            DateTime?
+  lastActivityAt           DateTime?
+  approximateActiveSeconds Int               @default(0)
+  completedAt              DateTime?
+  expiresAt                DateTime?
+  packageHash              String?
+  declarationAcceptedAt    DateTime?
+  downloadedAt             DateTime?
+  revokedAt                DateTime?
+  pageEvents               ReviewPageEvent[]
 
   @@index([stepInstanceId, userId])
+  @@index([userId, expiresAt, revokedAt])
+}
+
+model ReviewPageEvent {
+  id              String        @id @default(cuid())
+  reviewSessionId String
+  pageNumber      Int
+  eventType       String
+  activeSeconds   Int           @default(0)
+  occurredAt      DateTime      @default(now())
+  session         ReviewSession @relation(fields: [reviewSessionId], references: [id], onDelete: Restrict)
+
+  @@index([reviewSessionId, occurredAt])
+  @@index([reviewSessionId, pageNumber])
 }
 
 model SignerReassignment {
@@ -2191,18 +2209,27 @@ model ClientSubmission {
 }
 
 model Comment {
-  id                String       @id @default(cuid())
-  revisionId        String
-  packageManifestId String?
-  authorUserId      String
-  body              String
-  blocking          Boolean      @default(false)
-  state             CommentState @default(Open)
-  dueAt             DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  id                      String       @id @default(cuid())
+  revisionId              String
+  packageManifestId       String?
+  authorUserId            String
+  parentCommentId         String?
+  body                    String
+  category                String?
+  blocking                Boolean      @default(false)
+  state                   CommentState @default(Open)
+  responsibleDepartmentId String?
+  closureVerifiedByUserId String?
+  dueAt                   DateTime?
+  resolvedAt              DateTime?
+  closedAt                DateTime?
+  reopenedAt              DateTime?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
 
   @@index([revisionId, state])
+  @@index([parentCommentId, createdAt])
+  @@index([responsibleDepartmentId, state])
 }
 
 model CommentLocation {

@@ -50,3 +50,10 @@ Use `@dtg/cover-designer` for schema, inheritance, and validation, and
 `@dtg/pdf-engine` for authoritative output. Keep signature bytes server-side.
 Do not mutate published layouts or replace deterministic visual rendering with
 a browser screenshot.
+
+# Phase 9 Handoff
+
+Keep every approval action bound to assignment, current Package Hash, valid
+ReviewSession, recent authentication, declaration, and idempotency. Workers may
+assemble and deliver artifacts but must not invent or replay approval
+decisions.

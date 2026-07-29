@@ -11,12 +11,22 @@
       "@dtg/configuration": ["./packages/configuration/src/index.ts"],
       "@dtg/contracts": ["./packages/contracts/src/index.ts"],
       "@dtg/database": ["./packages/database/src/index.ts"],
-      "@dtg/document-control-domain": ["./packages/document-control-domain/src/index.ts"],
+      "@dtg/document-control-domain": [
+        "./packages/document-control-domain/src/index.ts"
+      ],
       "@dtg/observability": ["./packages/observability/src/index.ts"],
       "@dtg/pdf-engine": ["./packages/pdf-engine/src/index.ts"],
+      "@dtg/review-domain": ["./packages/review-domain/src/index.ts"],
       "@dtg/ui": ["./packages/ui/src/index.tsx"]
     }
   },
-  "include": ["tests/**/*.ts", "scripts/**/*.ts", "apps/**/*.ts", "apps/**/*.tsx", "packages/**/*.ts", "packages/**/*.tsx"],
+  "include": [
+    "tests/**/*.ts",
+    "scripts/**/*.ts",
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx"
+  ],
   "exclude": ["node_modules", "**/.next/**", "**/dist/**"]
 }

@@ -1,0 +1,268 @@
+:root {
+  --ink: #132827;
+  --muted: #637471;
+  --paper: #f4f0e5;
+  --panel: #fffdf7;
+  --line: #d6d1c4;
+  --teal: #0d6864;
+  --teal-dark: #073f3d;
+  --amber: #e6a83b;
+  --red: #a74332;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 90% 4%, #e6c77c55, transparent 26rem),
+    linear-gradient(145deg, #e7eee9, var(--paper) 55%);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+.button,
+a.button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  color: white;
+  background: var(--teal);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.2rem clamp(1rem, 4vw, 4rem);
+  color: white;
+  background: linear-gradient(110deg, var(--teal-dark), #174e48 68%, #5b4829);
+}
+
+.brand {
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.brand small,
+.eyebrow {
+  display: block;
+  color: #d7b968;
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(17rem, 25rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  padding: 1.25rem clamp(1rem, 3vw, 3rem) 3rem;
+}
+
+.panel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: #fffdf7dd;
+  box-shadow: 0 1rem 3rem #21413a14;
+}
+
+.panel-header,
+.panel-body {
+  padding: 1rem 1.1rem;
+}
+
+.panel-header {
+  border-bottom: 1px solid var(--line);
+}
+
+.panel h1,
+.panel h2,
+.panel h3,
+p {
+  margin-top: 0;
+}
+
+.filter-row,
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.filter-row a {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  color: var(--ink);
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.inbox-list {
+  display: grid;
+}
+
+.inbox-item {
+  display: grid;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.inbox-item:hover,
+.inbox-item[data-selected="true"] {
+  background: #dcebe5;
+}
+
+.mono {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.review-column {
+  display: grid;
+  min-width: 0;
+  gap: 1.25rem;
+}
+
+.case-header {
+  background:
+    linear-gradient(120deg, #ffffffdd, #f5e7c7dd),
+    repeating-linear-gradient(90deg, transparent 0 30px, #0d68640a 31px);
+}
+
+.hash {
+  overflow-wrap: anywhere;
+  border-radius: 0.75rem;
+  padding: 0.65rem;
+  background: #102c2a;
+  color: #c9eee6;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+.viewer-shell {
+  border-top: 1px solid var(--line);
+  background: #22312f;
+}
+
+.viewer-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem;
+  color: white;
+}
+
+.viewer-toolbar input {
+  width: 4rem;
+  margin: 0 0.35rem;
+}
+
+.viewer-toolbar a {
+  color: #ffd981;
+}
+
+.viewer-status {
+  padding: 0.45rem 0.8rem;
+  color: #cce4df;
+  background: #172421;
+  font:
+    0.75rem ui-monospace,
+    monospace;
+}
+
+.viewer-canvas {
+  min-height: 35rem;
+  max-height: 72vh;
+  overflow: auto;
+  padding: 1rem;
+  text-align: center;
+}
+
+.viewer-canvas canvas {
+  max-width: none;
+  background: white;
+  box-shadow: 0 0.5rem 2rem #0007;
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+  padding: 0.65rem;
+  background: white;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.comment {
+  border-left: 3px solid var(--amber);
+  padding: 0.7rem;
+  background: #faf4e5;
+}
+
+.comment.blocking {
+  border-color: var(--red);
+}
+
+.empty {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .workspace,
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .inbox-panel {
+    max-height: 28rem;
+    overflow: auto;
+  }
+
+  .viewer-canvas {
+    min-height: 25rem;
+  }
+}

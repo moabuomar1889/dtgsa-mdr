@@ -204,6 +204,10 @@ async function runWithDatabase(mode) {
         adminClient,
         "20260729210000_phase8_cover_designer"
       )
+      await applyMigrationSql(
+        adminClient,
+        "20260729230000_phase9_approval_application"
+      )
       await adminClient.end()
       return
     }
@@ -241,6 +245,7 @@ async function runWithDatabase(mode) {
             "tests/unit/phase-6-manifest-and-evidence.test.ts",
             "tests/unit/phase-7-workflow-engine.test.ts",
             "tests/unit/phase-8-cover-designer.test.ts",
+            "tests/unit/phase-9-approval-application.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",

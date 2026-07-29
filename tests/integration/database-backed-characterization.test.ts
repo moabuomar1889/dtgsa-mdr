@@ -3,6 +3,7 @@ import { after, beforeEach, test } from "node:test"
 import {
   ClientReplyNextAction,
   ClientReplyState,
+  CommentState,
   FoundationRecordStatus,
   NotificationChannel,
   NotificationStatus,
@@ -1939,5 +1940,67 @@ test("Phase 8 visual covers publish immutably, inherit by scope, and preserve hi
         action: { in: ["cover.visual.draft_saved", "cover.visual.published"] },
       },
     })
+  )
+})
+
+test("Phase 9 review events are append-only and comment timelines preserve closure evidence", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const fixture = await createDocumentFixture(baseline)
+  const review = await prisma.reviewSession.create({
+    data: {
+      stepInstanceId: "phase-9-step",
+      userId: baseline.actor.id,
+      contentHash: "8".repeat(64),
+      packageHash: "8".repeat(64),
+      firstOpenedAt: new Date(),
+      lastActivityAt: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+    },
+  })
+  const event = await prisma.reviewPageEvent.create({
+    data: {
+      reviewSessionId: review.id,
+      pageNumber: 1,
+      eventType: "PAGE_RENDERED",
+      activeSeconds: 3,
+    },
+  })
+  await assert.rejects(
+    prisma.reviewPageEvent.update({
+      where: { id: event.id },
+      data: { activeSeconds: 300 },
+    }),
+    /append-only/
+  )
+  const comment = await prisma.comment.create({
+    data: {
+      revisionId: fixture.revision.id,
+      authorUserId: baseline.actor.id,
+      body: "Correct the marked dimension.",
+      category: "Technical",
+      blocking: true,
+      responsibleDepartmentId: "engineering",
+      state: CommentState.Open,
+    },
+  })
+  await prisma.commentStatusEvent.createMany({
+    data: [
+      {
+        commentId: comment.id,
+        fromState: CommentState.Open,
+        toState: CommentState.Resolved,
+        actorUserId: baseline.actor.id,
+      },
+      {
+        commentId: comment.id,
+        fromState: CommentState.Resolved,
+        toState: CommentState.Verified,
+        actorUserId: "independent-verifier",
+      },
+    ],
+  })
+  assert.equal(
+    await prisma.commentStatusEvent.count({ where: { commentId: comment.id } }),
+    2
   )
 })

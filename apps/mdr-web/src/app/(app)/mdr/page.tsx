@@ -1,3 +1,4 @@
+import Link from "next/link"
 import {
   approveApproveRevisionAction,
   approveRejectRevisionAction,
@@ -35,6 +36,8 @@ import {
 } from "@/components/ui/table"
 
 export const dynamic = "force-dynamic"
+const approvalOrigin =
+  process.env.APPROVE_PUBLIC_ORIGIN?.trim() || "http://127.0.0.1:3001"
 
 function WorkflowActions({
   revisionId,
@@ -144,7 +147,7 @@ function WorkflowActions({
   }
 
   return (
-    <span className="text-sm text-muted-foreground">
+    <span className="text-muted-foreground text-sm">
       No workflow action available for your role.
     </span>
   )
@@ -157,9 +160,9 @@ export default async function MdrPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
       <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+        <CardHeader className="border-border/60 from-primary/12 gap-3 border-b bg-gradient-to-br via-transparent to-transparent">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-primary/15 text-primary hover:bg-primary/15 rounded-full px-3 py-1">
               MDR Register
             </Badge>
             <Badge variant="outline">Operational register</Badge>
@@ -175,26 +178,26 @@ export default async function MdrPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Documents</p>
+          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+            <p className="text-muted-foreground text-sm">Documents</p>
             <p className="mt-2 text-2xl font-semibold tracking-tight">
               {overview.counts.total}
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Draft workflow</p>
+          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+            <p className="text-muted-foreground text-sm">Draft workflow</p>
             <p className="mt-2 text-2xl font-semibold tracking-tight">
               {overview.counts.readyForWorkflow}
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Submitted</p>
+          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+            <p className="text-muted-foreground text-sm">Submitted</p>
             <p className="mt-2 text-2xl font-semibold tracking-tight">
               {overview.counts.submittedToClient}
             </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Waiting reply</p>
+          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
+            <p className="text-muted-foreground text-sm">Waiting reply</p>
             <p className="mt-2 text-2xl font-semibold tracking-tight">
               {overview.counts.awaitingReply}
             </p>
@@ -231,33 +234,38 @@ export default async function MdrPage() {
                         <span className="font-medium">
                           {document.project.code} - {document.project.name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          {document.project.client.code} - {document.project.client.name}
+                        <span className="text-muted-foreground text-xs">
+                          {document.project.client.code} -{" "}
+                          {document.project.client.name}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs">
                       {document.dtgsaDocumentNumber}
                     </TableCell>
-                    <TableCell>{document.clientDocumentNumber ?? "Pending"}</TableCell>
+                    <TableCell>
+                      {document.clientDocumentNumber ?? "Pending"}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">{document.title}</span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {document.discipline.code} /{" "}
                           {document.documentTypeCategory?.code ?? "N/A"} /{" "}
                           {document.releasePurpose?.code ?? "N/A"}
                         </span>
                       </div>
                     </TableCell>
-                  <TableCell>
+                    <TableCell>
                       <div className="flex flex-col gap-1">
                         <Badge>
                           Rev {document.currentRevision?.revisionLabel ?? "N/A"}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {document.currentRevision?.workflowStatus ?? "Draft"} /{" "}
-                          {document.currentRevision?.revisionStatus ?? "Original"}
+                        <span className="text-muted-foreground text-xs">
+                          {document.currentRevision?.workflowStatus ?? "Draft"}{" "}
+                          /{" "}
+                          {document.currentRevision?.revisionStatus ??
+                            "Original"}
                         </span>
                       </div>
                     </TableCell>
@@ -266,16 +274,27 @@ export default async function MdrPage() {
                         <Badge variant="outline">
                           {document.currentClientReplyState}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {document._count.revisions} revisions /{" "}
                           {document._count.clientReplies} replies
                         </span>
                         {document.currentRevision ? (
-                          <WorkflowActions
-                            revisionId={document.currentRevision.id}
-                            workflowStatus={document.currentRevision.workflowStatus}
-                            permissions={document.permissions}
-                          />
+                          <>
+                            <WorkflowActions
+                              revisionId={document.currentRevision.id}
+                              workflowStatus={
+                                document.currentRevision.workflowStatus
+                              }
+                              permissions={document.permissions}
+                            />
+                            <Button asChild variant="outline">
+                              <Link
+                                href={`${approvalOrigin}/?q=${encodeURIComponent(document.dtgsaDocumentNumber)}`}
+                              >
+                                Open central approval review
+                              </Link>
+                            </Button>
+                          </>
                         ) : null}
                       </div>
                     </TableCell>
@@ -337,24 +356,30 @@ export default async function MdrPage() {
                                 {document.currentRevisionFiles.map((file) => (
                                   <div
                                     key={file.id}
-                                    className="rounded-xl border border-border/60 bg-background/70 p-3"
+                                    className="border-border/60 bg-background/70 rounded-xl border p-3"
                                   >
                                     <div className="flex items-center justify-between gap-3">
                                       <div className="space-y-1">
                                         <p className="text-sm font-medium">
                                           {file.fileName}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-muted-foreground text-xs">
                                           {file.type} /{" "}
                                           {Math.max(
                                             1,
-                                            Math.round(file.fileSizeBytes / 1024)
+                                            Math.round(
+                                              file.fileSizeBytes / 1024
+                                            )
                                           )}{" "}
                                           KB
                                         </p>
                                       </div>
                                       {file.accessUrl ? (
-                                        <Button asChild size="sm" variant="outline">
+                                        <Button
+                                          asChild
+                                          size="sm"
+                                          variant="outline"
+                                        >
                                           <a
                                             href={file.accessUrl}
                                             target="_blank"
@@ -369,13 +394,13 @@ export default async function MdrPage() {
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 No source files uploaded yet.
                               </span>
                             )}
                           </>
                         ) : (
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-muted-foreground text-sm">
                             No current revision.
                           </span>
                         )}
@@ -386,7 +411,7 @@ export default async function MdrPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+            <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-6 text-sm leading-6">
               No MDR documents exist yet. Promote a PDI item after client
               numbering is received to create the first MDR record.
             </div>
