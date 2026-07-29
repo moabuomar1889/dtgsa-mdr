@@ -18,8 +18,8 @@ durable jobs, and operations preparation.
 ## 3. Branch/Commit
 
 **COMPLETE.** Branch: `codex/dtg-signature-platform-merge`. Baseline:
-`05eb730a8f7e735a1254c1d1ba7e3133775d5ddc`. Phase 15 implementation SHA is
-recorded after the required commit.
+`05eb730a8f7e735a1254c1d1ba7e3133775d5ddc`. Phase 15 implementation:
+`bdde5462167f487d74abaf0f80edfdbf426b27fd`.
 
 ## 4. Standards Version
 
@@ -264,10 +264,12 @@ force push or automatic merge to main.
 
 ## 44. Final SHA
 
-**PARTIALLY_COMPLETE.** Phase 15 implementation SHA: `PENDING_REQUIRED_COMMIT`.
-The final report-finalization SHA is recorded after the implementation commit.
+**COMPLETE.** Phase 15 implementation SHA:
+`bdde5462167f487d74abaf0f80edfdbf426b27fd`. It carries the exact required
+message: `Phase 15 - Complete DTG Signature Platform consolidation and acceptance`.
+The following documentation-only commit records this immutable SHA.
 
 ## 45. Clean Tree
 
-**PARTIALLY_COMPLETE.** The tree is expected to be clean after final report
-finalization and push. Final status is recorded after commit.
+**COMPLETE.** The tree is clean after report finalization and is pushed without
+force. No automatic merge to main was performed.
