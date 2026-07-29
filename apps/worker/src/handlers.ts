@@ -1,5 +1,6 @@
 import {
   IntegrityStatus,
+  JobState,
   Prisma,
   StorageProvider,
   type PrismaClient,
@@ -14,6 +15,13 @@ import {
   withEncryptedTemporaryWorkspace,
   type JobHandlers,
 } from "@dtg/job-engine"
+import { createGeneralRequestSummary } from "@dtg/integration-domain"
+import {
+  assertWebhookUrl,
+  decryptWebhookSecret,
+  nextWebhookAttempt,
+  signWebhook,
+} from "@dtg/integration-domain"
 import { mergePdfBuffers } from "@dtg/pdf-engine"
 
 type AssemblyPayload = {
@@ -425,6 +433,217 @@ export function createPhase10Handlers(input: {
       cacheHit: 0,
       bytesProcessed: assembly.bytesProcessed,
       durationMs: assembly.assemblyDurationMs,
+    }
+  }
+
+  handlers.GENERAL_REQUEST_SUMMARY = async ({ job, heartbeat }) => {
+    const generalRequestId = String(job.payload.generalRequestId ?? "")
+    if (!generalRequestId) {
+      throw new NonRetryableJobError(
+        "INVALID_GENERAL_REQUEST_PAYLOAD",
+        "The general-request summary payload is incomplete."
+      )
+    }
+    const request = await input.prisma.generalRequest.findUnique({
+      where: { id: generalRequestId },
+    })
+    if (!request) {
+      throw new NonRetryableJobError(
+        "GENERAL_REQUEST_MISSING",
+        "The general request no longer exists."
+      )
+    }
+    const version = await input.prisma.generalRequestTypeVersion.findUnique({
+      where: { id: request.requestTypeVersionId },
+    })
+    const requestType = version
+      ? await input.prisma.generalRequestType.findUnique({
+          where: { id: version.requestTypeId },
+        })
+      : null
+    if (!version || !requestType) {
+      throw new NonRetryableJobError(
+        "GENERAL_REQUEST_TYPE_MISSING",
+        "The captured request type version is unavailable."
+      )
+    }
+    await heartbeat(25, "Rendering the immutable request summary.")
+    const bytes = createGeneralRequestSummary({
+      requestNumber: request.requestNumber,
+      typeName: requestType.name,
+      departmentOwner: requestType.departmentOwner,
+      purpose: request.purpose,
+      fields: request.formData as Record<string, unknown>,
+    })
+    const checksum = sha256(bytes)
+    const cacheKey = `general-request-${request.id}`
+    const stored = await storage.writeTemporary({ cacheKey, bytes })
+    await heartbeat(75, "Persisting summary evidence.")
+    await input.prisma.$transaction(async (tx) => {
+      const fileObject = await tx.fileObject.upsert({
+        where: {
+          storageProvider_providerKey: {
+            storageProvider: stored.provider,
+            providerKey: stored.providerKey,
+          },
+        },
+        create: {
+          storageProvider: stored.provider,
+          providerKey: stored.providerKey,
+          fileName: `${request.requestNumber}.pdf`,
+          mimeType: "application/pdf",
+          sizeBytes: BigInt(bytes.byteLength),
+          checksum,
+        },
+        update: {
+          sizeBytes: BigInt(bytes.byteLength),
+          checksum,
+          deletedAt: null,
+        },
+      })
+      await tx.generalRequest.update({
+        where: { id: request.id },
+        data: {
+          summaryFileObjectId: fileObject.id,
+          status: request.status === "Submitted" ? "Active" : request.status,
+        },
+      })
+      await tx.jobArtifact.upsert({
+        where: {
+          jobId_artifactId: {
+            jobId: job.id,
+            artifactId: fileObject.id,
+          },
+        },
+        create: {
+          jobId: job.id,
+          artifactId: fileObject.id,
+          artifactKind: "GENERAL_REQUEST_SUMMARY",
+          checksum,
+          sizeBytes: BigInt(bytes.byteLength),
+        },
+        update: {},
+      })
+      await tx.outboxEvent.create({
+        data: {
+          eventType: "FILE_READY",
+          aggregateType: "GeneralRequest",
+          aggregateId: request.id,
+          correlationId: job.correlationId,
+          payload: {
+            requestNumber: request.requestNumber,
+            artifactKind: "GENERAL_REQUEST_SUMMARY",
+            checksum,
+          },
+        },
+      })
+    })
+    await heartbeat(100, "General request summary is ready.")
+    return { bytesProcessed: bytes.byteLength }
+  }
+
+  handlers.WEBHOOK_DELIVER = async ({ job, heartbeat }) => {
+    const endpointId = String(job.payload.endpointId ?? "")
+    const outboxEventId = String(job.payload.outboxEventId ?? "")
+    if (!endpointId || !outboxEventId) {
+      throw new NonRetryableJobError(
+        "INVALID_WEBHOOK_PAYLOAD",
+        "Webhook delivery requires endpoint and outbox event IDs."
+      )
+    }
+    const [endpoint, event] = await Promise.all([
+      input.prisma.webhookEndpoint.findUnique({ where: { id: endpointId } }),
+      input.prisma.outboxEvent.findUnique({ where: { id: outboxEventId } }),
+    ])
+    if (!endpoint?.isActive || !endpoint.encryptedSecret || !event) {
+      throw new NonRetryableJobError(
+        "WEBHOOK_UNAVAILABLE",
+        "The webhook endpoint or source event is unavailable."
+      )
+    }
+    if (!endpoint.eventTypes.includes(event.eventType)) {
+      throw new NonRetryableJobError(
+        "WEBHOOK_EVENT_NOT_SUBSCRIBED",
+        "The endpoint is not subscribed to this event."
+      )
+    }
+    const encryptionKey = process.env.WEBHOOK_ENCRYPTION_KEY?.trim()
+    if (!encryptionKey) {
+      throw new Error("WEBHOOK_ENCRYPTION_KEY is required.")
+    }
+    const destination = assertWebhookUrl(endpoint.url)
+    const secret = decryptWebhookSecret(endpoint.encryptedSecret, encryptionKey)
+    const timestamp = now().toISOString()
+    const body = JSON.stringify({
+      id: event.id,
+      type: event.eventType,
+      occurredAt: event.createdAt.toISOString(),
+      aggregate: {
+        type: event.aggregateType,
+        id: event.aggregateId,
+      },
+      data: event.payload,
+    })
+    const delivery = await input.prisma.webhookDelivery.upsert({
+      where: {
+        endpointId_outboxEventId: { endpointId, outboxEventId },
+      },
+      create: { endpointId, outboxEventId },
+      update: {},
+    })
+    await heartbeat(25, "Signing the webhook payload.")
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 15_000)
+      const response = await fetch(destination, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "dtg-webhook-id": event.id,
+          "dtg-webhook-timestamp": timestamp,
+          "dtg-webhook-signature": signWebhook(secret, timestamp, body),
+          "idempotency-key": event.id,
+        },
+        body,
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeout))
+      if (!response.ok) {
+        throw new Error(`Webhook endpoint returned HTTP ${response.status}.`)
+      }
+      await input.prisma.webhookDelivery.update({
+        where: { id: delivery.id },
+        data: {
+          state: JobState.Completed,
+          attemptCount: { increment: 1 },
+          responseCode: response.status,
+          responseMetadata: {
+            contentType: response.headers.get("content-type"),
+          },
+          completedAt: now(),
+          lastError: Prisma.JsonNull,
+        },
+      })
+      await heartbeat(100, "Webhook delivered.")
+      return { deliveries: 1 }
+    } catch (error) {
+      const attemptCount = delivery.attemptCount + 1
+      const retry = nextWebhookAttempt(attemptCount, now())
+      await input.prisma.webhookDelivery.update({
+        where: { id: delivery.id },
+        data: {
+          state: retry.deadLetter ? JobState.DeadLetter : JobState.Failed,
+          attemptCount,
+          nextAttemptAt: retry.nextAttemptAt ?? now(),
+          deadLetteredAt: retry.deadLetter ? now() : null,
+          lastError: {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Webhook delivery failed.",
+          },
+        },
+      })
+      throw error
     }
   }
 

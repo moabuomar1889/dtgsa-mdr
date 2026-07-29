@@ -220,6 +220,10 @@ async function runWithDatabase(mode) {
         adminClient,
         "20260730050000_phase12_verification_portal"
       )
+      await applyMigrationSql(
+        adminClient,
+        "20260730070000_phase13_integrations_requests"
+      )
       await adminClient.end()
       return
     }
@@ -248,7 +252,10 @@ async function runWithDatabase(mode) {
     const tsxBin = await readPackageBin("tsx")
     const testFiles =
       mode === "integration"
-        ? ["tests/integration/database-backed-characterization.test.ts"]
+        ? [
+            "tests/integration/database-backed-characterization.test.ts",
+            "tests/integration/phase-13-integrations.test.ts",
+          ]
         : [
             "tests/unit/database-safety.test.ts",
             "tests/unit/phase-3-database-foundation.test.ts",
@@ -261,9 +268,11 @@ async function runWithDatabase(mode) {
             "tests/unit/phase-10-downloads-and-worker.test.ts",
             "tests/unit/phase-11-client-responses.test.ts",
             "tests/unit/phase-12-verification-portal.test.ts",
+            "tests/unit/phase-13-integrations.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",
+            "tests/integration/phase-13-integrations.test.ts",
           ]
 
     await run(

@@ -1796,6 +1796,13 @@ model ApprovalCycle {
   completedAt        DateTime?
   invalidatedAt      DateTime?
   invalidationReason String?
+  sourceSystem       String                 @default("DOCUMENT_CONTROL")
+  sourceEntityType   String                 @default("DOCUMENT_REVISION")
+  sourceRecordId     String?
+  sourceCallback     String?
+  sourceMetadata     Json?
+  purpose            String                 @default("Document approval")
+  classification     String                 @default("INTERNAL")
   revision           DocumentRevision       @relation(fields: [revisionId], references: [id], onDelete: Restrict)
   snapshot           WorkflowSnapshot       @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
   steps              WorkflowStepInstance[]
@@ -2313,23 +2320,24 @@ model ClientSubmission {
 }
 
 model Comment {
-  id                      String       @id @default(cuid())
-  revisionId              String
-  packageManifestId       String?
-  authorUserId            String
-  parentCommentId         String?
-  body                    String
-  category                String?
-  blocking                Boolean      @default(false)
-  state                   CommentState @default(Open)
-  responsibleDepartmentId String?
-  closureVerifiedByUserId String?
-  dueAt                   DateTime?
-  resolvedAt              DateTime?
-  closedAt                DateTime?
-  reopenedAt              DateTime?
-  createdAt               DateTime     @default(now())
-  updatedAt               DateTime     @updatedAt
+  id                        String       @id @default(cuid())
+  revisionId                String
+  packageManifestId         String?
+  authorUserId              String?
+  authorIntegrationClientId String?
+  parentCommentId           String?
+  body                      String
+  category                  String?
+  blocking                  Boolean      @default(false)
+  state                     CommentState @default(Open)
+  responsibleDepartmentId   String?
+  closureVerifiedByUserId   String?
+  dueAt                     DateTime?
+  resolvedAt                DateTime?
+  closedAt                  DateTime?
+  reopenedAt                DateTime?
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
 
   @@index([revisionId, state])
   @@index([parentCommentId, createdAt])
@@ -2472,6 +2480,7 @@ model IdempotencyRecord {
   key         String
   requestHash String
   response    Json?
+  statusCode  Int      @default(200)
   expiresAt   DateTime
   createdAt   DateTime @default(now())
 
@@ -2479,13 +2488,19 @@ model IdempotencyRecord {
 }
 
 model IntegrationClient {
-  id         String    @id @default(cuid())
-  clientKey  String    @unique
-  name       String
-  secretHash String
-  isActive   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  revokedAt  DateTime?
+  id                 String    @id @default(cuid())
+  clientKey          String    @unique
+  name               String
+  secretHash         String
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  revokedAt          DateTime?
+  projectIds         String[]  @default([])
+  clientIds          String[]  @default([])
+  rateLimitPerMinute Int       @default(120)
+  lastUsedAt         DateTime?
+  secretRotatedAt    DateTime?
+  credentialMetadata Json?
 }
 
 model IntegrationScope {
@@ -2497,14 +2512,33 @@ model IntegrationScope {
   @@unique([integrationClientId, scope])
 }
 
-model WebhookEndpoint {
+model IntegrationRequestAttempt {
   id                  String   @id @default(cuid())
+  integrationClientId String
+  correlationId       String
+  method              String
+  path                String
+  statusCode          Int
+  projectId           String?
+  clientId            String?
+  createdAt           DateTime @default(now())
+
+  @@index([integrationClientId, createdAt])
+  @@index([correlationId])
+}
+
+model WebhookEndpoint {
+  id                  String    @id @default(cuid())
   integrationClientId String
   url                 String
   secretHash          String
   eventTypes          String[]
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  previousSecretHash  String?
+  secretRotatedAt     DateTime?
+  encryptedSecret     String?
+  secretKeyVersion    Int       @default(1)
 }
 
 model WebhookDelivery {
@@ -2523,6 +2557,62 @@ model WebhookDelivery {
   createdAt        DateTime  @default(now())
 
   @@unique([endpointId, outboxEventId])
+}
+
+model GeneralRequestType {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  name            String
+  departmentOwner String
+  createdAt       DateTime @default(now())
+}
+
+model GeneralRequestTypeVersion {
+  id                 String    @id @default(cuid())
+  requestTypeId      String
+  version            Int
+  status             String    @default("Draft")
+  formDefinition     Json
+  workflowTemplateId String?
+  publishedAt        DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@unique([requestTypeId, version])
+}
+
+model GeneralRequest {
+  id                   String                     @id @default(cuid())
+  requestTypeVersionId String
+  requestNumber        String                     @unique
+  sourceSystem         String
+  sourceEntityType     String
+  sourceRecordId       String
+  sourceCallback       String?
+  sourceMetadata       Json?
+  purpose              String
+  classification       String
+  projectId            String?
+  clientId             String?
+  submittedByUserId    String?
+  formData             Json
+  status               String                     @default("Draft")
+  summaryFileObjectId  String?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  attachments          GeneralRequestAttachment[]
+
+  @@index([sourceSystem, sourceEntityType, sourceRecordId])
+}
+
+model GeneralRequestAttachment {
+  id               String         @id @default(cuid())
+  generalRequestId String
+  fileObjectId     String
+  label            String?
+  createdAt        DateTime       @default(now())
+  request          GeneralRequest @relation(fields: [generalRequestId], references: [id], onDelete: Restrict)
+
+  @@unique([generalRequestId, fileObjectId])
 }
 
 model RetentionRule {

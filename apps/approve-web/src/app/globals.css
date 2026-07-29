@@ -47,6 +47,18 @@ button:disabled {
   opacity: 0.45;
 }
 
+.button.secondary {
+  border: 1px solid #ffffff66;
+  background: #ffffff18;
+}
+
+.masthead-actions,
+.field-pair {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .app-shell {
   min-height: 100vh;
 }
@@ -251,10 +263,66 @@ p {
   text-align: center;
 }
 
+.request-workspace {
+  display: grid;
+  grid-template-columns: minmax(22rem, 0.9fr) minmax(25rem, 1.1fr);
+  gap: 1.25rem;
+  padding: 1.25rem clamp(1rem, 3vw, 3rem) 3rem;
+}
+
+.request-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.6rem;
+}
+
+.request-type-grid a {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  padding: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.request-type-grid a[data-selected="true"] {
+  border-color: var(--teal);
+  background: #dcebe5;
+}
+
+.request-register article {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.1rem;
+}
+
+.request-register article > div:last-child {
+  display: grid;
+  justify-items: end;
+  gap: 0.4rem;
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 0.25rem 0.6rem;
+  color: white;
+  background: var(--teal);
+  font-size: 0.75rem;
+}
+
 @media (max-width: 900px) {
   .workspace,
-  .split {
+  .split,
+  .request-workspace {
     grid-template-columns: 1fr;
+  }
+
+  .field-pair {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .inbox-panel {

@@ -25,6 +25,7 @@ export const JOB_TYPES = [
   "TEMP_CLEANUP",
   "DRIVE_RECONCILE",
   "ARTIFACT_CLEANUP",
+  "GENERAL_REQUEST_SUMMARY",
 ] as const
 
 export type JobType = (typeof JOB_TYPES)[number]

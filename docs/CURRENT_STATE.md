@@ -23,6 +23,9 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 12: COMPLETE / LOCALLY_VERIFIED.
 - Phase 12 public domain, live key registry, and edge rate-limit verification:
   `STAGING_REQUIRED`.
+- Phase 13: COMPLETE / LOCALLY_VERIFIED.
+- Phase 13 live webhook destinations, secret manager, and deployment adapters:
+  `STAGING_REQUIRED`.
 
 ## Authoritative Workspace
 
@@ -67,6 +70,7 @@ The additive migration inventory is:
 20260730010000_phase10_durable_worker
 20260730030000_phase11_client_responses
 20260730050000_phase12_verification_portal
+20260730070000_phase13_integrations_requests
 ```
 
 Phase 4 adds internal and external sessions, OIDC transactions, invitation
@@ -142,3 +146,13 @@ codes, local browser hashing, structured tamper results, key and seal status,
 privacy allowlists, enumeration resistance, rate evidence, and no default file
 upload. The authenticated MDR view exposes scoped internal evidence. The
 platform verifies application seals and explicitly does not claim PAdES.
+
+# Phase 13 Integrations and General Requests
+
+The platform now exposes a versioned, scoped service API, generated OpenAPI,
+typed TypeScript SDK, canonical idempotency, project/client restrictions,
+rate/audit evidence, signed durable webhooks, and privacy-safe serialization.
+The approval application owns versioned General Request forms, seven initial
+templates, attachments, search/history, audit/outbox records, and durable PDF
+summary generation. Live external webhook and storage verification remains a
+Phase 14 staging gate.

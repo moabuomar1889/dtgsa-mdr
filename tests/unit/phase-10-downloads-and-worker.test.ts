@@ -40,6 +40,7 @@ test("Phase 10 registers the complete durable job catalog", () => {
     "TEMP_CLEANUP",
     "DRIVE_RECONCILE",
     "ARTIFACT_CLEANUP",
+    "GENERAL_REQUEST_SUMMARY",
   ])
 })
 

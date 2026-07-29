@@ -24,6 +24,12 @@ importers:
       '@dtg/client-response-domain':
         specifier: workspace:*
         version: link:packages/client-response-domain
+      '@dtg/integration-domain':
+        specifier: workspace:*
+        version: link:packages/integration-domain
+      '@dtg/integration-sdk':
+        specifier: workspace:*
+        version: link:packages/integration-sdk
       '@dtg/job-engine':
         specifier: workspace:*
         version: link:packages/job-engine
@@ -93,6 +99,9 @@ importers:
       '@dtg/identity-domain':
         specifier: workspace:*
         version: link:../../packages/identity-domain
+      '@dtg/integration-domain':
+        specifier: workspace:*
+        version: link:../../packages/integration-domain
       '@dtg/review-domain':
         specifier: workspace:*
         version: link:../../packages/review-domain
@@ -264,9 +273,18 @@ importers:
       '@dtg/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@dtg/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@dtg/integration-domain':
+        specifier: workspace:*
+        version: link:../../packages/integration-domain
       '@dtg/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@prisma/client':
+        specifier: ^7.6.0
+        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
     devDependencies:
       '@types/node':
         specifier: ^20
@@ -313,6 +331,9 @@ importers:
       '@dtg/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@dtg/integration-domain':
+        specifier: workspace:*
+        version: link:../../packages/integration-domain
       '@dtg/job-engine':
         specifier: workspace:*
         version: link:../../packages/job-engine
@@ -385,6 +406,14 @@ importers:
         version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
 
   packages/identity-domain: {}
+
+  packages/integration-domain: {}
+
+  packages/integration-sdk:
+    dependencies:
+      '@dtg/integration-domain':
+        specifier: workspace:*
+        version: link:../integration-domain
 
   packages/job-engine:
     dependencies:

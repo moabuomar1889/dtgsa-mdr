@@ -12,7 +12,10 @@
   "dependencies": {
     "@dtg/configuration": "workspace:*",
     "@dtg/contracts": "workspace:*",
-    "@dtg/observability": "workspace:*"
+    "@dtg/database": "workspace:*",
+    "@dtg/integration-domain": "workspace:*",
+    "@dtg/observability": "workspace:*",
+    "@prisma/client": "^7.6.0"
   },
   "devDependencies": {
     "@types/node": "^20",

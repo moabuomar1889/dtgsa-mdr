@@ -65,9 +65,14 @@ export default async function ApprovalPage({
           DTG Signature Platform
           <small>Exact-package review desk</small>
         </div>
-        <div>
-          <strong>{inbox.actor.fullName}</strong>
-          <small className="eyebrow">{inbox.actor.email}</small>
+        <div className="masthead-actions">
+          <Link className="button secondary" href="/requests">
+            General requests
+          </Link>
+          <div>
+            <strong>{inbox.actor.fullName}</strong>
+            <small className="eyebrow">{inbox.actor.email}</small>
+          </div>
         </div>
       </header>
       <div className="workspace">

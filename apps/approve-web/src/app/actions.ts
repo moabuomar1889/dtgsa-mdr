@@ -231,7 +231,7 @@ export async function transitionCommentAction(input: {
     to: input.to,
     blocking: comment.blocking,
     actorUserId: actor.id,
-    authorUserId: comment.authorUserId,
+    authorUserId: comment.authorUserId ?? "",
     assigneeIds: assignments
       .filter((item) => item.assigneeType === "PERSON")
       .map((item) => item.assigneeId),

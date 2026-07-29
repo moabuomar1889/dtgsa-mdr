@@ -119,7 +119,7 @@ test("worker starts and stops with the durable job catalog registered", async ()
     ready: false,
     stopping: true,
   })
-  assert.match(logs[0], /"jobsRegistered":14/)
+  assert.match(logs[0], /"jobsRegistered":15/)
   assert.match(logs[1], /"signal":"test"/)
 })
 
