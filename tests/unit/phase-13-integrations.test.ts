@@ -214,6 +214,7 @@ test("Phase 13 migration is additive and protects published forms", async () => 
   )
   assert.match(migration, /IntegrationRequestAttempt/)
   assert.match(migration, /GeneralRequestAttachment/)
+  assert.match(migration, /GeneralRequestApprovalDecision/)
   assert.match(migration, /published_immutable/)
   assert.doesNotMatch(migration, /DROP TABLE|TRUNCATE|DELETE FROM/)
 })

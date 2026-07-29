@@ -2581,9 +2581,9 @@ model GeneralRequestTypeVersion {
 }
 
 model GeneralRequest {
-  id                   String                     @id @default(cuid())
+  id                   String                      @id @default(cuid())
   requestTypeVersionId String
-  requestNumber        String                     @unique
+  requestNumber        String                      @unique
   sourceSystem         String
   sourceEntityType     String
   sourceRecordId       String
@@ -2595,13 +2595,55 @@ model GeneralRequest {
   clientId             String?
   submittedByUserId    String?
   formData             Json
-  status               String                     @default("Draft")
+  status               String                      @default("Draft")
   summaryFileObjectId  String?
-  createdAt            DateTime                   @default(now())
-  updatedAt            DateTime                   @updatedAt
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
   attachments          GeneralRequestAttachment[]
+  approvalCase         GeneralRequestApprovalCase?
 
   @@index([sourceSystem, sourceEntityType, sourceRecordId])
+}
+
+model GeneralRequestApprovalCase {
+  id               String                       @id @default(cuid())
+  generalRequestId String                       @unique
+  packageHash      String
+  workflowSnapshot Json
+  status           String                       @default("Active")
+  startedAt        DateTime                     @default(now())
+  completedAt      DateTime?
+  request          GeneralRequest               @relation(fields: [generalRequestId], references: [id], onDelete: Restrict)
+  steps            GeneralRequestApprovalStep[]
+}
+
+model GeneralRequestApprovalStep {
+  id             String                           @id @default(cuid())
+  approvalCaseId String
+  stepKey        String
+  label          String
+  requiredRole   String
+  stepOrder      Int
+  status         String                           @default("Active")
+  completedAt    DateTime?
+  approvalCase   GeneralRequestApprovalCase       @relation(fields: [approvalCaseId], references: [id], onDelete: Restrict)
+  decisions      GeneralRequestApprovalDecision[]
+
+  @@unique([approvalCaseId, stepKey])
+}
+
+model GeneralRequestApprovalDecision {
+  id               String                     @id @default(cuid())
+  stepId           String
+  actorUserId      String
+  decision         String
+  comments         String?
+  declarationHash  String
+  evidenceHash     String                     @unique
+  idempotencyKey   String                     @unique
+  identitySnapshot Json
+  decidedAt        DateTime                   @default(now())
+  step             GeneralRequestApprovalStep @relation(fields: [stepId], references: [id], onDelete: Restrict)
 }
 
 model GeneralRequestAttachment {

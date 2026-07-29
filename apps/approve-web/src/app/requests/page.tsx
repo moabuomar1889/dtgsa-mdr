@@ -3,7 +3,10 @@ import type { SafeField } from "@dtg/integration-domain"
 import { requireApprovalActor } from "../../server/auth"
 import { prisma } from "../../server/database"
 import { getGeneralRequestWorkspace } from "../../server/general-request-service"
-import { submitGeneralRequestAction } from "./actions"
+import {
+  decideGeneralRequestAction,
+  submitGeneralRequestAction,
+} from "./actions"
 
 export const dynamic = "force-dynamic"
 
@@ -176,6 +179,44 @@ export default async function GeneralRequestsPage({
                   <span className="status-pill">{request.status}</span>
                   <small className="mono">{request.sourceSystem}</small>
                 </div>
+                {request.status === "Active" &&
+                  request.summaryFileObjectId &&
+                  request.approvalCase?.steps.some(
+                    (step) => step.status === "Active"
+                  ) && (
+                    <form
+                      action={decideGeneralRequestAction}
+                      className="request-decision"
+                    >
+                      <input
+                        type="hidden"
+                        name="generalRequestId"
+                        value={request.id}
+                      />
+                      <input
+                        type="hidden"
+                        name="idempotencyKey"
+                        value={`request-decision:${request.id}:${request.approvalCase.id}`}
+                      />
+                      <textarea name="comments" placeholder="Decision note" />
+                      <label>
+                        <input name="declaration" type="checkbox" required /> I
+                        reviewed the immutable request summary and accept
+                        responsibility for this decision.
+                      </label>
+                      <div className="action-row">
+                        <button name="decision" value="APPROVE">
+                          Approve and sign
+                        </button>
+                        <button name="decision" value="RETURN">
+                          Return
+                        </button>
+                        <button name="decision" value="REJECT">
+                          Reject
+                        </button>
+                      </div>
+                    </form>
+                  )}
               </article>
             ))}
             {workspace.requests.length === 0 && (

@@ -299,6 +299,18 @@ p {
   padding: 1rem 1.1rem;
 }
 
+.request-decision {
+  display: grid;
+  flex-basis: 100%;
+  gap: 0.5rem;
+  border-top: 1px dashed var(--line);
+  padding-top: 0.75rem;
+}
+
+.request-decision textarea {
+  width: 100%;
+}
+
 .request-register article > div:last-child {
   display: grid;
   justify-items: end;

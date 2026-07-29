@@ -35,6 +35,8 @@ created.
    status or signed webhooks.
 6. Search and history preserve number, purpose, source, status, and timestamps.
 
-The current local implementation queues the summary and records case-start
-evidence. Final production storage and live workflow assignment depend on Phase
-14 deployment adapters and configured workflow templates.
+Approval requires the generated immutable summary, an active assigned step, a
+responsibility declaration, and an authorized department, project, or system
+role. The decision records identity, declaration, request Package Hash, summary
+hash, evidence hash, audit, and an outbox event atomically. Final production
+storage and live provider delivery depend on Phase 14 deployment adapters.

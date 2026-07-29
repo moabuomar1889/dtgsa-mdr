@@ -731,6 +731,16 @@ async function createGeneralRequest(
       "A published request type version is required."
     )
   }
+  const requestType = await prisma.generalRequestType.findUnique({
+    where: { id: version.requestTypeId },
+  })
+  if (!requestType) {
+    throw new IntegrationError(
+      "request_type_unavailable",
+      400,
+      "The request type is unavailable."
+    )
+  }
   const projectId = input.projectId ? String(input.projectId) : undefined
   const clientId = input.clientId ? String(input.clientId) : undefined
   assertResourceAccess({
@@ -768,6 +778,31 @@ async function createGeneralRequest(
       clientId,
       formData: formData as Prisma.InputJsonValue,
       status: "Submitted",
+      approvalCase: {
+        create: {
+          packageHash: canonicalRequestHash({
+            requestNumber,
+            requestTypeVersionId: version.id,
+            formData,
+            purpose: input.purpose,
+            classification: input.classification,
+          }),
+          workflowSnapshot: {
+            requestTypeVersionId: version.id,
+            workflowTemplateId: version.workflowTemplateId,
+            departmentOwner: requestType.departmentOwner,
+            steps: ["DEPARTMENT_APPROVAL"],
+          },
+          steps: {
+            create: {
+              stepKey: "DEPARTMENT_APPROVAL",
+              label: `${requestType.departmentOwner} approval`,
+              requiredRole: requestType.departmentOwner,
+              stepOrder: 1,
+            },
+          },
+        },
+      },
     },
   })
   await prisma.outboxEvent.create({

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { requireApprovalActor } from "../../server/auth"
 import { prisma } from "../../server/database"
 import { submitGeneralRequest } from "../../server/general-request-service"
+import { decideGeneralRequest } from "../../server/general-request-service"
 
 export async function submitGeneralRequestAction(formData: FormData) {
   const actor = await requireApprovalActor()
@@ -35,6 +36,23 @@ export async function submitGeneralRequestAction(formData: FormData) {
   })
   revalidatePath("/requests")
   redirect("/requests")
+}
+
+export async function decideGeneralRequestAction(formData: FormData) {
+  const actor = await requireApprovalActor()
+  const decision = String(formData.get("decision") ?? "")
+  if (!["APPROVE", "RETURN", "REJECT"].includes(decision)) {
+    throw new Error("The request decision is invalid.")
+  }
+  await decideGeneralRequest(prisma, {
+    generalRequestId: String(formData.get("generalRequestId") ?? ""),
+    actor,
+    decision: decision as "APPROVE" | "RETURN" | "REJECT",
+    comments: String(formData.get("comments") ?? "").trim() || undefined,
+    declarationAccepted: formData.get("declaration") === "on",
+    idempotencyKey: String(formData.get("idempotencyKey") ?? ""),
+  })
+  revalidatePath("/requests")
 }
 
 function normalizeValue(value: FormDataEntryValue) {

@@ -110,6 +110,60 @@ CREATE TABLE "GeneralRequestAttachment" (
 CREATE UNIQUE INDEX "GeneralRequestAttachment_request_file_key"
   ON "GeneralRequestAttachment"("generalRequestId", "fileObjectId");
 
+CREATE TABLE "GeneralRequestApprovalCase" (
+  "id" TEXT NOT NULL,
+  "generalRequestId" TEXT NOT NULL,
+  "packageHash" TEXT NOT NULL,
+  "workflowSnapshot" JSONB NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'Active',
+  "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "completedAt" TIMESTAMP(3),
+  CONSTRAINT "GeneralRequestApprovalCase_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "GeneralRequestApprovalCase_request_fkey"
+    FOREIGN KEY ("generalRequestId") REFERENCES "GeneralRequest"("id")
+    ON DELETE RESTRICT ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX "GeneralRequestApprovalCase_request_key"
+  ON "GeneralRequestApprovalCase"("generalRequestId");
+
+CREATE TABLE "GeneralRequestApprovalStep" (
+  "id" TEXT NOT NULL,
+  "approvalCaseId" TEXT NOT NULL,
+  "stepKey" TEXT NOT NULL,
+  "label" TEXT NOT NULL,
+  "requiredRole" TEXT NOT NULL,
+  "stepOrder" INTEGER NOT NULL,
+  "status" TEXT NOT NULL DEFAULT 'Active',
+  "completedAt" TIMESTAMP(3),
+  CONSTRAINT "GeneralRequestApprovalStep_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "GeneralRequestApprovalStep_case_fkey"
+    FOREIGN KEY ("approvalCaseId") REFERENCES "GeneralRequestApprovalCase"("id")
+    ON DELETE RESTRICT ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX "GeneralRequestApprovalStep_case_key"
+  ON "GeneralRequestApprovalStep"("approvalCaseId", "stepKey");
+
+CREATE TABLE "GeneralRequestApprovalDecision" (
+  "id" TEXT NOT NULL,
+  "stepId" TEXT NOT NULL,
+  "actorUserId" TEXT NOT NULL,
+  "decision" TEXT NOT NULL,
+  "comments" TEXT,
+  "declarationHash" TEXT NOT NULL,
+  "evidenceHash" TEXT NOT NULL,
+  "idempotencyKey" TEXT NOT NULL,
+  "identitySnapshot" JSONB NOT NULL,
+  "decidedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "GeneralRequestApprovalDecision_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "GeneralRequestApprovalDecision_step_fkey"
+    FOREIGN KEY ("stepId") REFERENCES "GeneralRequestApprovalStep"("id")
+    ON DELETE RESTRICT ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX "GeneralRequestApprovalDecision_evidence_key"
+  ON "GeneralRequestApprovalDecision"("evidenceHash");
+CREATE UNIQUE INDEX "GeneralRequestApprovalDecision_idempotency_key"
+  ON "GeneralRequestApprovalDecision"("idempotencyKey");
+
 CREATE OR REPLACE FUNCTION prevent_published_request_version_mutation()
 RETURNS trigger AS $$
 BEGIN

@@ -45,6 +45,7 @@ export async function getApprovalActor() {
         .map((identity) => identity.google?.googleSubject)
         .find(Boolean) ?? null,
     employeeCode: session.user.employeeProfile?.employeeCode ?? null,
+    departmentId: session.user.employeeProfile?.departmentId ?? null,
   }
 }
 
