@@ -455,20 +455,20 @@ Phase 2 remains closed. The owner must review the database-backed coverage gap a
 Primary Phase 1 implementation commit:
 
 ```text
-PENDING PRIMARY COMMIT
+e7b19f983e0de0d2cf2be11405407e5283c3bfa6
 ```
 
 The report-finalization commit cannot self-embed its own SHA. Both commits are visible in Git history.
 
 ## 33. Clean Working-Tree Status
 
-Before commit:
+After the primary Phase 1 implementation commit and before the report-finalization update:
 
 ```text
-EXPECTED PHASE 1 CHANGES ONLY
+CLEAN
 ```
 
-Final clean status is verified after the report-finalization commit.
+Final clean status is verified externally with `git status --short` after the report-finalization commit because a commit cannot self-record a later working-tree observation.
 
 ## Provenance Note
 
