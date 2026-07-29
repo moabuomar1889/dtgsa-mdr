@@ -89,4 +89,4 @@ versioned visual covers without owning cover layout.
 
 ## Commit
 
-Pending final implementation commit.
+`45adb1e7db90ead7e0b7671053a37c89344d938c`
