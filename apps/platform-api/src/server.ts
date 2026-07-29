@@ -149,6 +149,11 @@ function sendJson(
 ) {
   response.writeHead(statusCode, {
     "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+    "referrer-policy": "no-referrer",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
     "x-request-id": correlationId,
     ...extraHeaders,
   })

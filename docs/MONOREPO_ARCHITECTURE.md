@@ -4,27 +4,39 @@ Date: 2026-07-29
 
 ## Status
 
-Phase 2 establishes a pnpm modular monorepo without changing MDR business
-behavior or the Prisma data model.
+The Phase 15 architecture is a pnpm modular monorepo with five deployment
+units, one PostgreSQL database, additive migrations, reusable domain packages,
+and compatibility boundaries that preserve characterized MDR behavior.
 
 ## Repository Shape
 
 ```text
 apps/
-  mdr-web/       Existing MDR Next.js application
-  approve-web/   Truthful approval foundation shell
-  verify-web/    Truthful verification foundation shell
-  platform-api/  Operational Node.js HTTP service
-  worker/        Operational worker process foundation
+  mdr-web/       MDR, PDI, document control, templates, and administration
+  approve-web/   Internal approval, review, comments, and General Requests
+  verify-web/    Public and authenticated verification
+  platform-api/  Scoped versioned integration API
+  worker/        Durable jobs, assembly, delivery, and reconciliation
 packages/
-  contracts/
+  authorization/
+  client-response-domain/
   configuration/
+  contracts/
+  controlled-storage-domain/
+  cover-designer/
   database/
   document-control-domain/
-  authorization/
-  pdf-engine/
+  identity-domain/
+  integration-domain/
+  integration-sdk/
+  job-engine/
   observability/
+  pdf-engine/
+  review-domain/
+  trust-domain/
   ui/
+  verification-domain/
+  workflow-engine-domain/
 prisma/          Authoritative schema and migration history
 tests/           Shared characterization, integration, and architecture tests
 scripts/         Root orchestration and validation
@@ -47,11 +59,11 @@ composition roots. Shared packages never import application source.
 
 ## Incremental Extraction
 
-Only characterized deterministic code moved in Phase 2: authorization
-vocabulary and evaluation, numbering composition, PDI policy, client-reply
-policy, and PDF utilities. Prisma transactions, Supabase authentication,
-storage, workflow orchestration, Google Drive, transmittal delivery, and MDR
-screens remain in `apps/mdr-web`.
+Reusable policy and contracts are package-owned. Prisma transactions and
+provider composition remain in applications or worker services. Supabase
+authentication/storage and fixed workflow compatibility remain in `mdr-web`
+until production parity, migration, reconciliation, rollback closure, and
+zero-consumer evidence allow retirement.
 
 ## Tooling
 
@@ -60,9 +72,9 @@ introduced. Each application and package owns a manifest and TypeScript
 configuration. The architecture checker enforces package cycles, public
 exports, application isolation, and the MDR route baseline.
 
-## Deferred Boundaries
+## Deployment Boundary
 
-Identity, workflow engine, signature, cover designer, controlled documents,
-Drive adapter, client-response engine, audit verification, integrations, and
-notifications remain documented future packages. They are not empty runtime
-packages in Phase 2.
+The three web applications use standalone Next.js output. API and worker are
+private services. All five use one private project database and deployment
+secrets supplied by the environment. No application imports source from
+another application.

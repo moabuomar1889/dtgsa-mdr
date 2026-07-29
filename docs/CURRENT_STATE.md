@@ -29,6 +29,9 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 14: CODE_CONFIG_COMPLETE / LOCALLY_VERIFIED.
 - Phase 14 container execution, staging recovery, domains, and production:
   `BLOCKED_EXTERNAL_ENVIRONMENT_AND_AUTHORIZATION`.
+- Phase 15: CONSOLIDATED / LOCALLY_VERIFIED / STAGING_READY.
+- Phase 15 production activation:
+  `BLOCKED_EXTERNAL_ENVIRONMENT_AND_AUTHORIZATION`.
 
 ## Authoritative Workspace
 
@@ -168,3 +171,17 @@ security operations, and disaster-recovery runbooks are prepared. Docker is not
 installed in the local verification environment, and no staging/production
 credentials or authorization were supplied; images, live restore, DNS, and
 deployment remain externally blocked.
+
+# Phase 15 Final Acceptance
+
+Final acceptance synchronizes the gate matrix, Graphify comparison, legacy
+retirement decision, security and performance evidence, dependency remediation,
+documentation, and complete repository validation. Next.js, Nodemailer,
+Docxtemplater, Sharp, Supabase clients, PostCSS, and transitive dependencies
+were upgraded. The vulnerable unmaintained XLSX implementation was replaced
+with a patched fork while preserving characterized PDI import/export behavior.
+
+The final verdict is `STAGING_READY`. Google Workspace, Controlled Drive,
+Coolify, Docker/container scan, live backup/restore, qpdf capacity, malware
+provider, KMS/HSM, public domains, and production deployment remain external
+gates. PAdES remains explicitly deferred.

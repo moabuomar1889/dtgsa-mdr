@@ -4,21 +4,26 @@ Date: 2026-07-29
 
 ## Completed
 
-- Phases 0-3: baseline, characterization, modular foundation, and database
-  foundation.
-- Phase 4: identity and access implementation is code-complete and
-  staging-ready; live Google verification is externally blocked.
-- Phases 5-11: controlled storage, trust evidence, configurable workflow,
-  visual cover design, central approval, durable downloads/worker, and client
-  response revision lifecycle are complete locally.
+- Phases 0-15 are implementation-complete or locally accepted at their stated
+  boundary.
+- Identity, controlled storage, trust evidence, configurable workflow, cover
+  design, approval, durable jobs, client responses, verification, integrations,
+  General Requests, and operations configuration are complete locally.
+- Final dependency remediation, security headers, acceptance matrix, legacy
+  retirement decision, and documentation consolidation are complete.
 
 ## Next
 
-- Phase 12: public and internal document verification is complete locally.
-- Phases 13-15: integrations, operational hardening, and final acceptance.
+- Activate a controlled staging environment with owner-authorized credentials.
+- Build and scan all containers.
+- Exercise Google Workspace, Drive, providers, public domains, and webhooks.
+- Run large-file, concurrency, connection, memory, CPU, and temporary-disk tests.
+- Perform encrypted backup/restore and post-restore evidence verification.
+- Reconcile legacy identities, files, workflow cases, and evidence before any
+  compatibility removal.
+- Obtain explicit authorization before production deployment.
 
-Production deployment remains outside the modernization phases unless
-explicitly authorized.
+The readiness verdict is `STAGING_READY`; production is not yet accepted.
 
 # Phase 6 Status
 

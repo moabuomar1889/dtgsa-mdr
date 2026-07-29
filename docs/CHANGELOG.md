@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-07-29 - Phase 15 Final Consolidation
+
+- Added final gate, Graphify, legacy retirement, security, performance, and
+  implementation reports with a `STAGING_READY` verdict.
+- Upgraded security-sensitive runtime dependencies, replaced unmaintained XLSX
+  processing with a patched fork and characterized behavior, and added global
+  defensive response headers.
+- Added final acceptance tests and synchronized README, architecture, current
+  state, roadmap, standards, and handoff documentation.
+
+## 2026-07-29 - Phases 9-14
+
+- Completed central approval/review, durable worker/downloads, client responses
+  and revisions, verification, integration API, webhooks, General Requests,
+  container/CI topology, monitoring, backup, recovery, and operations guidance.
+- Kept live Google, Drive, provider, qpdf, container, staging recovery, DNS,
+  and production deployment claims explicitly blocked.
+
 ## 2026-07-29 - Phase 5 Controlled Google Drive
 
 - Added Drive File ID authority, secure Picker handoff, server-side controlled

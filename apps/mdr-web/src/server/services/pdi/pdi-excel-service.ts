@@ -121,7 +121,7 @@ export async function exportPdiWorkbook(input: {
     Remarks: item.remarks ?? "",
   }))
 
-  return writePdiWorkbook(rows)
+  return await writePdiWorkbook(rows)
 }
 
 export async function importPdiWorkbook(
@@ -209,7 +209,7 @@ export async function importPdiWorkbook(
     }),
   ])
 
-  const rows = readPdiWorkbookRows(await file.arrayBuffer())
+  const rows = await readPdiWorkbookRows(await file.arrayBuffer())
 
   let importedCount = 0
 
@@ -509,7 +509,7 @@ export async function exportExternalPortalPdiWorkbook(
       releasePurpose: { select: { code: true, name: true } },
     },
   })
-  return writePdiWorkbook(
+  return await writePdiWorkbook(
     items.map((item) => ({
       ProjectCode: item.project.code,
       ProjectName: item.project.name,

@@ -9,8 +9,8 @@ import {
 } from "@/lib/pdi/excel"
 import { createSamplePdiWorkbook } from "../../fixtures/excel/sample-pdi-workbook"
 
-test("PDI workbook round-trip preserves the exported column order and row values", () => {
-  const [row] = readPdiWorkbookRows(createSamplePdiWorkbook())
+test("PDI workbook round-trip preserves the exported column order and row values", async () => {
+  const [row] = await readPdiWorkbookRows(await createSamplePdiWorkbook())
 
   assert.deepEqual(Object.keys(row), PDI_EXPORT_COLUMNS)
   assert.equal(row.ProjectCode, "PRJ-001")
@@ -18,8 +18,8 @@ test("PDI workbook round-trip preserves the exported column order and row values
   assert.equal(row.ClientDocumentNumber, "CL-001")
 })
 
-test("PDI import normalization trims text, uppercases codes, and defaults revision", () => {
-  const [row] = readPdiWorkbookRows(createSamplePdiWorkbook())
+test("PDI import normalization trims text, uppercases codes, and defaults revision", async () => {
+  const [row] = await readPdiWorkbookRows(await createSamplePdiWorkbook())
 
   assert.deepEqual(normalizePdiImportRow(row), {
     title: "General Arrangement",
@@ -63,13 +63,13 @@ test("PDI cell normalization captures current number and null handling", () => {
   assert.equal(normalizePdiCell(null), "")
 })
 
-test("PDI workbook reader returns an empty list for a readable empty worksheet", () => {
-  assert.deepEqual(readPdiWorkbookRows(writePdiWorkbook([])), [])
+test("PDI workbook reader returns an empty list for a readable empty worksheet", async () => {
+  assert.deepEqual(await readPdiWorkbookRows(await writePdiWorkbook([])), [])
 })
 
-test("PDI workbook reader rejects arbitrary text with an actionable error", () => {
-  assert.throws(
-    () => readPdiWorkbookRows(Buffer.from("not-an-xlsx-workbook")),
+test("PDI workbook reader rejects arbitrary text with an actionable error", async () => {
+  await assert.rejects(
+    readPdiWorkbookRows(Buffer.from("not-an-xlsx-workbook")),
     /not a valid XLSX workbook/
   )
 })

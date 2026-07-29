@@ -1,6 +1,6 @@
 import { writePdiWorkbook } from "@/lib/pdi/excel"
 
-export function createSamplePdiWorkbook() {
+export async function createSamplePdiWorkbook() {
   return writePdiWorkbook([
     {
       ProjectCode: "PRJ-001",

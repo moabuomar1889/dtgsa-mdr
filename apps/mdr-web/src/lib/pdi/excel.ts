@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx"
+import * as XLSX from "@e965/xlsx"
 
 export const PDI_EXPORT_COLUMNS = [
   "ProjectCode",
@@ -37,7 +37,7 @@ export function normalizePdiImportRow(row: PdiWorkbookRow) {
   }
 }
 
-export function writePdiWorkbook(rows: PdiWorkbookRow[]) {
+export async function writePdiWorkbook(rows: PdiWorkbookRow[]) {
   const workbook = XLSX.utils.book_new()
   const worksheet = XLSX.utils.json_to_sheet(rows)
   XLSX.utils.book_append_sheet(workbook, worksheet, "PDI")
@@ -48,7 +48,7 @@ export function writePdiWorkbook(rows: PdiWorkbookRow[]) {
   }) as Buffer
 }
 
-export function readPdiWorkbookRows(
+export async function readPdiWorkbookRows(
   workbookBytes: ArrayBuffer | Uint8Array | Buffer
 ) {
   const bytes = new Uint8Array(

@@ -82,3 +82,32 @@ field filtering, and structured results. Raw codes and request addresses must
 not be persisted. Public APIs must preserve generic lookup failures and policy
 allowlists. Internal evidence must remain project-scoped. Do not describe the
 application seal as PAdES.
+
+# Phase 13 Handoff
+
+Use `/api/v1` and `@dtg/integration-sdk` for scoped service integration. Keep
+credentials server-side, require idempotency on mutations, enforce project and
+client restrictions, and deliver signed webhooks only to validated public
+HTTPS destinations. General Request approval must remain human and bound to
+the deterministic summary hash.
+
+# Phase 14 Handoff
+
+Use the five deployment units and one private PostgreSQL database. Run
+production migrations only through `scripts/deploy-migrate.mjs` after a
+verified backup. Never expose PostgreSQL, API, or worker publicly. Docker,
+Coolify, DNS, backup destination, and live recovery require owner authorization.
+
+# Phase 15 Final Handoff
+
+The branch is `STAGING_READY`. Start with container build/scan and an isolated
+staging database. Activate Google, Drive, email/webhooks, signing provider,
+malware scanner, qpdf, domains, monitoring, and encrypted backups through
+deployment-owned secrets. Run functional, security, performance, smoke, and
+recovery gates and attach evidence to the exact commit.
+
+Do not remove Supabase authentication/storage, fixed workflow, historical
+`SignatureEvent`, persistent package compatibility, synchronous provider paths,
+or compatibility exports until every gate in
+`docs/LEGACY_PARITY_AND_RETIREMENT.md` passes. Do not call the application seal
+PAdES.
