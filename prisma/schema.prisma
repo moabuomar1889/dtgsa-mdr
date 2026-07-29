@@ -1870,18 +1870,26 @@ model CoverTemplate {
 }
 
 model CoverTemplateVersion {
-  id             String                 @id @default(cuid())
-  templateId     String
-  version        Int
-  status         FoundationRecordStatus @default(Draft)
-  pageSize       String
-  orientation    String
-  publishedAt    DateTime?
-  createdAt      DateTime               @default(now())
-  template       CoverTemplate          @relation(fields: [templateId], references: [id], onDelete: Restrict)
-  elements       CoverLayoutElement[]
-  bindings       CoverFieldBinding[]
-  signatureBoxes SignatureBox[]
+  id                String                 @id @default(cuid())
+  templateId        String
+  version           Int
+  status            FoundationRecordStatus @default(Draft)
+  pageSize          String
+  orientation       String
+  publishedAt       DateTime?
+  createdAt         DateTime               @default(now())
+  schemaVersion     String                 @default("1")
+  customWidthPt     Decimal?
+  customHeightPt    Decimal?
+  contentHash       String?
+  snapshot          Json?
+  supersededAt      DateTime?
+  publishedByUserId String?
+  legacyFallback    Boolean                @default(true)
+  template          CoverTemplate          @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  elements          CoverLayoutElement[]
+  bindings          CoverFieldBinding[]
+  signatureBoxes    SignatureBox[]
 
   @@unique([templateId, version])
 }
@@ -1895,6 +1903,8 @@ model CoverLayoutElement {
   width       Decimal
   height      Decimal
   properties  Json?
+  zIndex      Int                  @default(0)
+  locked      Boolean              @default(false)
   version     CoverTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
 }
 
@@ -1910,16 +1920,19 @@ model CoverFieldBinding {
 }
 
 model SignatureBox {
-  id              String               @id @default(cuid())
-  versionId       String
-  boxKey          String
-  roleCode        String
-  workflowStepKey String?
-  x               Decimal
-  y               Decimal
-  width           Decimal
-  height          Decimal
-  version         CoverTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  id                 String               @id @default(cuid())
+  versionId          String
+  boxKey             String
+  roleCode           String
+  workflowStepKey    String?
+  x                  Decimal
+  y                  Decimal
+  width              Decimal
+  height             Decimal
+  roleLabel          String?
+  specificAssignment String?
+  displayOptions     Json?
+  version            CoverTemplateVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
 
   @@unique([versionId, boxKey])
 }
@@ -1932,17 +1945,22 @@ model GeneratedCover {
   fileObjectId       String
   contentHash        String
   generatedAt        DateTime @default(now())
+  outputHash         String?
+  rendererVersion    String?
+  templateSnapshot   Json?
 
   @@index([revisionId])
 }
 
 model CoverTemplateInheritanceRule {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   templateId String
   scopeType  String
   scopeId    String?
-  priority   Int     @default(0)
-  isActive   Boolean @default(true)
+  priority   Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([templateId, scopeType, scopeId])
 }

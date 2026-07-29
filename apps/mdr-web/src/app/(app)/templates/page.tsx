@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { CoverSheetKind } from "@prisma/client"
 import {
   createCoverTemplateAction,
@@ -107,6 +108,14 @@ export default async function TemplatesPage() {
           <CardDescription className="max-w-3xl leading-6">
             Upload versioned template files, mark defaults per scope, and keep the cover and transmittal engine anchored to managed assets instead of ad-hoc files.
           </CardDescription>
+          <div>
+            <Link
+              href="/templates/designer"
+              className="inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              Open visual cover designer
+            </Link>
+          </div>
         </CardHeader>
         <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
           <div className="rounded-2xl border border-border/60 bg-background/80 p-4">

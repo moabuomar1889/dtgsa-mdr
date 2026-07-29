@@ -79,6 +79,18 @@ import {
   startApprovalCycle,
 } from "@/server/services/workflow/approval-engine-service"
 import { DEFAULT_ENGINEERING_WORKFLOW } from "../../packages/workflow-engine-domain/src/index"
+import {
+  DEFAULT_COVER_TEMPLATE,
+  type CoverTemplateDocument,
+} from "../../packages/cover-designer/src/index"
+import {
+  archiveVisualCoverVersion,
+  createVisualCoverDraft,
+  getProjectResponseLegend,
+  publishVisualCoverVersion,
+  resolvePublishedVisualCover,
+  saveVisualCoverDraft,
+} from "@/server/services/templates/visual-cover-template-service"
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL
 
@@ -1718,5 +1730,214 @@ test("Phase 7 workflow decisions are package-bound, evidence-backed, and concurr
   assert.equal(
     await prisma.approvalDecision.count({ where: { id: first.id } }),
     1
+  )
+})
+
+test("Phase 8 visual covers publish immutably, inherit by scope, and preserve history", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const unauthorizedActor = {
+    ...baseline.actor,
+    userRoles: [],
+    projectRoles: [],
+  }
+  await assert.rejects(
+    createVisualCoverDraft({
+      actor: unauthorizedActor,
+      code: "UNAUTHORIZED",
+      name: "Unauthorized",
+      scopeType: "ORGANIZATION",
+    }),
+    /not authorized/
+  )
+  await assert.rejects(
+    createVisualCoverDraft({
+      actor: baseline.actor,
+      code: "INVALID_SCOPE",
+      name: "Invalid scope",
+      scopeType: "CLIENT",
+      scopeId: baseline.discipline.id,
+    }),
+    /does not exist or is inactive/
+  )
+
+  const organization = await createVisualCoverDraft({
+    actor: baseline.actor,
+    code: "ORG_COVER",
+    name: "Organization cover",
+    scopeType: "ORGANIZATION",
+  })
+  await publishVisualCoverVersion({
+    actor: baseline.actor,
+    versionId: organization.id,
+  })
+  const client = await createVisualCoverDraft({
+    actor: baseline.actor,
+    code: "CLIENT_COVER_VISUAL",
+    name: "Client cover",
+    scopeType: "CLIENT",
+    scopeId: baseline.client.id,
+    cloneVersionId: organization.id,
+  })
+  await publishVisualCoverVersion({
+    actor: baseline.actor,
+    versionId: client.id,
+  })
+  const project = await createVisualCoverDraft({
+    actor: baseline.actor,
+    code: "PROJECT_COVER_VISUAL",
+    name: "Project cover",
+    scopeType: "PROJECT",
+    scopeId: baseline.project.id,
+    cloneVersionId: client.id,
+  })
+  const projectDocument: CoverTemplateDocument = {
+    ...structuredClone(DEFAULT_COVER_TEMPLATE),
+    elements: [
+      ...structuredClone(DEFAULT_COVER_TEMPLATE.elements),
+      {
+        id: "project-response-legend",
+        type: "CLIENT_RESPONSE_LEGEND",
+        x: 0.08,
+        y: 0.46,
+        width: 0.84,
+        height: 0.16,
+        zIndex: 8,
+      },
+      {
+        id: "additional-manager",
+        type: "SIGNATURE_BOX",
+        workflowStepKey: "manager-2",
+        roleLabel: "Additional Manager",
+        x: 0.52,
+        y: 0.68,
+        width: 0.4,
+        height: 0.16,
+        zIndex: 9,
+      },
+    ],
+  }
+  await saveVisualCoverDraft({
+    actor: baseline.actor,
+    versionId: project.id,
+    template: projectDocument,
+  })
+  const publishedProject = await publishVisualCoverVersion({
+    actor: baseline.actor,
+    versionId: project.id,
+  })
+  const resolved = await resolvePublishedVisualCover({
+    clientId: baseline.client.id,
+    projectId: baseline.project.id,
+    documentTypeId: baseline.documentType.id,
+    disciplineId: baseline.discipline.id,
+  })
+  assert.equal(resolved?.id, publishedProject.id)
+  await assert.rejects(
+    prisma.coverLayoutElement.updateMany({
+      where: { versionId: publishedProject.id },
+      data: { x: 0.2 },
+    }),
+    /immutable/
+  )
+
+  const historicalSnapshot = publishedProject.snapshot
+  const nextProject = await createVisualCoverDraft({
+    actor: baseline.actor,
+    code: "PROJECT_COVER_VISUAL",
+    name: "Project cover",
+    scopeType: "PROJECT",
+    scopeId: baseline.project.id,
+    cloneVersionId: publishedProject.id,
+  })
+  const modified = structuredClone(projectDocument)
+  modified.elements[0]!.text = "New project layout"
+  await saveVisualCoverDraft({
+    actor: baseline.actor,
+    versionId: nextProject.id,
+    template: modified,
+  })
+  await publishVisualCoverVersion({
+    actor: baseline.actor,
+    versionId: nextProject.id,
+  })
+  const prior = await prisma.coverTemplateVersion.findUniqueOrThrow({
+    where: { id: publishedProject.id },
+  })
+  assert.equal(prior.status, "Superseded")
+  assert.deepEqual(prior.snapshot, historicalSnapshot)
+  await archiveVisualCoverVersion({
+    actor: baseline.actor,
+    versionId: prior.id,
+  })
+  assert.equal(
+    (
+      await prisma.coverTemplateVersion.findUniqueOrThrow({
+        where: { id: prior.id },
+      })
+    ).status,
+    "Archived"
+  )
+
+  const codeSet = await prisma.clientResponseCodeSet.create({
+    data: {
+      clientId: baseline.client.id,
+      code: "PROJECT8",
+      name: "Project-specific legend",
+    },
+  })
+  const codeVersion = await prisma.clientResponseCodeSetVersion.create({
+    data: {
+      codeSetId: codeSet.id,
+      version: 1,
+      status: FoundationRecordStatus.Draft,
+      codes: {
+        create: [
+          {
+            externalCode: "A",
+            exactWording: "Accepted without comments",
+            internalLabel: "Accepted",
+            outcomeClass: "Approved",
+            displayOrder: 1,
+          },
+          {
+            externalCode: "R2",
+            exactWording: "Revise selected items",
+            internalLabel: "Revise",
+            outcomeClass: "Revision",
+            displayOrder: 2,
+          },
+        ],
+      },
+    },
+  })
+  await prisma.clientResponseCodeSetVersion.update({
+    where: { id: codeVersion.id },
+    data: {
+      status: FoundationRecordStatus.Published,
+      publishedAt: new Date(),
+    },
+  })
+  await prisma.projectResponseCodeConfiguration.create({
+    data: {
+      projectId: baseline.project.id,
+      codeSetVersionId: codeVersion.id,
+    },
+  })
+  assert.deepEqual(await getProjectResponseLegend(baseline.project.id), [
+    {
+      externalCode: "A",
+      exactWording: "Accepted without comments",
+    },
+    {
+      externalCode: "R2",
+      exactWording: "Revise selected items",
+    },
+  ])
+  assert.ok(
+    await prisma.auditLog.count({
+      where: {
+        action: { in: ["cover.visual.draft_saved", "cover.visual.published"] },
+      },
+    })
   )
 })

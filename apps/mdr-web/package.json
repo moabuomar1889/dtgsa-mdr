@@ -15,6 +15,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@dtg/authorization": "workspace:*",
     "@dtg/controlled-storage-domain": "workspace:*",
+    "@dtg/cover-designer": "workspace:*",
     "@dtg/trust-domain": "workspace:*",
     "@dtg/workflow-engine-domain": "workspace:*",
     "@dtg/database": "workspace:*",

@@ -31,13 +31,22 @@ Document generation may read only verified controlled files through the
 platform delivery/storage contract. It must not expose Drive IDs, bypass
 integrity status, replace the workflow engine, implement final signing, deploy
 to production, or weaken Phase 4/5 controls.
+
 # Phase 6 Handoff
 
 Use `@dtg/trust-domain` for canonical manifests, evidence, seals, timestamps,
 verification, and audit chains. Do not treat signature images or legacy
 Signature Events as trusted file-bound evidence.
+
 # Phase 7 Handoff
 
 Use the configurable approval engine for new target cases. Keep the fixed
 workflow readable until UI and production-data parity are proven. Never bypass
 Package Hash review eligibility or decision idempotency.
+
+# Phase 8 Handoff
+
+Use `@dtg/cover-designer` for schema, inheritance, and validation, and
+`@dtg/pdf-engine` for authoritative output. Keep signature bytes server-side.
+Do not mutate published layouts or replace deterministic visual rendering with
+a browser screenshot.

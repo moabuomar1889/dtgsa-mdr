@@ -1,5 +1,13 @@
 import "server-only"
+import { createHash } from "node:crypto"
+import {
+  detectTextOverflow,
+  toAbsoluteLayout,
+  validateCoverTemplate,
+  type CoverTemplateDocument,
+} from "@dtg/cover-designer"
 import { degrees, PDFDocument, StandardFonts, rgb } from "pdf-lib"
+import QRCode from "qrcode"
 
 type SimplePdfSection = {
   label: string
@@ -34,6 +42,250 @@ type TransmittalPdfInput = {
     revisionLabel: string
     title: string
   }>
+}
+
+export type CoverRenderInput = {
+  template: CoverTemplateDocument
+  values: Record<string, string | number | null | undefined>
+  signatures?: Record<
+    string,
+    {
+      name: string
+      jobTitle?: string
+      department?: string
+      signedAt?: string
+      decision?: string
+      referenceId?: string
+      appearanceBytes?: Uint8Array
+    }
+  >
+  responseLegend?: Array<{
+    externalCode: string
+    wording: string
+    selected?: boolean
+  }>
+  images?: Record<
+    string,
+    { mimeType: "image/png" | "image/jpeg"; bytes: Uint8Array }
+  >
+}
+
+function safeText(value: unknown) {
+  return String(value ?? "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .slice(0, 5000)
+}
+
+export async function renderCoverTemplatePdf(input: CoverRenderInput) {
+  const validationIssues = validateCoverTemplate(input.template)
+  if (validationIssues.length > 0) {
+    throw new Error(
+      `Cover template validation failed: ${validationIssues
+        .map((issue) => issue.code)
+        .join(", ")}`
+    )
+  }
+  const layout = toAbsoluteLayout(input.template)
+  const pdf = await PDFDocument.create()
+  const fixedDate = new Date("2000-01-01T00:00:00.000Z")
+  pdf.setCreationDate(fixedDate)
+  pdf.setModificationDate(fixedDate)
+  pdf.setProducer("DTG PdfEngine")
+  pdf.setCreator("DTG Signature Platform")
+  const page = pdf.addPage([layout.page.width, layout.page.height])
+  const font = await pdf.embedFont(StandardFonts.Helvetica)
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold)
+  const overflow: string[] = []
+
+  for (const element of layout.elements) {
+    const fontSize = Number(element.properties?.fontSize ?? 10)
+    if (element.type === "RECTANGLE") {
+      page.drawRectangle({
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+        borderColor: rgb(0.2, 0.25, 0.3),
+        borderWidth: Number(element.properties?.borderWidth ?? 1),
+      })
+      continue
+    }
+    if (element.type === "LINE") {
+      page.drawLine({
+        start: { x: element.x, y: element.y },
+        end: { x: element.x + element.width, y: element.y + element.height },
+        thickness: Number(element.properties?.thickness ?? 1),
+        color: rgb(0.2, 0.25, 0.3),
+      })
+      continue
+    }
+    if (element.type === "IMAGE" && input.images?.[element.id]) {
+      const imageInput = input.images[element.id]!
+      const image =
+        imageInput.mimeType === "image/png"
+          ? await pdf.embedPng(imageInput.bytes)
+          : await pdf.embedJpg(imageInput.bytes)
+      const scale = Math.min(
+        element.width / image.width,
+        element.height / image.height
+      )
+      page.drawImage(image, {
+        x: element.x + (element.width - image.width * scale) / 2,
+        y: element.y + (element.height - image.height * scale) / 2,
+        width: image.width * scale,
+        height: image.height * scale,
+      })
+      continue
+    }
+    if (element.type === "QR_CODE") {
+      const qrValue = safeText(
+        input.values[element.binding ?? "verification.qr"]
+      )
+      if (qrValue) {
+        const png = await QRCode.toBuffer(qrValue, {
+          errorCorrectionLevel: "M",
+          margin: 1,
+          width: 256,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        })
+        const image = await pdf.embedPng(png)
+        const size = Math.min(element.width, element.height)
+        page.drawImage(image, {
+          x: element.x,
+          y: element.y,
+          width: size,
+          height: size,
+        })
+      }
+      continue
+    }
+    if (element.type === "SIGNATURE_BOX") {
+      const signature = input.signatures?.[element.workflowStepKey ?? ""]
+      page.drawRectangle({
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+        borderColor: rgb(0.4, 0.45, 0.5),
+        borderWidth: 1,
+      })
+      page.drawText(safeText(element.roleLabel), {
+        x: element.x + 6,
+        y: element.y + element.height - 14,
+        size: 9,
+        font: bold,
+      })
+      if (signature?.appearanceBytes) {
+        try {
+          const image =
+            signature.appearanceBytes[0] === 0x89
+              ? await pdf.embedPng(signature.appearanceBytes)
+              : await pdf.embedJpg(signature.appearanceBytes)
+          const maxWidth = element.width * 0.42
+          const maxHeight = element.height * 0.42
+          const scale = Math.min(
+            maxWidth / image.width,
+            maxHeight / image.height
+          )
+          page.drawImage(image, {
+            x: element.x + 6,
+            y: element.y + element.height * 0.32,
+            width: image.width * scale,
+            height: image.height * scale,
+          })
+        } catch {
+          // Invalid appearance bytes remain absent; evidence references still render.
+        }
+      }
+      const lines = [
+        signature?.name ?? "Pending",
+        [signature?.jobTitle, signature?.department]
+          .filter(Boolean)
+          .join(" / "),
+        signature?.signedAt ? `Date: ${signature.signedAt}` : "Date: Pending",
+        signature?.decision ?? "",
+        signature?.referenceId ? `Ref: ${signature.referenceId}` : "",
+      ].filter(Boolean)
+      lines.forEach((line, index) =>
+        page.drawText(safeText(line), {
+          x: element.x + element.width * 0.47,
+          y: element.y + element.height - 28 - index * 11,
+          size: 7.5,
+          font,
+          maxWidth: element.width * 0.5 - 6,
+        })
+      )
+      continue
+    }
+    if (element.type === "CLIENT_RESPONSE_LEGEND") {
+      const rows = input.responseLegend ?? []
+      page.drawText("Client response", {
+        x: element.x,
+        y: element.y + element.height - 12,
+        size: 9,
+        font: bold,
+      })
+      rows.slice(0, 12).forEach((row, index) => {
+        const y = element.y + element.height - 26 - index * 12
+        page.drawRectangle({
+          x: element.x,
+          y,
+          width: 8,
+          height: 8,
+          borderWidth: 0.7,
+          borderColor: rgb(0.2, 0.25, 0.3),
+        })
+        if (row.selected) {
+          page.drawText("X", {
+            x: element.x + 1,
+            y: y + 1,
+            size: 7,
+            font: bold,
+          })
+        }
+        page.drawText(
+          safeText(`${row.externalCode} - ${row.wording}`).slice(0, 120),
+          {
+            x: element.x + 13,
+            y,
+            size: 7,
+            font,
+            maxWidth: element.width - 13,
+          }
+        )
+      })
+      continue
+    }
+
+    const value =
+      element.type === "STATIC_TEXT"
+        ? (element.text ?? "")
+        : (input.values[element.binding ?? ""] ?? element.text ?? "")
+    const text = safeText(value)
+    if (detectTextOverflow(text, element.width, element.height, fontSize)) {
+      overflow.push(element.id)
+    }
+    page.drawText(text, {
+      x: element.x,
+      y: element.y + Math.max(0, element.height - fontSize),
+      size: fontSize,
+      font: element.properties?.bold ? bold : font,
+      maxWidth: element.width,
+      lineHeight: fontSize * 1.2,
+    })
+  }
+
+  if (overflow.length > 0) {
+    throw new Error(`Cover text overflow: ${overflow.join(", ")}`)
+  }
+  const bytes = Buffer.from(
+    await pdf.save({ useObjectStreams: false, addDefaultPage: false })
+  )
+  return {
+    bytes,
+    outputHash: createHash("sha256").update(bytes).digest("hex"),
+    rendererVersion: "pdf-engine-1",
+  }
 }
 
 function wrapText(text: string, maxCharacters = 82) {
@@ -347,7 +599,10 @@ export async function mergePdfBuffers(buffers: Array<Uint8Array | Buffer>) {
 
   for (const buffer of buffers) {
     const source = await PDFDocument.load(buffer)
-    const copiedPages = await mergedPdf.copyPages(source, source.getPageIndices())
+    const copiedPages = await mergedPdf.copyPages(
+      source,
+      source.getPageIndices()
+    )
 
     for (const page of copiedPages) {
       mergedPdf.addPage(page)

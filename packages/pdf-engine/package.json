@@ -9,7 +9,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dtg/cover-designer": "workspace:*",
     "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
     "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6"
   }
 }

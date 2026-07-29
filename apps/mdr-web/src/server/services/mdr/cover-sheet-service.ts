@@ -8,12 +8,15 @@ import {
   DriveFolderType,
   DocumentFileType,
   GeneratedDocumentKind,
+  Prisma,
   StorageProvider,
   WorkflowStepType,
 } from "@prisma/client"
 import { env } from "@/lib/config/env"
 import { convertDocxToPdf } from "@/lib/docx/libreoffice"
 import { createCoverPdfBuffer, mergePdfBuffers } from "@/lib/pdf/toolkit"
+import { renderCoverTemplatePdf } from "@dtg/pdf-engine"
+import type { CoverTemplateDocument } from "@dtg/cover-designer"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
 import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
@@ -24,9 +27,23 @@ import {
 } from "@/server/services/storage/storage-service"
 import { renderDocxTemplateFromStorage } from "@/server/services/templates/docx-template-service"
 import { findPreferredCoverSheetTemplate } from "@/server/services/templates/template-management-service"
+import {
+  getProjectResponseLegend,
+  resolvePublishedVisualCover,
+} from "@/server/services/templates/visual-cover-template-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
+type RenderedCover = {
+  bytes: Buffer
+  visual: {
+    templateVersionId: string
+    contentHash: string
+    outputHash: string
+    rendererVersion: string
+    templateSnapshot: Prisma.JsonValue
+  } | null
+}
 
 function assertMdrPermission(user: CurrentAppUser, projectId: string) {
   const allowed = hasAnyPermission({
@@ -42,7 +59,9 @@ function assertMdrPermission(user: CurrentAppUser, projectId: string) {
   })
 
   if (!allowed) {
-    throw new Error("You do not have permission to generate covers or packages.")
+    throw new Error(
+      "You do not have permission to generate covers or packages."
+    )
   }
 }
 
@@ -136,9 +155,12 @@ function buildCoverTemplateData(input: {
     prepared_by: prepared?.signatureEvent?.userDisplayNameSnapshot ?? "",
     reviewed_by: reviewed?.signatureEvent?.userDisplayNameSnapshot ?? "",
     approved_by: approved?.signatureEvent?.userDisplayNameSnapshot ?? "",
-    prepared_at: prepared?.signatureEvent?.signedAt?.toLocaleString("en-US") ?? "",
-    reviewed_at: reviewed?.signatureEvent?.signedAt?.toLocaleString("en-US") ?? "",
-    approved_at: approved?.signatureEvent?.signedAt?.toLocaleString("en-US") ?? "",
+    prepared_at:
+      prepared?.signatureEvent?.signedAt?.toLocaleString("en-US") ?? "",
+    reviewed_at:
+      reviewed?.signatureEvent?.signedAt?.toLocaleString("en-US") ?? "",
+    approved_at:
+      approved?.signatureEvent?.signedAt?.toLocaleString("en-US") ?? "",
     tags: "",
   }
 }
@@ -147,6 +169,93 @@ async function renderCoverFromTemplate(input: {
   revision: Awaited<ReturnType<typeof getRevisionPackageContext>>
   kind: CoverSheetKind
 }) {
+  const visual = await resolvePublishedVisualCover({
+    clientId: input.revision.document.project.clientId,
+    projectId: input.revision.document.projectId,
+    documentTypeId: input.revision.document.documentTypeCategoryId ?? undefined,
+    disciplineId: input.revision.document.disciplineId,
+  })
+  if (visual?.snapshot) {
+    try {
+      const data = buildCoverTemplateData(input)
+      const signatureSteps = await Promise.all(
+        input.revision.workflowSteps.map(async (step) => ({
+          key: step.stepType.toLowerCase().replace("dccheck", "dc-validated"),
+          event: step.signatureEvent,
+          appearanceBytes: await loadSignatureBytes(
+            step.signatureEvent?.signatureProfile?.storageBucket ?? null,
+            step.signatureEvent?.signatureImagePath ?? null
+          ),
+        }))
+      )
+      const responseLegend = await getProjectResponseLegend(
+        input.revision.document.projectId
+      )
+      const rendered = await renderCoverTemplatePdf({
+        template: visual.snapshot as unknown as CoverTemplateDocument,
+        values: {
+          "client.name": data.client_name,
+          "project.name": data.project_title,
+          "project.code": data.project_code,
+          "document.number": data.dtgsa_document_number,
+          "document.clientNumber": data.client_document_number,
+          "document.title": data.document_title,
+          "document.revision": data.revision,
+          "document.discipline": data.discipline,
+          "document.type": data.document_type,
+          "document.releasePurpose": data.release_purpose,
+          "document.date": data.date,
+          "workflow.preparedBy": data.prepared_by,
+          "workflow.reviewer": data.reviewed_by,
+          "workflow.approver": data.approved_by,
+          "verification.qr": `${env.NEXT_PUBLIC_APP_URL}/verify`,
+        },
+        signatures: Object.fromEntries(
+          signatureSteps
+            .filter((item) => item.event)
+            .map((item) => [
+              item.key,
+              {
+                name: item.event!.userDisplayNameSnapshot,
+                signedAt: item.event!.signedAt.toISOString(),
+                referenceId: item.event!.id,
+                appearanceBytes: item.appearanceBytes ?? undefined,
+              },
+            ])
+        ),
+        responseLegend: responseLegend.map((code) => ({
+          externalCode: code.externalCode,
+          wording: code.exactWording,
+        })),
+      })
+      return {
+        bytes: rendered.bytes,
+        visual: {
+          templateVersionId: visual.id,
+          contentHash: visual.contentHash!,
+          outputHash: rendered.outputHash,
+          rendererVersion: rendered.rendererVersion,
+          templateSnapshot: visual.snapshot,
+        },
+      } satisfies RenderedCover
+    } catch (error) {
+      await prisma.systemLog.create({
+        data: {
+          source: "cover_sheet",
+          action: "visual_template.render_failed",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unknown visual cover rendering failure.",
+          entityType: "CoverTemplateVersion",
+          entityId: visual.id,
+          projectId: input.revision.document.projectId,
+          clientId: input.revision.document.project.clientId,
+        },
+      })
+    }
+  }
+
   const template = await findPreferredCoverSheetTemplate({
     kind: input.kind,
     clientId: input.revision.document.project.clientId,
@@ -167,7 +276,10 @@ async function renderCoverFromTemplate(input: {
     const inputPath = join(tempDir, `${input.kind.toLowerCase()}.docx`)
     await writeFile(inputPath, docxBuffer)
     const outputPath = await convertDocxToPdf(inputPath, tempDir)
-    return await readFile(outputPath)
+    return {
+      bytes: await readFile(outputPath),
+      visual: null,
+    } satisfies RenderedCover
   } catch (error) {
     await prisma.systemLog.create({
       data: {
@@ -307,12 +419,8 @@ export async function generateRevisionCoverSheets(
     fallbackClientCover,
   ])
 
-  const dtgCoverBuffer =
-    templatedDtgCover ??
-    fallbackDtgBuffer
-  const clientCoverBuffer =
-    templatedClientCover ??
-    fallbackClientBuffer
+  const dtgCoverBuffer = templatedDtgCover?.bytes ?? fallbackDtgBuffer
+  const clientCoverBuffer = templatedClientCover?.bytes ?? fallbackClientBuffer
 
   const basePath = buildStoragePath(
     "projects",
@@ -324,7 +432,9 @@ export async function generateRevisionCoverSheets(
 
   const dtgCoverUpload = await uploadBytesToSupabaseStorage({
     bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
-    path: `${basePath}/dtgsa-cover.pdf`,
+    path: templatedDtgCover?.visual
+      ? `${basePath}/dtgsa-cover-${templatedDtgCover.visual.outputHash}.pdf`
+      : `${basePath}/dtgsa-cover.pdf`,
     bytes: dtgCoverBuffer,
     fileName: `DTGSA-Cover-${revision.document.dtgsaDocumentNumber}-Rev-${revision.revisionLabel}.pdf`,
     mimeType: "application/pdf",
@@ -332,7 +442,9 @@ export async function generateRevisionCoverSheets(
   })
   const clientCoverUpload = await uploadBytesToSupabaseStorage({
     bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
-    path: `${basePath}/client-cover.pdf`,
+    path: templatedClientCover?.visual
+      ? `${basePath}/client-cover-${templatedClientCover.visual.outputHash}.pdf`
+      : `${basePath}/client-cover.pdf`,
     bytes: clientCoverBuffer,
     fileName: `Client-Cover-${revision.document.dtgsaDocumentNumber}-Rev-${revision.revisionLabel}.pdf`,
     mimeType: "application/pdf",
@@ -359,6 +471,11 @@ export async function generateRevisionCoverSheets(
   ])
 
   return prisma.$transaction(async (tx) => {
+    const activeCycle = await tx.approvalCycle.findFirst({
+      where: { revisionId: revision.id, isActive: true },
+      orderBy: { cycleNumber: "desc" },
+      select: { snapshotId: true },
+    })
     await tx.documentFile.updateMany({
       where: {
         documentRevisionId: revision.id,
@@ -434,6 +551,50 @@ export async function generateRevisionCoverSheets(
       ],
     })
 
+    const visualCovers = [
+      {
+        render: templatedDtgCover?.visual,
+        upload: dtgCoverUpload,
+      },
+      {
+        render: templatedClientCover?.visual,
+        upload: clientCoverUpload,
+      },
+    ]
+    for (const item of visualCovers) {
+      if (!item.render) continue
+      const fileObject = await tx.fileObject.upsert({
+        where: {
+          storageProvider_providerKey: {
+            storageProvider: StorageProvider.Supabase,
+            providerKey: `${item.upload.bucket}/${item.upload.path}`,
+          },
+        },
+        create: {
+          storageProvider: StorageProvider.Supabase,
+          providerKey: `${item.upload.bucket}/${item.upload.path}`,
+          fileName: item.upload.fileName,
+          mimeType: item.upload.mimeType,
+          sizeBytes: BigInt(item.upload.fileSizeBytes),
+          checksum: item.upload.checksum,
+        },
+        update: {},
+      })
+      await tx.generatedCover.create({
+        data: {
+          revisionId: revision.id,
+          templateVersionId: item.render.templateVersionId,
+          workflowSnapshotId: activeCycle?.snapshotId,
+          fileObjectId: fileObject.id,
+          contentHash: item.render.contentHash,
+          outputHash: item.render.outputHash,
+          rendererVersion: item.render.rendererVersion,
+          templateSnapshot: item.render
+            .templateSnapshot as Prisma.InputJsonValue,
+        },
+      })
+    }
+
     await tx.auditLog.create({
       data: {
         actorUserId: actor.id,
@@ -471,7 +632,8 @@ export async function generateMergedRevisionPackage(
         file.type === DocumentFileType.REVISION_SOURCE) &&
       file.storageBucket &&
       file.storagePath &&
-      (file.mimeType === "application/pdf" || file.fileName.toLowerCase().endsWith(".pdf"))
+      (file.mimeType === "application/pdf" ||
+        file.fileName.toLowerCase().endsWith(".pdf"))
   )
   const coverFiles = revision.files.filter(
     (file) =>
@@ -483,7 +645,9 @@ export async function generateMergedRevisionPackage(
   )
 
   if (sourceFiles.length === 0) {
-    throw new Error("At least one PDF source file is required to build the merged package.")
+    throw new Error(
+      "At least one PDF source file is required to build the merged package."
+    )
   }
 
   const buffers = await Promise.all(

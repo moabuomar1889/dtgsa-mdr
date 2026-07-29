@@ -33,5 +33,6 @@
   "/sign-in",
   "/tasks",
   "/templates",
+  "/templates/designer",
   "/transmittals"
 ]

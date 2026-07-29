@@ -9,9 +9,18 @@ import {
   createCoverSheetTemplate,
   createTransmittalTemplate,
 } from "@/server/services/templates/template-management-service"
+import {
+  createVisualCoverDraft,
+  publishVisualCoverVersion,
+  saveVisualCoverDraft,
+} from "@/server/services/templates/visual-cover-template-service"
+import type { CoverTemplateDocument } from "@dtg/cover-designer"
+import { redirect } from "next/navigation"
 
 function toOptionalString(value: FormDataEntryValue | null) {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : undefined
 }
 
 function toScope(value: FormDataEntryValue | null) {
@@ -74,4 +83,57 @@ export async function createTransmittalTemplateAction(formData: FormData) {
 
   revalidatePath("/templates")
   revalidatePath("/settings")
+}
+
+export async function createVisualCoverDraftAction(formData: FormData) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.templatesManage)
+  const scopeType = String(formData.get("scopeType") ?? "ORGANIZATION")
+  const allowedScopes = new Set([
+    "ORGANIZATION",
+    "CLIENT",
+    "PROJECT",
+    "DOCUMENT_TYPE",
+    "DISCIPLINE",
+  ])
+  if (!allowedScopes.has(scopeType)) throw new Error("Invalid cover scope.")
+  const draft = await createVisualCoverDraft({
+    actor,
+    code: String(formData.get("code") ?? ""),
+    name: String(formData.get("name") ?? ""),
+    scopeType: scopeType as
+      | "ORGANIZATION"
+      | "CLIENT"
+      | "PROJECT"
+      | "DOCUMENT_TYPE"
+      | "DISCIPLINE",
+    scopeId: toOptionalString(formData.get("scopeId")),
+    cloneVersionId: toOptionalString(formData.get("cloneVersionId")),
+  })
+  revalidatePath("/templates")
+  revalidatePath("/templates/designer")
+  redirect(`/templates/designer?version=${draft.id}`)
+}
+
+export async function saveVisualCoverDraftAction(
+  versionId: string,
+  template: CoverTemplateDocument
+) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.templatesManage)
+  const result = await saveVisualCoverDraft({ actor, versionId, template })
+  revalidatePath("/templates/designer")
+  return {
+    contentHash: result.saved.contentHash,
+    issues: result.issues,
+  }
+}
+
+export async function publishVisualCoverVersionAction(versionId: string) {
+  const actor = await requireCurrentAppUser()
+  assertUserHasAnyPermission(actor, PERMISSIONS.templatesManage)
+  const published = await publishVisualCoverVersion({ actor, versionId })
+  revalidatePath("/templates")
+  revalidatePath("/templates/designer")
+  return { id: published.id, status: published.status }
 }

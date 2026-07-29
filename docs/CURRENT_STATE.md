@@ -13,6 +13,7 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 4 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
 - Phase 5: CODE_COMPLETE / STAGING_READY.
 - Phase 5 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
+- Phases 6, 7, and 8: COMPLETE / LOCALLY_VERIFIED.
 
 ## Authoritative Workspace
 
@@ -49,6 +50,10 @@ The additive migration inventory is:
 20260329143000_init_foundation
 20260729111500_phase3_database_foundation
 20260729133000_phase4_identity_and_access
+20260729153000_phase5_controlled_google_drive
+20260729170000_phase6_manifest_and_evidence
+20260729190000_phase7_workflow_engine
+20260729210000_phase8_cover_designer
 ```
 
 Phase 4 adds internal and external sessions, OIDC transactions, invitation
@@ -70,14 +75,24 @@ and delegated Directory credentials are tested in staging. Supabase
 compatibility remains intentionally present for rollback. Controlled Drive,
 the replacement workflow engine, final signing, sealing, and production
 deployment remain later-phase work.
+
 # Phase 6 Trust Foundation
 
 Deterministic package manifests, application seals, approval-evidence
 contracts, structured verification, and tamper-evident audit chains are now
 implemented. Production KMS/HSM, PAdES, and trusted timestamps remain deferred.
+
 # Phase 7 Workflow Engine
 
 The configurable, versioned workflow engine is locally implemented alongside
 the legacy adapter. Package-bound review eligibility, separation of duties,
 atomic decisions, reassignment, delegation, overrides, and cycle invalidation
 are enforced.
+
+# Phase 8 Cover Designer
+
+Document Control now owns a versioned, inheritance-aware visual cover designer.
+Published layouts and generated-cover snapshots are immutable, rendering is
+deterministic, Prepared By Manager is formal and visible, and project response
+legends are dynamic. Managed DOCX/PDF generation remains a compatibility
+fallback.

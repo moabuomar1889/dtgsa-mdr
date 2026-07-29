@@ -19,12 +19,21 @@
   rate limiting, replay prevention, revocation, replacement, and admin tools.
 - Added additive Phase 4 schema migration, deterministic security tests,
   disposable-database integration tests, environment contracts, and runbooks.
+
 # 2026-07-29 - Phase 6
 
 Added deterministic package manifests, approval evidence, Ed25519 application
 seals, verification statuses, artifact evidence, and audit hash chains.
+
 # 2026-07-29 - Phase 7
 
 Added the versioned workflow engine, immutable snapshots, package-bound review,
 atomic evidence-backed decisions, separation of duties, overrides,
 reassignment, delegation, and legacy parity.
+
+# 2026-07-29 - Phase 8
+
+Added the Document Control visual cover designer, structured relative layout
+schema, inheritance and immutable versioning, formal Prepared By Manager
+signature boxes, dynamic project response legends, deterministic PDF
+rendering, generated-cover history, and legacy DOCX/PDF fallback.
