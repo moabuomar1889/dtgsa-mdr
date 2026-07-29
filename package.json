@@ -30,7 +30,7 @@
     "build:api": "pnpm --filter @dtg/platform-api build",
     "build:worker": "pnpm --filter @dtg/worker build",
     "check:architecture": "node scripts/check-architecture.mjs",
-    "docs:validate": "node scripts/validate-phase-2-docs.mjs && node scripts/validate-phase-3-docs.mjs && node scripts/validate-phase-4-docs.mjs && node scripts/validate-phase-5-docs.mjs && node scripts/validate-phase-6-docs.mjs && node scripts/validate-phase-7-docs.mjs && node scripts/validate-phase-8-docs.mjs && node scripts/validate-phase-9-docs.mjs && node scripts/validate-phase-10-docs.mjs",
+    "docs:validate": "node scripts/validate-phase-2-docs.mjs && node scripts/validate-phase-3-docs.mjs && node scripts/validate-phase-4-docs.mjs && node scripts/validate-phase-5-docs.mjs && node scripts/validate-phase-6-docs.mjs && node scripts/validate-phase-7-docs.mjs && node scripts/validate-phase-8-docs.mjs && node scripts/validate-phase-9-docs.mjs && node scripts/validate-phase-10-docs.mjs && node scripts/validate-phase-11-docs.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:format": "prisma format",
