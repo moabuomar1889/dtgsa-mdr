@@ -51,7 +51,7 @@ external evidence. The synchronous implementation remains compatibility-only.
 - Job catalog: 14 registered types.
 - Signed Internally order test: 3 components in exact order.
 - Large-file policy test: 100 MiB selects qpdf; unavailable binary fails closed.
-- Current commit: pending final implementation commit.
+- Implementation commit: `6f766f78f4996d9dde4305744da4c1667aed5e97`.
 
 ## Phase 11 Readiness
 
