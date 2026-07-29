@@ -83,4 +83,4 @@ into the worker.
 
 ## Commit
 
-Pending final implementation commit.
+`38d9044a9d7aadfa3e828cd732587000547f1b13`
