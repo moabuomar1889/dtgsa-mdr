@@ -216,6 +216,10 @@ async function runWithDatabase(mode) {
         adminClient,
         "20260730030000_phase11_client_responses"
       )
+      await applyMigrationSql(
+        adminClient,
+        "20260730050000_phase12_verification_portal"
+      )
       await adminClient.end()
       return
     }
@@ -256,6 +260,7 @@ async function runWithDatabase(mode) {
             "tests/unit/phase-9-approval-application.test.ts",
             "tests/unit/phase-10-downloads-and-worker.test.ts",
             "tests/unit/phase-11-client-responses.test.ts",
+            "tests/unit/phase-12-verification-portal.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",

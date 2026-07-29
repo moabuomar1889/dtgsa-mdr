@@ -20,6 +20,9 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 11: COMPLETE / LOCALLY_VERIFIED.
 - Phase 11 live storage and large response-package verification:
   `STAGING_REQUIRED`.
+- Phase 12: COMPLETE / LOCALLY_VERIFIED.
+- Phase 12 public domain, live key registry, and edge rate-limit verification:
+  `STAGING_REQUIRED`.
 
 ## Authoritative Workspace
 
@@ -63,6 +66,7 @@ The additive migration inventory is:
 20260729230000_phase9_approval_application
 20260730010000_phase10_durable_worker
 20260730030000_phase11_client_responses
+20260730050000_phase12_verification_portal
 ```
 
 Phase 4 adds internal and external sessions, OIDC transactions, invitation
@@ -130,3 +134,11 @@ policy, effects, files, submissions, and history. Guided revision creation
 preserves lineage, creates a new controlled Main hash and Package Hash,
 restarts approvals, and never copies signatures. Dynamic response downloads
 use the exact submitted Main PDF and the durable worker.
+
+# Phase 12 Verification Portal
+
+The public portal verifies six evidence target types with unpredictable hashed
+codes, local browser hashing, structured tamper results, key and seal status,
+privacy allowlists, enumeration resistance, rate evidence, and no default file
+upload. The authenticated MDR view exposes scoped internal evidence. The
+platform verifies application seals and explicitly does not claim PAdES.

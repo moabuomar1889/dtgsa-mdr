@@ -32,6 +32,7 @@
   "/search",
   "/settings",
   "/settings/response-codes",
+  "/verification",
   "/sign-in",
   "/tasks",
   "/templates",

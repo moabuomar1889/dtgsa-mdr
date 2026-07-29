@@ -1,8 +1,5 @@
 import { loadFoundationConfiguration } from "@dtg/configuration"
-import {
-  createHealthResponse,
-  createReadinessResponse,
-} from "@dtg/contracts"
+import { createHealthResponse, createReadinessResponse } from "@dtg/contracts"
 
 export const verifyConfiguration = loadFoundationConfiguration(
   "verify-web",

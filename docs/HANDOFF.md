@@ -74,3 +74,11 @@ exact `ClientSubmission` Main file and Package Hash, all response versions and
 files, and published policy snapshots. Phase 12 may read verification evidence
 but must not expose response files, reviewer names, internal comments, or
 revision workflow internals publicly.
+
+# Phase 12 Handoff
+
+Use `@dtg/verification-domain` for code hashing, target vocabulary, public
+field filtering, and structured results. Raw codes and request addresses must
+not be persisted. Public APIs must preserve generic lookup failures and policy
+allowlists. Internal evidence must remain project-scoped. Do not describe the
+application seal as PAdES.

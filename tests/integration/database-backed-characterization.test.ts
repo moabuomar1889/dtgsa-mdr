@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { after, beforeEach, test } from "node:test"
 import {
   ClientReplyNextAction,
@@ -99,6 +100,12 @@ import {
   resolvePublishedResponsePolicy,
   toDefinition,
 } from "@/server/services/replies/client-response-policy-service"
+import {
+  TEST_PUBLIC_KEY,
+  TestPlatformSealProvider,
+} from "../../packages/trust-domain/src/index"
+import { issueUnpredictableVerificationCode } from "@dtg/verification-domain"
+import { verifyPublicCode } from "../../apps/verify-web/src/lib/verify"
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL
 
@@ -2368,5 +2375,130 @@ test("Phase 11 resolves project policies and preserves response evidence", async
       data: { exactWording: "Mutated wording" },
     }),
     /Published response-code content is immutable/
+  )
+})
+
+test("Phase 12 verifies codes, local hashes, seals, privacy, rate evidence, and tamper", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const fixture = await createDocumentFixture(baseline)
+  const canonicalBytes = Buffer.from('{"phase":12,"stable":true}', "utf8")
+  const packageHash = createHash("sha256").update(canonicalBytes).digest("hex")
+  const manifest = await prisma.packageManifest.create({
+    data: {
+      revisionId: fixture.revision.id,
+      schemaVersion: "1",
+      canonicalizationVersion: "phase-12-test",
+      manifestJson: { phase: 12, stable: true },
+      canonicalBytes,
+      manifestDigest: packageHash,
+      hashes: {
+        create: { algorithm: "SHA-256", value: packageHash },
+      },
+    },
+  })
+  const provider = new TestPlatformSealProvider("test")
+  const signature = await provider.sign(canonicalBytes)
+  await prisma.signingKeyRegistry.create({
+    data: {
+      keyId: provider.keyId,
+      algorithm: provider.algorithm,
+      publicKeyPem: TEST_PUBLIC_KEY,
+      status: "RETIRED",
+      retiredAt: new Date(),
+    },
+  })
+  await prisma.platformSeal.create({
+    data: {
+      manifestId: manifest.id,
+      provider: provider.provider,
+      algorithm: provider.algorithm,
+      keyId: provider.keyId,
+      signature,
+      status: "Verified",
+      publicKeyReference: provider.publicKeyReference(),
+      signedPayloadVersion: "1",
+      verificationStatus: "VALID",
+    },
+  })
+  await prisma.publicVerificationPolicy.create({
+    data: {
+      projectId: baseline.project.id,
+      version: 1,
+      fields: {
+        documentNumber: true,
+        revision: true,
+        client: false,
+        project: false,
+        internalApprovalStatus: true,
+        clientResponseStatus: true,
+        finalApprovalStatus: true,
+        completionDate: true,
+        packageMatch: true,
+      },
+    },
+  })
+  const issued = issueUnpredictableVerificationCode()
+  await prisma.verificationCode.create({
+    data: {
+      manifestId: manifest.id,
+      codeHash: issued.codeHash,
+      targetType: "PACKAGE_MANIFEST",
+      targetId: manifest.id,
+    },
+  })
+
+  const valid = await verifyPublicCode({
+    code: issued.code,
+    observedHash: packageHash,
+    requestFingerprint: "phase-12-valid",
+  })
+  assert.equal(valid.status, "VALID")
+  assert.equal(valid.documentNumber, fixture.document.dtgsaDocumentNumber)
+  assert.equal(valid.client, undefined)
+  assert.equal(valid.project, undefined)
+  assert.equal(valid.packageMatch, true)
+  assert.deepEqual(valid.seal, {
+    algorithm: "Ed25519",
+    keyId: provider.keyId,
+    keyStatus: "RETIRED",
+    payloadVersion: "1",
+    pades: false,
+  })
+
+  const modified = await verifyPublicCode({
+    code: issued.code,
+    observedHash: "f".repeat(64),
+    requestFingerprint: "phase-12-modified",
+  })
+  assert.equal(modified.status, "TAMPER_DETECTED")
+  assert.equal(modified.packageMatch, false)
+  const unknown = await verifyPublicCode({
+    code: "unknown-code",
+    requestFingerprint: "phase-12-unknown",
+  })
+  assert.equal(unknown.status, "INVALID_HASH")
+  assert.equal(await prisma.verificationAttempt.count(), 3)
+  assert.equal(await prisma.verificationRecord.count(), 2)
+  for (let index = 0; index < 21; index += 1) {
+    await verifyPublicCode({
+      code: `rate-limit-${index}`,
+      requestFingerprint: "phase-12-rate-limit",
+    })
+  }
+  assert.equal(
+    await prisma.verificationAttempt.count({
+      where: {
+        requestFingerprintHash: {
+          not: {
+            equals: (
+              await prisma.verificationAttempt.findFirstOrThrow({
+                where: { codeHash: issued.codeHash },
+              })
+            ).requestFingerprintHash,
+          },
+        },
+      },
+    }),
+    22
   )
 })

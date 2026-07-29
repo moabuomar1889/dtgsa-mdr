@@ -27,6 +27,9 @@ importers:
       '@dtg/job-engine':
         specifier: workspace:*
         version: link:packages/job-engine
+      '@dtg/verification-domain':
+        specifier: workspace:*
+        version: link:packages/verification-domain
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.2.2
@@ -283,9 +286,15 @@ importers:
       '@dtg/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@dtg/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@dtg/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@dtg/verification-domain':
+        specifier: workspace:*
+        version: link:../../packages/verification-domain
       next:
         specifier: 16.2.1
         version: 16.2.1(@babel/core@7.29.0(supports-color@7.2.0))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -434,6 +443,8 @@ importers:
       react:
         specifier: 19.2.4
         version: 19.2.4
+
+  packages/verification-domain: {}
 
   packages/workflow-engine-domain:
     devDependencies:

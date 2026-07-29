@@ -85,3 +85,14 @@ signature copying. Dynamic assembly selects the exact submitted Main file and
 uses private TTL artifacts. Residual staging risks include malicious document
 content, live malware-provider behavior, storage cleanup guarantees, large
 response packages, and client procedure accuracy.
+
+# Phase 12 Verification Addendum
+
+Cryptographically random codes, hash-only storage, generic lookup failure,
+privacy-hashed request fingerprints, bounded attempts, and audit records reduce
+enumeration and abuse. Public fields are allowlisted after verification.
+Browser hashing avoids default file upload. Internal detail requires project
+scope. Retired keys remain verifiable while revoked and unknown keys fail
+explicitly. Residual staging risks include reverse-proxy fingerprint accuracy,
+distributed edge limiting, public-domain controls, key registry operations,
+and denial-of-service traffic above the application tier.

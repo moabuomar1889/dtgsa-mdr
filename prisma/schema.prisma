@@ -2124,14 +2124,19 @@ model VerificationRecord {
 }
 
 model VerificationCode {
-  id         String    @id @default(cuid())
-  manifestId String
-  codeHash   String    @unique
-  expiresAt  DateTime?
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
+  id                String    @id @default(cuid())
+  manifestId        String
+  codeHash          String    @unique
+  targetType        String    @default("PACKAGE_MANIFEST")
+  targetId          String?
+  publicLabel       String?
+  sealTransactionId String?
+  expiresAt         DateTime?
+  revokedAt         DateTime?
+  createdAt         DateTime  @default(now())
 
   @@index([manifestId])
+  @@index([targetType, targetId])
 }
 
 model PublicVerificationPolicy {
@@ -2143,6 +2148,31 @@ model PublicVerificationPolicy {
   createdAt DateTime @default(now())
 
   @@unique([projectId, version])
+}
+
+model SigningKeyRegistry {
+  id           String    @id @default(cuid())
+  keyId        String    @unique
+  algorithm    String
+  publicKeyPem String
+  status       String    @default("ACTIVE")
+  activatedAt  DateTime  @default(now())
+  retiredAt    DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model VerificationAttempt {
+  id                     String   @id @default(cuid())
+  codeHash               String
+  requestFingerprintHash String
+  resultCode             String
+  targetType             String?
+  authenticated          Boolean  @default(false)
+  createdAt              DateTime @default(now())
+
+  @@index([requestFingerprintHash, createdAt])
+  @@index([codeHash, createdAt])
 }
 
 model ClientResponseCodeSet {

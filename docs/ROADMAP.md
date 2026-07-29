@@ -14,8 +14,8 @@ Date: 2026-07-29
 
 ## Next
 
-- Phase 12: public document verification portal.
-- Phases 13-15: operational hardening, release evidence, and final acceptance.
+- Phase 12: public and internal document verification is complete locally.
+- Phases 13-15: integrations, operational hardening, and final acceptance.
 
 Production deployment remains outside the modernization phases unless
 explicitly authorized.
@@ -54,3 +54,10 @@ Versioned client/project response policies, historical response evidence,
 guided revision creation, and dynamic client-response downloads are complete
 locally. Phase 12 may expose strictly allowlisted public verification without
 revealing private files or internal workflow data.
+
+# Phase 12 Status
+
+Public privacy-safe verification, local file hashing, six evidence target
+types, application-seal and key-state checks, and scoped internal evidence are
+complete locally. Phase 13 may expose versioned integration contracts without
+bypassing these authorization and privacy boundaries.

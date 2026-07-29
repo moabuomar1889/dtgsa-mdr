@@ -37,3 +37,11 @@ draft version for changes. Register returned evidence at `/replies`, preview
 the configured effects, and use the guided revision action only when offered.
 The dynamic download label comes from the policy and may include the exact
 submitted Main PDF.
+
+## Verification
+
+Use the public verification portal to enter a code or scan a cover QR. A local
+file is hashed in the browser and is not uploaded. Employees may use
+`/verification` for scoped internal evidence. A red result means the selected
+hash or evidence chain did not verify; do not treat a visible signature image
+as proof. The platform seal is not a PAdES claim.

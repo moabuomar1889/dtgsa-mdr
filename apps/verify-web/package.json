@@ -11,7 +11,9 @@
   "dependencies": {
     "@dtg/configuration": "workspace:*",
     "@dtg/contracts": "workspace:*",
+    "@dtg/database": "workspace:*",
     "@dtg/ui": "workspace:*",
+    "@dtg/verification-domain": "workspace:*",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"
