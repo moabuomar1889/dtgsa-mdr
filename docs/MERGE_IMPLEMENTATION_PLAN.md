@@ -30,7 +30,7 @@ Blocked or partial:
 
 ## Phase 1 - Characterization Tests
 
-Status: COMPLETE_WITH_DOCUMENTED_GAPS
+Status: COMPLETE
 
 Required tests:
 
@@ -50,12 +50,30 @@ Exit criteria:
 
 - PASS: tests run in CI-friendly non-interactive mode.
 - PASS: deterministic current behavior is protected before package extraction.
-- PARTIAL: database transaction, rollback, and database-backed read-model behavior is registered as explicit skips until an approved disposable PostgreSQL database is configured.
+- PASS: database transaction, rollback, and database-backed read-model behavior is completed in Phase 1.5.
 
 Phase 2 gate:
 
-- CLOSED pending owner review of `docs/reports/PHASE_1_CHARACTERIZATION_TEST_REPORT.md`.
+- CLOSED pending owner review of `docs/reports/PHASE_1_5_DATABASE_CHARACTERIZATION_REPORT.md`.
 - No monorepo, package extraction, authentication, storage, workflow, signature, deployment, or new domain-model work has started.
+
+## Phase 1.5 - Database-Backed Characterization Closure
+
+Status: COMPLETE
+
+Completed:
+
+- Added pinned disposable PostgreSQL 17.10 lifecycle tooling.
+- Applied the existing migration to an empty database.
+- Completed all seven previously skipped database-backed test areas.
+- Added deterministic database fixtures and fail-closed cleanup.
+- Added narrow transmittal delivery adapters for test fakes.
+- Recorded three intentionally preserved behavioral defects.
+- Reached 65 passed tests with zero failures and zero skips.
+
+Phase 2 gate:
+
+- CLOSED until explicit owner approval after report review.
 
 ## Phase 2 - Monorepo Foundation
 

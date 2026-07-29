@@ -107,10 +107,14 @@ Phase 1 additions:
 - Fail-closed test-database URL and host validation.
 - No live calls to Supabase, Google Drive, email, LibreOffice, Coolify, or production PostgreSQL.
 
-Known gaps:
+Phase 1.5 additions:
 
-- Database transaction and rollback characterization remains skipped until an approved disposable PostgreSQL database is configured.
-- Migration tests against an empty database were not executed in Phase 1.
+- Pinned embedded PostgreSQL 17.10 with loopback-only random-port exposure.
+- Empty-database migration validation using the existing migration.
+- 65 passing tests with zero failures and zero skips.
+- Database safety, password redaction, isolated fixtures, and automatic cleanup.
+- Fake external delivery adapters for transmittal persistence tests.
+- Stable records for three intentionally preserved behavioral defects.
 
 ## CI/CD Requirements
 
@@ -136,7 +140,6 @@ No owner-approved deviations are recorded yet.
 
 ## Remaining Compliance Gaps
 
-- Complete database-backed characterization tests using an approved disposable PostgreSQL database.
 - Add detailed target documentation.
 - Introduce modular monorepo boundaries.
 - Replace Supabase password auth with Google Workspace SSO for employees.

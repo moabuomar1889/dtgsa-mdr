@@ -41,6 +41,22 @@ import {
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
+export type TransmittalDeliveryAdapters = {
+  uploadBytes: typeof uploadBytesToSupabaseStorage
+  uploadToDrive: typeof uploadProjectFileToGoogleDrive
+  createSignedUrl: typeof createSignedStorageUrl
+  sendEmail: typeof queueAndSendEmailNotification
+  notifyRoles: typeof notifyProjectRoles
+}
+
+const defaultDeliveryAdapters: TransmittalDeliveryAdapters = {
+  uploadBytes: uploadBytesToSupabaseStorage,
+  uploadToDrive: uploadProjectFileToGoogleDrive,
+  createSignedUrl: createSignedStorageUrl,
+  sendEmail: queueAndSendEmailNotification,
+  notifyRoles: notifyProjectRoles,
+}
+
 type TransmittalTemplateContext = {
   id: string
   projectId: string
@@ -399,7 +415,11 @@ export async function createTransmittal(actor: CurrentAppUser, input: unknown) {
   })
 }
 
-export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
+export async function sendTransmittal(
+  actor: CurrentAppUser,
+  input: unknown,
+  deliveryAdapters: TransmittalDeliveryAdapters = defaultDeliveryAdapters
+) {
   const parsed = transmittalIdSchema.parse(input)
 
   const transmittal = await prisma.transmittal.findUnique({
@@ -473,7 +493,7 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
   const transmittalPdfBuffer =
     (await renderTransmittalPdfWithTemplate({ transmittal })) ??
     (await fallbackTransmittalPdf)
-  const transmittalPdfUpload = await uploadBytesToSupabaseStorage({
+  const transmittalPdfUpload = await deliveryAdapters.uploadBytes({
     bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
     path: buildStoragePath(
       "projects",
@@ -487,7 +507,7 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
     mimeType: "application/pdf",
     upsert: true,
   })
-  const transmittalDriveUpload = await uploadProjectFileToGoogleDrive({
+  const transmittalDriveUpload = await deliveryAdapters.uploadToDrive({
     projectId: transmittal.projectId,
     folderType: DriveFolderType.TRANSMITTALS,
     fileName: transmittalPdfUpload.fileName,
@@ -495,11 +515,13 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
     mimeType: transmittalPdfUpload.mimeType,
     actorUserId: actor.id,
   })
-  const transmittalPdfUrl = await createSignedStorageUrl(
-    transmittalPdfUpload.bucket,
-    transmittalPdfUpload.path,
-    60 * 60 * 24 * 7
-  ).catch(() => null)
+  const transmittalPdfUrl = await deliveryAdapters
+    .createSignedUrl(
+      transmittalPdfUpload.bucket,
+      transmittalPdfUpload.path,
+      60 * 60 * 24 * 7
+    )
+    .catch(() => null)
 
   await prisma.$transaction(async (tx) => {
     await tx.transmittal.update({
@@ -605,49 +627,53 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
   )
 
   if (env.EMAIL_PROVIDER && emailRecipients.length > 0) {
-    await queueAndSendEmailNotification({
-      to: emailRecipients,
-      subject: `Transmittal ${transmittal.transmittalNumber}: ${transmittal.subject}`,
-      text: [
-        `Project: ${transmittal.project.code} - ${transmittal.project.name}`,
-        `Transmittal: ${transmittal.transmittalNumber}`,
-        transmittal.messageBody ? `Message: ${transmittal.messageBody}` : null,
-        transmittalPdfUrl ? `PDF: ${transmittalPdfUrl}` : null,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-      html: `
+    await deliveryAdapters
+      .sendEmail({
+        to: emailRecipients,
+        subject: `Transmittal ${transmittal.transmittalNumber}: ${transmittal.subject}`,
+        text: [
+          `Project: ${transmittal.project.code} - ${transmittal.project.name}`,
+          `Transmittal: ${transmittal.transmittalNumber}`,
+          transmittal.messageBody
+            ? `Message: ${transmittal.messageBody}`
+            : null,
+          transmittalPdfUrl ? `PDF: ${transmittalPdfUrl}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        html: `
         <p><strong>Project:</strong> ${transmittal.project.code} - ${transmittal.project.name}</p>
         <p><strong>Transmittal:</strong> ${transmittal.transmittalNumber}</p>
         <p><strong>Subject:</strong> ${transmittal.subject}</p>
         ${transmittal.messageBody ? `<p>${transmittal.messageBody}</p>` : ""}
         ${transmittalPdfUrl ? `<p><a href="${transmittalPdfUrl}">Open transmittal PDF</a></p>` : ""}
       `,
-      projectId: transmittal.projectId,
-      clientId: transmittal.project.clientId,
-      actorUserId: actor.id,
-    }).catch(async (error) => {
-      await prisma.systemLog.create({
-        data: {
-          actorUserId: actor.id,
-          source: "transmittals",
-          action: "email.failed",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Unknown transmittal email delivery failure.",
-          entityType: "Transmittal",
-          entityId: transmittal.id,
-          projectId: transmittal.projectId,
-          clientId: transmittal.project.clientId,
-          severity: SystemSeverity.Warning,
-          metadata: {
-            transmittalNumber: transmittal.transmittalNumber,
-            recipients: emailRecipients,
-          },
-        },
+        projectId: transmittal.projectId,
+        clientId: transmittal.project.clientId,
+        actorUserId: actor.id,
       })
-    })
+      .catch(async (error) => {
+        await prisma.systemLog.create({
+          data: {
+            actorUserId: actor.id,
+            source: "transmittals",
+            action: "email.failed",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Unknown transmittal email delivery failure.",
+            entityType: "Transmittal",
+            entityId: transmittal.id,
+            projectId: transmittal.projectId,
+            clientId: transmittal.project.clientId,
+            severity: SystemSeverity.Warning,
+            metadata: {
+              transmittalNumber: transmittal.transmittalNumber,
+              recipients: emailRecipients,
+            },
+          },
+        })
+      })
   } else if (env.EMAIL_PROVIDER && emailRecipients.length === 0) {
     await prisma.systemLog.create({
       data: {
@@ -670,7 +696,7 @@ export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
     })
   }
 
-  await notifyProjectRoles({
+  await deliveryAdapters.notifyRoles({
     projectId: transmittal.projectId,
     clientId: transmittal.project.clientId,
     roleCodes: [

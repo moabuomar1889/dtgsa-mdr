@@ -1,6 +1,9 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { assertSafeTestDatabaseUrl } from "../helpers/database-safety"
+import {
+  assertSafeTestDatabaseUrl,
+  redactTestDatabaseUrl,
+} from "../helpers/database-safety.mjs"
 
 test("database safety accepts an explicitly named local test database", () => {
   assert.deepEqual(
@@ -10,6 +13,24 @@ test("database safety accepts an explicitly named local test database", () => {
       databaseName: "mdr_test",
     }
   )
+})
+
+test("database safety accepts the characterization database marker", () => {
+  assert.equal(
+    assertSafeTestDatabaseUrl(
+      "postgresql://user:pass@127.0.0.1:5432/mdr_characterization"
+    ).databaseName,
+    "mdr_characterization"
+  )
+})
+
+test("database safety redacts passwords from connection summaries", () => {
+  const summary = redactTestDatabaseUrl(
+    "postgresql://test_user:super-secret@127.0.0.1:5432/mdr_test"
+  )
+
+  assert.equal(summary.includes("super-secret"), false)
+  assert.match(summary, /test_user:<redacted>/)
 })
 
 test("database safety fails closed when the URL is missing", () => {

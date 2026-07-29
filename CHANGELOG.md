@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Phase 1.5 - Database-Backed Characterization Closure
+
+- Added pinned, disposable PostgreSQL 17.10 test lifecycle tooling.
+- Converted all seven skipped database areas into executable integration tests.
+- Added synthetic database fixture factories and safe cleanup.
+- Added a narrow transmittal delivery-adapter seam for external-free tests.
+- Recorded three stable known-behavior defect IDs.
+- Reached 65 passing tests with zero failures and zero skips.
+
 ### Phase 1 - Characterization Tests
 
 - Added non-interactive unit, characterization, integration, and CI test commands.

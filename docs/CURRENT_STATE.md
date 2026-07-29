@@ -140,7 +140,7 @@ Passed:
 .\node_modules\.bin\next.cmd build
 ```
 
-Available after Phase 1:
+Available after Phase 1.5:
 
 ```text
 pnpm test
@@ -148,9 +148,11 @@ pnpm test:unit
 pnpm test:characterization
 pnpm test:integration
 pnpm test:ci
+pnpm test:db:migrate
+pnpm test:db:clean
 ```
 
-The Phase 1 suite contains 63 tests: 56 pass, 0 fail, and 7 database-backed cases skip safely when no approved disposable database is configured.
+The Phase 1.5 suite contains 65 tests: 65 pass, 0 fail, and 0 skip. The seven database-backed areas run against disposable PostgreSQL 17.10 on loopback, after applying the existing migration to an empty database.
 
 ## Current Architecture Constraints
 
@@ -173,4 +175,8 @@ Phase 1 added a Node.js and TypeScript characterization-test foundation without 
 
 Protected deterministic behavior includes numbering, PDI workbook handling, PDI status decisions, workflow guards, review-code precedence, client-reply effects, revision labels, transmittal policies, read-model shape, authorization vocabulary, and PDF utilities.
 
-Database-backed transaction behavior remains explicitly skipped behind a fail-closed database safety guard. Phase 2 remains closed pending owner review of the Phase 1 report and its known coverage gaps.
+## Phase 1.5 State
+
+Phase 1.5 completed database-backed characterization for numbering, PDI promotion, workflow persistence, client replies, revision lineage, transmittals, and read models. The runner uses a pinned embedded PostgreSQL 17.10 test service, validates and redacts the generated test URL, applies the existing migration, and removes the database in `finally`.
+
+The three known PDI defects remain intentionally unchanged and are recorded in `docs/KNOWN_BEHAVIORAL_DEFECTS.md`. Phase 2 remains closed pending owner review of `docs/reports/PHASE_1_5_DATABASE_CHARACTERIZATION_REPORT.md`.

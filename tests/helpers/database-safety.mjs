@@ -1,11 +1,13 @@
 const LOCAL_TEST_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
-const TEST_DATABASE_PATTERN = /(^|[-_.])(test|testing)([-_.]|$)/i
+const TEST_DATABASE_PATTERN =
+  /(^|[-_.])(test|testing|characterization)([-_.]|$)/i
 const PRODUCTION_NAME_PATTERN = /(^|[-_.])(prod|production|live)([-_.]|$)/i
 
-export function assertSafeTestDatabaseUrl(
-  value: string | undefined,
-  approvedRemoteHosts: readonly string[] = []
-) {
+/**
+ * @param {string | undefined} value
+ * @param {readonly string[]} approvedRemoteHosts
+ */
+export function assertSafeTestDatabaseUrl(value, approvedRemoteHosts = []) {
   if (!value) {
     throw new Error("TEST_DATABASE_URL is required for database-backed tests.")
   }
@@ -38,4 +40,12 @@ export function assertSafeTestDatabaseUrl(
     host: url.hostname,
     databaseName,
   }
+}
+
+/** @param {string} value */
+export function redactTestDatabaseUrl(value) {
+  const url = new URL(value)
+  const port = url.port ? `:${url.port}` : ""
+
+  return `${url.protocol}//${url.username || "<user>"}:<redacted>@${url.hostname}${port}${url.pathname}`
 }

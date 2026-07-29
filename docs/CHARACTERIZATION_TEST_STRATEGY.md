@@ -24,7 +24,7 @@ Phase 1 covers deterministic behavior in:
 - Role expansion and permission checks.
 - PDF merge, split, remove, reorder, rotate, stamp, invalid-input, and page-count behavior.
 
-Transaction-heavy behavior remains represented by explicit integration-test skips until a safe database is supplied.
+Phase 1.5 adds executable transaction-heavy behavior against an automatically created, disposable local PostgreSQL database.
 
 ## Selected Tools
 
@@ -43,20 +43,20 @@ docs/decisions/ADR-001-characterization-test-foundation.md
 
 Pure unit and characterization tests run on every ordinary test execution. They do not require network access, credentials, or a database.
 
-Database-backed integration cases are listed in the integration suite and skipped when:
+Database-backed integration cases run through:
 
 ```text
-TEST_DATABASE_URL
+scripts/run-database-characterization.mjs
 ```
 
-is absent. If supplied, the safety guard validates the database name and host before any future connection is allowed.
+The runner creates `TEST_DATABASE_URL` independently, validates it before connecting, copies it explicitly into the child `DATABASE_URL`, applies migrations, runs tests, and deletes the database.
 
 ## Database Safety
 
 The guard in:
 
 ```text
-tests/helpers/database-safety.ts
+tests/helpers/database-safety.mjs
 ```
 
 fails closed unless:
@@ -66,7 +66,7 @@ fails closed unless:
 - The database name is not production-like.
 - The host is local or explicitly listed in the approved test-host variable.
 
-The test suite does not run migrations, reset schemas, or connect to PostgreSQL in ordinary Phase 1 execution.
+The Phase 1.5 integration and CI commands apply migrations only to the generated loopback test database. Reset and cleanup operations fail closed through the same safety guard.
 
 ## External Integration Strategy
 
@@ -79,7 +79,7 @@ Ordinary tests do not call:
 - Coolify.
 - Production PostgreSQL.
 
-Current deterministic policy seams are exercised directly. Delivery, storage, and database transaction behavior remains an integration gap rather than being simulated inaccurately.
+Current deterministic policy seams are exercised directly. Transmittal delivery uses narrow fake adapters; no live email, Drive, signed URL, or storage request is made.
 
 ## Fixture Policy
 
@@ -88,6 +88,8 @@ All fixture content is generated locally and contains no confidential company da
 - Excel fixtures contain a sanitized example PDI row.
 - PDF fixtures generate small valid pages in memory.
 - No production exports, documents, signatures, credentials, or customer records are used.
+- Database factories use synthetic `.invalid` identities and deterministic metadata.
+- Every database-backed test truncates only the validated disposable database.
 
 ## Production Seams
 
@@ -99,16 +101,14 @@ Three narrow behavior-preserving seams were added:
 
 The runtime services call these helpers, preserving current outputs and error messages.
 
-## Known Untestable Areas
+## Database-Backed Coverage
 
-Without an approved disposable database, the suite does not execute:
-
-- Numbering sequence allocation concurrency and rollback.
-- PDI creation, database status updates, promotion transaction, or rollback.
-- Workflow action and signature-event transactions.
-- Client-reply audit writes and revision transaction lineage.
-- Transmittal writes, notifications, delivery, and document status updates.
-- Database-backed search, dashboard, task, and report queries.
+- Numbering allocation, scope, uniqueness, controlled concurrency, and rollback.
+- PDI creation, status writes, promotion, audit, duplicate prevention, and rollback.
+- Workflow actions, signatures, transitions, repeated decisions, and rollback.
+- Client reply writes, revision lineage, replacement documents, and rollback.
+- Transmittal creation, fake delivery, notification, submission, and failure behavior.
+- Search, dashboard, task, report, empty-state, and project-scoped read models.
 
 ## Known Coverage Gaps
 
