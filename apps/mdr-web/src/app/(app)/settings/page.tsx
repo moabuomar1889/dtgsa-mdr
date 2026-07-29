@@ -49,9 +49,9 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
             <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Supabase role</p>
+              <p className="text-sm text-muted-foreground">Database authority</p>
               <p className="mt-2 text-lg font-semibold tracking-tight">
-                {statusLabel(overview.integrations.supabaseServiceRole)}
+                {overview.integrations.databaseAuthority}
               </p>
             </div>
             <div className="rounded-2xl border border-border/60 bg-background/80 p-4">

@@ -1,7 +1,5 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
-import { updateSupabaseSession } from "./src/lib/supabase/proxy"
-import { env } from "./src/lib/config/env"
 
 const INTERNAL_SESSION_COOKIE = "dtg_internal_session"
 const EXTERNAL_SESSION_COOKIE = "dtg_external_session"
@@ -42,20 +40,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
-  if (env.AUTH_MODE !== "LEGACY_SUPABASE") {
-    if (request.cookies.has(INTERNAL_SESSION_COOKIE)) {
-      return NextResponse.next({ request })
-    }
-    if (env.AUTH_MODE === "GOOGLE_WORKSPACE") {
-      const signIn = new URL("/sign-in", request.url)
-      signIn.searchParams.set(
-        "returnTo",
-        `${request.nextUrl.pathname}${request.nextUrl.search}`
-      )
-      return NextResponse.redirect(signIn)
-    }
+  if (request.cookies.has(INTERNAL_SESSION_COOKIE)) {
+    return NextResponse.next({ request })
   }
-  return updateSupabaseSession(request)
+  const signIn = new URL("/sign-in", request.url)
+  signIn.searchParams.set(
+    "returnTo",
+    `${request.nextUrl.pathname}${request.nextUrl.search}`
+  )
+  return NextResponse.redirect(signIn)
 }
 
 export const config = {

@@ -40,6 +40,19 @@ export function createControlledDriveAdapter() {
   })
 }
 
+export function createTemporaryArtifactAdapter() {
+  if (process.env.LOCAL_ACCEPTANCE_MODE !== "true") {
+    return new GoogleDriveStorageAdapter()
+  }
+  assertLocalAcceptanceMode()
+  const root = runtimeRoot()
+  return new LocalFilesystemDriveAdapter({
+    root: resolve(root, "temporary-artifacts"),
+    runtimeRoot: root,
+    driveId: "local-temporary-artifacts",
+  })
+}
+
 export function createDirectoryAdapter() {
   if (process.env.LOCAL_ACCEPTANCE_MODE !== "true") {
     return new GoogleWorkspaceDirectoryAdapter()

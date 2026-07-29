@@ -26,11 +26,26 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Phase 3 Database Foundation
 
-- Keep one authoritative Prisma schema and additive migration history at the repository root.
-- Never edit an applied migration; create a new additive migration.
+- Keep one authoritative Prisma schema and migration history at the repository root.
+- Phase 16.1 establishes `0001_initial_dtg_signature_platform` before first
+  operational use; never edit it after acceptance and use additive migrations.
 - Preserve legacy models and compatibility relations until a later parity-approved phase.
 - Keep one active controlled Main PDF and one active approval cycle per revision database-enforced.
 - Keep published workflow, cover, and response-code versions immutable.
 - Treat `AuditLog` as append-only for normal runtime roles and repository operations.
 - Use immutable provider identifiers and hashes as authority; paths and filenames are descriptive only.
 - Run Prisma validation, disposable migration validation, and database-backed integration tests after schema changes.
+
+## Phase 16.1 Provider Boundary
+
+- PostgreSQL is the only application database and Prisma is the only ORM and
+  migration authority.
+- Production internal identity is `GOOGLE_WORKSPACE`; local acceptance identity
+  is `LOCAL_ACCEPTANCE_IDENTITY`; external identity is `MAGIC_LINK`.
+- Production storage is `GOOGLE_DRIVE_CONTROLLED` or `GOOGLE_DRIVE_SOURCE`.
+- Local storage is `LOCAL_CONTROLLED_FILESYSTEM`,
+  `LOCAL_SOURCE_FILESYSTEM`, or `LOCAL_TEMPORARY_ARTIFACT`.
+- Never add password login, compatibility authentication modes, public object
+  URLs, provider-specific domain fields, or large file bytes in PostgreSQL.
+- Run `pnpm check:no-supabase` after changing source, configuration,
+  dependencies, database schema, tests, or CI.

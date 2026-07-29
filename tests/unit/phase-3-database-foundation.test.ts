@@ -108,11 +108,11 @@ test("Phase 3 schema keeps every owning relation explicit and restrictive", asyn
   )
 })
 
-test("Phase 3 migration contains database-enforced invariants", async () => {
+test("clean baseline migration contains database-enforced invariants", async () => {
   const sql = await readFile(
     join(
       root,
-      "prisma/migrations/20260729111500_phase3_database_foundation/migration.sql"
+      "prisma/migrations/0001_initial_dtg_signature_platform/migration.sql"
     ),
     "utf8"
   )

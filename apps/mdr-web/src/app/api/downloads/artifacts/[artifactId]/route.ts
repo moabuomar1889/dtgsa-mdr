@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { ROLE_CODES } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
 import { getCurrentAppUser } from "@/server/services/auth/auth-service"
-import { downloadFileFromSupabaseStorage } from "@/server/services/storage/storage-service"
+import { downloadFileFromStorage } from "@/server/services/storage/storage-service"
 
 export const dynamic = "force-dynamic"
 
@@ -59,13 +59,9 @@ export async function GET(
   if (!file || file.deletedAt) {
     return NextResponse.json({ error: "Artifact unavailable" }, { status: 404 })
   }
-  const separator = file.providerKey.indexOf("/")
-  if (separator <= 0) {
-    return NextResponse.json({ error: "Artifact unavailable" }, { status: 404 })
-  }
-  const bytes = await downloadFileFromSupabaseStorage(
-    file.providerKey.slice(0, separator),
-    file.providerKey.slice(separator + 1)
+  const bytes = await downloadFileFromStorage(
+    file.storageProvider,
+    file.providerKey
   )
   await prisma.auditLog.create({
     data: {

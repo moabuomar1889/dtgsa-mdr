@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Phase 16.1 - PostgreSQL/Prisma-Only Baseline
+
+- Removed the retired authentication and storage SDKs, password login,
+  compatibility modes, user synchronization, object-storage consumers, and
+  environment variables from active runtime and configuration.
+- Standardized identity on Google Workspace OIDC, local synthetic identity, and
+  PostgreSQL-backed external Magic Links.
+- Standardized files on controlled/source Google Drive providers and
+  controlled/source/temporary local filesystem providers.
+- Removed provider-specific Prisma fields and enum values and replaced the
+  pre-production development migration chain with one reviewed clean baseline.
+- Added authenticated provider-neutral file delivery routes, least-privilege
+  PostgreSQL role templates, a permanent repository gate, and Phase 16.1
+  architecture, ADR, acceptance, and handoff documentation.
+
 ### Phase 3 - Database Foundation
 
 - Added additive identity, controlled-file, workflow, cover, evidence, client

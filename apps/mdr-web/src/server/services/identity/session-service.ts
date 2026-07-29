@@ -111,8 +111,14 @@ export async function createInternalSession(input: {
       data: {
         userId: input.userId,
         internalSessionId: created.id,
-        provider: "google_workspace",
-        method: "oidc_authorization_code",
+        provider:
+          input.authMode === "GOOGLE_WORKSPACE"
+            ? "google_workspace"
+            : "local_acceptance",
+        method:
+          input.authMode === "GOOGLE_WORKSPACE"
+            ? "oidc_authorization_code"
+            : "synthetic_identity_selector",
         authenticatedAt,
         expiresAt: new Date(
           authenticatedAt.getTime() + config.recentAuthWindowMinutes * 60_000

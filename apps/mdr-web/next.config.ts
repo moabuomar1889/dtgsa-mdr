@@ -1,6 +1,5 @@
 import type { NextConfig } from "next"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const localAcceptance = process.env.LOCAL_ACCEPTANCE_MODE === "true"
 const developmentScriptPolicy =
   process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""
@@ -29,20 +28,6 @@ const securityHeaders = [
   },
 ]
 
-const remotePatterns = []
-
-if (supabaseUrl) {
-  try {
-    const parsedUrl = new URL(supabaseUrl)
-    remotePatterns.push({
-      protocol: parsedUrl.protocol.replace(":", "") as "http" | "https",
-      hostname: parsedUrl.hostname,
-    })
-  } catch {
-    // Ignore invalid URLs here; env validation handles this elsewhere.
-  }
-}
-
 const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: [
@@ -58,7 +43,7 @@ const nextConfig: NextConfig = {
     "@dtg/pdf-engine",
   ],
   images: {
-    remotePatterns,
+    remotePatterns: [],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }]

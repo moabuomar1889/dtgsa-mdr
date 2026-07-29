@@ -93,20 +93,6 @@ function parseAssemblyPayload(
   } as AssemblyPayload
 }
 
-function splitProviderKey(providerKey: string) {
-  const separator = providerKey.indexOf("/")
-  if (separator <= 0 || separator === providerKey.length - 1) {
-    throw new NonRetryableJobError(
-      "INVALID_PROVIDER_KEY",
-      "The storage provider key is invalid."
-    )
-  }
-  return {
-    bucket: providerKey.slice(0, separator),
-    path: providerKey.slice(separator + 1),
-  }
-}
-
 export function createWorkerStorage(
   prisma: PrismaClient,
   env: NodeJS.ProcessEnv = process.env
@@ -115,12 +101,40 @@ export function createWorkerStorage(
     assertLocalAcceptanceMode(env)
     const runtimeRoot = env.LOCAL_RUNTIME_ROOT?.trim()
     if (!runtimeRoot) throw new Error("LOCAL_RUNTIME_ROOT is required.")
-    const adapter = new LocalFilesystemDriveAdapter({
-      root: resolve(runtimeRoot, "controlled-documents"),
-      runtimeRoot,
-      driveId: "local-controlled-drive",
-      env,
-    })
+    const createAdapter = (
+      directory: string,
+      driveId: string
+    ) =>
+      new LocalFilesystemDriveAdapter({
+        root: resolve(runtimeRoot, directory),
+        runtimeRoot,
+        driveId,
+        env,
+      })
+    const controlledAdapter = createAdapter(
+      "controlled-documents",
+      "local-controlled-drive"
+    )
+    const sourceAdapter = createAdapter("source-drive", "local-source-drive")
+    const temporaryAdapter = createAdapter(
+      "temporary-artifacts",
+      "local-temporary-artifacts"
+    )
+    const adapterFor = (provider: StorageProvider) => {
+      if (provider === StorageProvider.LOCAL_SOURCE_FILESYSTEM) {
+        return sourceAdapter
+      }
+      if (provider === StorageProvider.LOCAL_TEMPORARY_ARTIFACT) {
+        return temporaryAdapter
+      }
+      if (provider === StorageProvider.LOCAL_CONTROLLED_FILESYSTEM) {
+        return controlledAdapter
+      }
+      throw new NonRetryableJobError(
+        "PROVIDER_UNSUPPORTED",
+        "The local assembly component provider is unsupported."
+      )
+    }
     const toBuffer = async (stream: NodeJS.ReadableStream) => {
       const chunks: Buffer[] = []
       for await (const chunk of stream) chunks.push(Buffer.from(chunk))
@@ -138,10 +152,10 @@ export function createWorkerStorage(
             "An assembly component is missing."
           )
         }
-        const fileId =
-          file.driveIdentity?.driveFileId ??
-          file.providerKey.replace(/^local-drive:/, "")
-        const bytes = await toBuffer(await adapter.read(fileId))
+        const fileId = file.driveIdentity?.driveFileId ?? file.providerKey
+        const bytes = await toBuffer(
+          await adapterFor(file.storageProvider).read(fileId)
+        )
         if (sha256(bytes) !== file.checksum) {
           throw new NonRetryableJobError(
             "TAMPER_DETECTED",
@@ -151,76 +165,26 @@ export function createWorkerStorage(
         return bytes
       },
       async writeTemporary(input) {
-        const uploaded = await adapter.uploadResumable({
+        const uploaded = await temporaryAdapter.uploadResumable({
           folderId: "local-worker-artifacts",
           opaqueName: `${input.cacheKey}.pdf`,
           mimeType: "application/pdf",
           bytes: Readable.from(input.bytes),
         })
         return {
-          provider: StorageProvider.Temporary,
-          providerKey: `local-drive:${uploaded.fileId}`,
+          provider: StorageProvider.LOCAL_TEMPORARY_ARTIFACT,
+          providerKey: uploaded.fileId,
           fileName: `signed-internally-${input.cacheKey.slice(0, 12)}.pdf`,
           mimeType: "application/pdf",
         }
       },
       async delete(providerKey) {
-        await adapter.deleteTemporary(providerKey.replace(/^local-drive:/, ""))
+        await temporaryAdapter.deleteTemporary(providerKey)
       },
     }
   }
 
   let drive: drive_v3.Drive | null = null
-
-  const privateStorageRequest = async (
-    method: "GET" | "POST" | "DELETE",
-    bucket: string,
-    path: string,
-    body?: Buffer
-  ) => {
-    if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Private Supabase worker credentials are not configured.")
-    }
-    const encodedPath = path
-      .split("/")
-      .map((part) => encodeURIComponent(part))
-      .join("/")
-    const objectPath =
-      method === "GET"
-        ? `object/authenticated/${bucket}/${encodedPath}`
-        : method === "DELETE"
-          ? `object/${bucket}`
-          : `object/${bucket}/${encodedPath}`
-    const response = await fetch(
-      `${env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/${objectPath}`,
-      {
-        method,
-        headers: {
-          Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-          ...(body || method === "DELETE"
-            ? {
-                "Content-Type":
-                  method === "DELETE" ? "application/json" : "application/pdf",
-                ...(method === "POST" ? { "x-upsert": "true" } : {}),
-              }
-            : {}),
-        },
-        body:
-          method === "DELETE"
-            ? JSON.stringify({ prefixes: [path] })
-            : body
-              ? Uint8Array.from(body)
-              : undefined,
-      }
-    )
-    if (!response.ok) {
-      throw new Error(
-        `Private storage request failed with status ${response.status}.`
-      )
-    }
-    return response
-  }
 
   const getDrive = () => {
     if (!drive) {
@@ -230,7 +194,7 @@ export function createWorkerStorage(
       const auth = new google.auth.JWT({
         email: env.GOOGLE_DRIVE_CLIENT_EMAIL,
         key: env.GOOGLE_DRIVE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-        scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+        scopes: ["https://www.googleapis.com/auth/drive"],
         subject: env.GOOGLE_DRIVE_IMPERSONATE_USER || undefined,
       })
       drive = google.drive({ version: "v3", auth })
@@ -251,40 +215,24 @@ export function createWorkerStorage(
         )
       }
 
-      let bytes: Buffer
-      if (file.storageProvider === StorageProvider.GoogleDrive) {
-        if (!file.driveIdentity) {
-          throw new NonRetryableJobError(
-            "DRIVE_IDENTITY_MISSING",
-            "The controlled Drive identity is missing."
-          )
-        }
-        const response = await getDrive().files.get(
-          {
-            fileId: file.driveIdentity.driveFileId,
-            alt: "media",
-            supportsAllDrives: true,
-          },
-          { responseType: "arraybuffer" }
-        )
-        bytes = Buffer.from(response.data as ArrayBuffer)
-      } else if (
-        file.storageProvider === StorageProvider.Supabase ||
-        file.storageProvider === StorageProvider.Temporary
+      if (
+        file.storageProvider !== StorageProvider.GOOGLE_DRIVE_CONTROLLED &&
+        file.storageProvider !== StorageProvider.GOOGLE_DRIVE_SOURCE
       ) {
-        const location = splitProviderKey(file.providerKey)
-        const response = await privateStorageRequest(
-          "GET",
-          location.bucket,
-          location.path
-        )
-        bytes = Buffer.from(await response.arrayBuffer())
-      } else {
         throw new NonRetryableJobError(
           "PROVIDER_UNSUPPORTED",
           "The assembly component storage provider is unsupported."
         )
       }
+      const response = await getDrive().files.get(
+        {
+          fileId: file.driveIdentity?.driveFileId ?? file.providerKey,
+          alt: "media",
+          supportsAllDrives: true,
+        },
+        { responseType: "arraybuffer" }
+      )
+      const bytes = Buffer.from(response.data as ArrayBuffer)
       if (sha256(bytes) !== file.checksum) {
         throw new NonRetryableJobError(
           "TAMPER_DETECTED",
@@ -295,20 +243,38 @@ export function createWorkerStorage(
     },
 
     async writeTemporary(input) {
-      const bucket = env.SUPABASE_STORAGE_BUCKET_TEMP || "temp-files"
-      const path = `worker-artifacts/${input.cacheKey}.pdf`
-      await privateStorageRequest("POST", bucket, path, input.bytes)
+      const folderId = env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim()
+      if (!folderId) {
+        throw new Error("Google Drive worker artifact folder is not configured.")
+      }
+      const uploaded = await getDrive().files.create({
+        supportsAllDrives: true,
+        requestBody: {
+          name: `${input.cacheKey}.pdf`,
+          parents: [folderId],
+        },
+        media: {
+          mimeType: "application/pdf",
+          body: Readable.from(input.bytes),
+        },
+        fields: "id",
+      })
+      if (!uploaded.data.id) {
+        throw new Error("Google Drive did not return an artifact File ID.")
+      }
       return {
-        provider: StorageProvider.Temporary,
-        providerKey: `${bucket}/${path}`,
+        provider: StorageProvider.GOOGLE_DRIVE_CONTROLLED,
+        providerKey: uploaded.data.id,
         fileName: `signed-internally-${input.cacheKey.slice(0, 12)}.pdf`,
         mimeType: "application/pdf",
       }
     },
 
     async delete(providerKey) {
-      const location = splitProviderKey(providerKey)
-      await privateStorageRequest("DELETE", location.bucket, location.path)
+      await getDrive().files.delete({
+        fileId: providerKey,
+        supportsAllDrives: true,
+      })
     },
   }
 }

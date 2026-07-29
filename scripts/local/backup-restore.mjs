@@ -146,7 +146,7 @@ await run(
   migration.args,
   localEnvironment(config, {
     DATABASE_URL: restoreUrl,
-    DIRECT_URL: restoreUrl,
+    DIRECT_DATABASE_URL: restoreUrl,
   })
 )
 

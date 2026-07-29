@@ -5,7 +5,6 @@ import { join } from "node:path"
 import {
   AuditSeverity,
   CoverSheetKind,
-  DriveFolderType,
   DocumentFileType,
   GeneratedDocumentKind,
   Prisma,
@@ -19,11 +18,10 @@ import { renderCoverTemplatePdf } from "@dtg/pdf-engine"
 import type { CoverTemplateDocument } from "@dtg/cover-designer"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
-import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
 import {
-  buildStoragePath,
-  downloadFileFromSupabaseStorage,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  downloadFileFromStorage,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
 import { renderDocxTemplateFromStorage } from "@/server/services/templates/docx-template-service"
 import { findPreferredCoverSheetTemplate } from "@/server/services/templates/template-management-service"
@@ -66,16 +64,14 @@ function assertMdrPermission(user: CurrentAppUser, projectId: string) {
 }
 
 async function loadSignatureBytes(
-  storageBucket: string | null,
-  signaturePath: string | null
+  storageProvider: StorageProvider | null,
+  providerKey: string | null
 ) {
-  if (!storageBucket || !signaturePath) {
+  if (!storageProvider || !providerKey) {
     return null
   }
 
-  return downloadFileFromSupabaseStorage(storageBucket, signaturePath).catch(
-    () => null
-  )
+  return downloadFileFromStorage(storageProvider, providerKey).catch(() => null)
 }
 
 async function getRevisionPackageContext(revisionId: string) {
@@ -183,8 +179,8 @@ async function renderCoverFromTemplate(input: {
           key: step.stepType.toLowerCase().replace("dccheck", "dc-validated"),
           event: step.signatureEvent,
           appearanceBytes: await loadSignatureBytes(
-            step.signatureEvent?.signatureProfile?.storageBucket ?? null,
-            step.signatureEvent?.signatureImagePath ?? null
+            step.signatureEvent?.signatureStorageProvider ?? null,
+            step.signatureEvent?.signatureProviderKey ?? null
           ),
         }))
       )
@@ -325,16 +321,16 @@ export async function generateRevisionCoverSheets(
   const [preparedSignature, reviewedSignature, approvedSignature] =
     await Promise.all([
       loadSignatureBytes(
-        prepared?.signatureEvent?.signatureProfile?.storageBucket ?? null,
-        prepared?.signatureEvent?.signatureImagePath ?? null
+        prepared?.signatureEvent?.signatureStorageProvider ?? null,
+        prepared?.signatureEvent?.signatureProviderKey ?? null
       ),
       loadSignatureBytes(
-        reviewed?.signatureEvent?.signatureProfile?.storageBucket ?? null,
-        reviewed?.signatureEvent?.signatureImagePath ?? null
+        reviewed?.signatureEvent?.signatureStorageProvider ?? null,
+        reviewed?.signatureEvent?.signatureProviderKey ?? null
       ),
       loadSignatureBytes(
-        approved?.signatureEvent?.signatureProfile?.storageBucket ?? null,
-        approved?.signatureEvent?.signatureImagePath ?? null
+        approved?.signatureEvent?.signatureStorageProvider ?? null,
+        approved?.signatureEvent?.signatureProviderKey ?? null
       ),
     ])
 
@@ -422,7 +418,7 @@ export async function generateRevisionCoverSheets(
   const dtgCoverBuffer = templatedDtgCover?.bytes ?? fallbackDtgBuffer
   const clientCoverBuffer = templatedClientCover?.bytes ?? fallbackClientBuffer
 
-  const basePath = buildStoragePath(
+  const baseKey = buildStorageKey(
     "projects",
     revision.document.project.code,
     revision.document.dtgsaDocumentNumber,
@@ -430,45 +426,24 @@ export async function generateRevisionCoverSheets(
     "covers"
   )
 
-  const dtgCoverUpload = await uploadBytesToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
-    path: templatedDtgCover?.visual
-      ? `${basePath}/dtgsa-cover-${templatedDtgCover.visual.outputHash}.pdf`
-      : `${basePath}/dtgsa-cover.pdf`,
+  const dtgCoverUpload = await uploadBytesToStorage({
+    area: "controlled",
+    providerKeyHint: templatedDtgCover?.visual
+      ? `${baseKey}/dtgsa-cover-${templatedDtgCover.visual.outputHash}.pdf`
+      : `${baseKey}/dtgsa-cover.pdf`,
     bytes: dtgCoverBuffer,
     fileName: `DTGSA-Cover-${revision.document.dtgsaDocumentNumber}-Rev-${revision.revisionLabel}.pdf`,
     mimeType: "application/pdf",
-    upsert: true,
   })
-  const clientCoverUpload = await uploadBytesToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
-    path: templatedClientCover?.visual
-      ? `${basePath}/client-cover-${templatedClientCover.visual.outputHash}.pdf`
-      : `${basePath}/client-cover.pdf`,
+  const clientCoverUpload = await uploadBytesToStorage({
+    area: "controlled",
+    providerKeyHint: templatedClientCover?.visual
+      ? `${baseKey}/client-cover-${templatedClientCover.visual.outputHash}.pdf`
+      : `${baseKey}/client-cover.pdf`,
     bytes: clientCoverBuffer,
     fileName: `Client-Cover-${revision.document.dtgsaDocumentNumber}-Rev-${revision.revisionLabel}.pdf`,
     mimeType: "application/pdf",
-    upsert: true,
   })
-
-  const [dtgDriveUpload, clientDriveUpload] = await Promise.all([
-    uploadProjectFileToGoogleDrive({
-      projectId: revision.document.projectId,
-      folderType: DriveFolderType.MDR,
-      fileName: dtgCoverUpload.fileName,
-      bytes: dtgCoverBuffer,
-      mimeType: dtgCoverUpload.mimeType,
-      actorUserId: actor.id,
-    }),
-    uploadProjectFileToGoogleDrive({
-      projectId: revision.document.projectId,
-      folderType: DriveFolderType.MDR,
-      fileName: clientCoverUpload.fileName,
-      bytes: clientCoverBuffer,
-      mimeType: clientCoverUpload.mimeType,
-      actorUserId: actor.id,
-    }),
-  ])
 
   return prisma.$transaction(async (tx) => {
     const activeCycle = await tx.approvalCycle.findFirst({
@@ -495,14 +470,11 @@ export async function generateRevisionCoverSheets(
           documentRevisionId: revision.id,
           projectId: revision.document.projectId,
           type: DocumentFileType.DTG_COVER,
-          storageProvider: StorageProvider.Supabase,
+          storageProvider: dtgCoverUpload.storageProvider,
+          providerKey: dtgCoverUpload.providerKey,
           fileName: dtgCoverUpload.fileName,
           mimeType: dtgCoverUpload.mimeType,
           fileSizeBytes: dtgCoverUpload.fileSizeBytes,
-          storageBucket: dtgCoverUpload.bucket,
-          storagePath: dtgCoverUpload.path,
-          googleDriveFileId: dtgDriveUpload?.fileId ?? null,
-          googleDriveFolderId: dtgDriveUpload?.folderId ?? null,
           checksum: dtgCoverUpload.checksum,
           uploadedByUserId: actor.id,
         },
@@ -512,14 +484,11 @@ export async function generateRevisionCoverSheets(
           documentRevisionId: revision.id,
           projectId: revision.document.projectId,
           type: DocumentFileType.CLIENT_COVER,
-          storageProvider: StorageProvider.Supabase,
+          storageProvider: clientCoverUpload.storageProvider,
+          providerKey: clientCoverUpload.providerKey,
           fileName: clientCoverUpload.fileName,
           mimeType: clientCoverUpload.mimeType,
           fileSizeBytes: clientCoverUpload.fileSizeBytes,
-          storageBucket: clientCoverUpload.bucket,
-          storagePath: clientCoverUpload.path,
-          googleDriveFileId: clientDriveUpload?.fileId ?? null,
-          googleDriveFolderId: clientDriveUpload?.folderId ?? null,
           checksum: clientCoverUpload.checksum,
           uploadedByUserId: actor.id,
         },
@@ -532,20 +501,16 @@ export async function generateRevisionCoverSheets(
           documentRevisionId: revision.id,
           kind: GeneratedDocumentKind.DTGSA_COVER_PDF,
           fileName: dtgCoverUpload.fileName,
-          storageProvider: StorageProvider.Supabase,
-          storageBucket: dtgCoverUpload.bucket,
-          storagePath: dtgCoverUpload.path,
-          googleDriveFileId: dtgDriveUpload?.fileId ?? null,
+          storageProvider: dtgCoverUpload.storageProvider,
+          providerKey: dtgCoverUpload.providerKey,
           generatedByUserId: actor.id,
         },
         {
           documentRevisionId: revision.id,
           kind: GeneratedDocumentKind.CLIENT_COVER_PDF,
           fileName: clientCoverUpload.fileName,
-          storageProvider: StorageProvider.Supabase,
-          storageBucket: clientCoverUpload.bucket,
-          storagePath: clientCoverUpload.path,
-          googleDriveFileId: clientDriveUpload?.fileId ?? null,
+          storageProvider: clientCoverUpload.storageProvider,
+          providerKey: clientCoverUpload.providerKey,
           generatedByUserId: actor.id,
         },
       ],
@@ -566,13 +531,13 @@ export async function generateRevisionCoverSheets(
       const fileObject = await tx.fileObject.upsert({
         where: {
           storageProvider_providerKey: {
-            storageProvider: StorageProvider.Supabase,
-            providerKey: `${item.upload.bucket}/${item.upload.path}`,
+            storageProvider: item.upload.storageProvider,
+            providerKey: item.upload.providerKey,
           },
         },
         create: {
-          storageProvider: StorageProvider.Supabase,
-          providerKey: `${item.upload.bucket}/${item.upload.path}`,
+          storageProvider: item.upload.storageProvider,
+          providerKey: item.upload.providerKey,
           fileName: item.upload.fileName,
           mimeType: item.upload.mimeType,
           sizeBytes: BigInt(item.upload.fileSizeBytes),
@@ -630,8 +595,7 @@ export async function generateMergedRevisionPackage(
       file.deletedAt === null &&
       (file.type === DocumentFileType.SOURCE ||
         file.type === DocumentFileType.REVISION_SOURCE) &&
-      file.storageBucket &&
-      file.storagePath &&
+      file.providerKey &&
       (file.mimeType === "application/pdf" ||
         file.fileName.toLowerCase().endsWith(".pdf"))
   )
@@ -640,8 +604,7 @@ export async function generateMergedRevisionPackage(
       file.deletedAt === null &&
       (file.type === DocumentFileType.DTG_COVER ||
         file.type === DocumentFileType.CLIENT_COVER) &&
-      file.storageBucket &&
-      file.storagePath
+      file.providerKey
   )
 
   if (sourceFiles.length === 0) {
@@ -652,14 +615,14 @@ export async function generateMergedRevisionPackage(
 
   const buffers = await Promise.all(
     [...coverFiles, ...sourceFiles].map((file) =>
-      downloadFileFromSupabaseStorage(file.storageBucket!, file.storagePath!)
+      downloadFileFromStorage(file.storageProvider, file.providerKey)
     )
   )
 
   const mergedBuffer = await mergePdfBuffers(buffers)
-  const mergedUpload = await uploadBytesToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
-    path: buildStoragePath(
+  const mergedUpload = await uploadBytesToStorage({
+    area: "controlled",
+    providerKeyHint: buildStorageKey(
       "projects",
       revision.document.project.code,
       revision.document.dtgsaDocumentNumber,
@@ -670,16 +633,6 @@ export async function generateMergedRevisionPackage(
     bytes: mergedBuffer,
     fileName: `Merged-${revision.document.dtgsaDocumentNumber}-Rev-${revision.revisionLabel}.pdf`,
     mimeType: "application/pdf",
-    upsert: true,
-  })
-
-  const driveUpload = await uploadProjectFileToGoogleDrive({
-    projectId: revision.document.projectId,
-    folderType: DriveFolderType.SUBMITTED,
-    fileName: mergedUpload.fileName,
-    bytes: mergedBuffer,
-    mimeType: mergedUpload.mimeType,
-    actorUserId: actor.id,
   })
 
   return prisma.$transaction(async (tx) => {
@@ -699,14 +652,11 @@ export async function generateMergedRevisionPackage(
         documentRevisionId: revision.id,
         projectId: revision.document.projectId,
         type: DocumentFileType.MERGED,
-        storageProvider: StorageProvider.Supabase,
+        storageProvider: mergedUpload.storageProvider,
+        providerKey: mergedUpload.providerKey,
         fileName: mergedUpload.fileName,
         mimeType: mergedUpload.mimeType,
         fileSizeBytes: mergedUpload.fileSizeBytes,
-        storageBucket: mergedUpload.bucket,
-        storagePath: mergedUpload.path,
-        googleDriveFileId: driveUpload?.fileId ?? null,
-        googleDriveFolderId: driveUpload?.folderId ?? null,
         checksum: mergedUpload.checksum,
         uploadedByUserId: actor.id,
       },
@@ -717,10 +667,8 @@ export async function generateMergedRevisionPackage(
         documentRevisionId: revision.id,
         kind: GeneratedDocumentKind.MERGED_PDF,
         fileName: mergedUpload.fileName,
-        storageProvider: StorageProvider.Supabase,
-        storageBucket: mergedUpload.bucket,
-        storagePath: mergedUpload.path,
-        googleDriveFileId: driveUpload?.fileId ?? null,
+        storageProvider: mergedUpload.storageProvider,
+        providerKey: mergedUpload.providerKey,
         generatedByUserId: actor.id,
       },
     })

@@ -207,9 +207,11 @@ enum DisciplineAssignmentType {
 }
 
 enum StorageProvider {
-  Supabase
-  GoogleDrive
-  Temporary
+  GOOGLE_DRIVE_CONTROLLED
+  GOOGLE_DRIVE_SOURCE
+  LOCAL_CONTROLLED_FILESYSTEM
+  LOCAL_SOURCE_FILESYSTEM
+  LOCAL_TEMPORARY_ARTIFACT
 }
 
 enum FoundationRecordStatus {
@@ -247,9 +249,8 @@ enum CommentState {
 }
 
 enum AuthMode {
-  LEGACY_SUPABASE
-  DUAL_TRANSITION
   GOOGLE_WORKSPACE
+  LOCAL_ACCEPTANCE_IDENTITY
 }
 
 enum PortalTokenUsePolicy {
@@ -278,7 +279,6 @@ model SystemSetting {
 
 model User {
   id                    String                               @id @default(cuid())
-  authUserId            String?                              @unique
   email                 String                               @unique
   fullName              String
   jobTitle              String?
@@ -373,37 +373,40 @@ model RolePermission {
 }
 
 model SignatureProfile {
-  id                String           @id @default(cuid())
-  userId            String           @unique
-  signatureFilePath String?
-  initialsFilePath  String?
-  storageBucket     String?
-  mimeType          String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  signatureEvents   SignatureEvent[]
+  id                       String           @id @default(cuid())
+  userId                   String           @unique
+  signatureStorageProvider StorageProvider?
+  signatureProviderKey     String?
+  initialsStorageProvider  StorageProvider?
+  initialsProviderKey      String?
+  mimeType                 String?
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  user                     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signatureEvents          SignatureEvent[]
 }
 
 model SignatureEvent {
-  id                      String            @id @default(cuid())
-  userId                  String
-  signatureProfileId      String?
-  userDisplayNameSnapshot String
-  roleSnapshot            String
-  targetEntityType        String
-  targetEntityId          String
-  workflowStepType        WorkflowStepType
-  signatureImagePath      String?
-  initialsImagePath       String?
-  signedAt                DateTime          @default(now())
-  timezone                String
-  signatureHash           String
-  auditLogId              String?           @unique
-  user                    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  signatureProfile        SignatureProfile? @relation(fields: [signatureProfileId], references: [id], onDelete: SetNull)
-  auditLog                AuditLog?         @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
-  workflowStep            WorkflowStep?
+  id                       String            @id @default(cuid())
+  userId                   String
+  signatureProfileId       String?
+  userDisplayNameSnapshot  String
+  roleSnapshot             String
+  targetEntityType         String
+  targetEntityId           String
+  workflowStepType         WorkflowStepType
+  signatureStorageProvider StorageProvider?
+  signatureProviderKey     String?
+  initialsStorageProvider  StorageProvider?
+  initialsProviderKey      String?
+  signedAt                 DateTime          @default(now())
+  timezone                 String
+  signatureHash            String
+  auditLogId               String?           @unique
+  user                     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signatureProfile         SignatureProfile? @relation(fields: [signatureProfileId], references: [id], onDelete: SetNull)
+  auditLog                 AuditLog?         @relation(fields: [auditLogId], references: [id], onDelete: SetNull)
+  workflowStep             WorkflowStep?
 
   @@index([targetEntityType, targetEntityId])
   @@index([signedAt])
@@ -866,25 +869,22 @@ model DocumentRevision {
 }
 
 model DocumentFile {
-  id                  String            @id @default(cuid())
-  documentRevisionId  String
-  projectId           String
-  type                DocumentFileType
-  storageProvider     StorageProvider
-  fileName            String
-  mimeType            String?
-  fileSizeBytes       Int               @default(0)
-  storageBucket       String?
-  storagePath         String?
-  googleDriveFileId   String?
-  googleDriveFolderId String?
-  checksum            String?
-  uploadedByUserId    String?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  deletedAt           DateTime?
-  revision            DocumentRevision  @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)
-  transmittalItems    TransmittalItem[]
+  id                 String            @id @default(cuid())
+  documentRevisionId String
+  projectId          String
+  type               DocumentFileType
+  storageProvider    StorageProvider
+  fileName           String
+  mimeType           String?
+  fileSizeBytes      Int               @default(0)
+  providerKey        String
+  checksum           String?
+  uploadedByUserId   String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  deletedAt          DateTime?
+  revision           DocumentRevision  @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)
+  transmittalItems   TransmittalItem[]
 
   @@index([documentRevisionId, type])
   @@index([projectId, type])
@@ -936,10 +936,8 @@ model CoverSheetTemplate {
   name              String
   description       String?
   fileName          String
-  storageProvider   StorageProvider @default(Supabase)
-  storageBucket     String?
-  storagePath       String?
-  googleDriveFileId String?
+  storageProvider   StorageProvider
+  providerKey       String?
   version           Int             @default(1)
   isDefault         Boolean         @default(false)
   isActive          Boolean         @default(true)
@@ -961,10 +959,8 @@ model TransmittalTemplate {
   name              String
   description       String?
   fileName          String
-  storageProvider   StorageProvider @default(Supabase)
-  storageBucket     String?
-  storagePath       String?
-  googleDriveFileId String?
+  storageProvider   StorageProvider
+  providerKey       String?
   version           Int             @default(1)
   isDefault         Boolean         @default(false)
   isActive          Boolean         @default(true)
@@ -986,10 +982,8 @@ model GeneratedDocument {
   clientReplyId      String?
   kind               GeneratedDocumentKind
   fileName           String
-  storageProvider    StorageProvider       @default(Supabase)
-  storageBucket      String?
-  storagePath        String?
-  googleDriveFileId  String?
+  storageProvider    StorageProvider
+  providerKey        String
   generatedByUserId  String?
   createdAt          DateTime              @default(now())
   revision           DocumentRevision?     @relation(fields: [documentRevisionId], references: [id], onDelete: Cascade)

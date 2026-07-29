@@ -138,10 +138,11 @@ async function runWithDatabase(mode) {
     NODE_ENV: "test",
     TEST_DATABASE_URL: testDatabaseUrl,
     DATABASE_URL: testDatabaseUrl,
-    DIRECT_URL: testDatabaseUrl,
+    DIRECT_DATABASE_URL: testDatabaseUrl,
     NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3000",
-    NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "synthetic-test-key",
+    AUTH_MODE: "LOCAL_ACCEPTANCE_IDENTITY",
+    LOCAL_ACCEPTANCE_MODE: "true",
+    LOCAL_RUNTIME_ROOT: databaseRoot,
     APP_ENCRYPTION_KEY: "test-encryption-key-32-characters!",
     CRON_SECRET: "test-cron-secret-1234",
     GOOGLE_WORKSPACE_ALLOWED_DOMAINS: "dtg.example",
@@ -177,53 +178,12 @@ async function runWithDatabase(mode) {
     }
 
     if (mode === "upgrade-check") {
-      await applyMigrationSql(adminClient, "20260329143000_init_foundation")
+      await applyMigrationSql(
+        adminClient,
+        "0001_initial_dtg_signature_platform"
+      )
       await runSeed(testEnvironment)
-      await applyMigrationSql(
-        adminClient,
-        "20260729111500_phase3_database_foundation"
-      )
       await runSeed(testEnvironment, true)
-      await applyMigrationSql(
-        adminClient,
-        "20260729133000_phase4_identity_and_access"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260729153000_phase5_controlled_google_drive"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260729170000_phase6_manifest_and_evidence"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260729190000_phase7_workflow_engine"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260729210000_phase8_cover_designer"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260729230000_phase9_approval_application"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260730010000_phase10_durable_worker"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260730030000_phase11_client_responses"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260730050000_phase12_verification_portal"
-      )
-      await applyMigrationSql(
-        adminClient,
-        "20260730070000_phase13_integrations_requests"
-      )
       await adminClient.end()
       return
     }

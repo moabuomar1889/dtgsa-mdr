@@ -611,28 +611,19 @@ test("transmittal database behavior uses fake delivery adapters and rolls back s
     /already reserved/
   )
 
-  const calls = { upload: 0, drive: 0, notify: 0 }
+  const calls = { upload: 0, notify: 0 }
   const adapters: TransmittalDeliveryAdapters = {
     uploadBytes: async (input) => {
       calls.upload += 1
       return {
-        bucket: input.bucket,
-        path: input.path,
+        storageProvider: StorageProvider.LOCAL_CONTROLLED_FILESYSTEM,
+        providerKey: "synthetic-transmittal-file",
         fileName: input.fileName,
         fileSizeBytes: Buffer.from(input.bytes).length,
         mimeType: input.mimeType,
         checksum: "synthetic-transmittal-checksum",
       }
     },
-    uploadToDrive: async () => {
-      calls.drive += 1
-      return {
-        fileId: "synthetic-drive-file",
-        folderId: "synthetic-drive-folder",
-        webViewLink: null,
-      }
-    },
-    createSignedUrl: async () => "http://127.0.0.1/synthetic.pdf",
     sendEmail: async () => ({ queued: false, sent: false }),
     notifyRoles: async (input) => {
       calls.notify += 1
@@ -661,7 +652,7 @@ test("transmittal database behavior uses fake delivery adapters and rolls back s
   })
   assert.equal(sent.status, TransmittalStatus.Sent)
   assert.equal(sent.generatedDocuments.length, 1)
-  assert.deepEqual(calls, { upload: 1, drive: 1, notify: 1 })
+  assert.deepEqual(calls, { upload: 1, notify: 1 })
   assert.equal(
     (
       await prisma.documentRevision.findUniqueOrThrow({
@@ -871,7 +862,7 @@ test("Phase 3 database constraints protect controlled files, cycles, versions, a
   const fixture = await createDocumentFixture(baseline)
   const firstFile = await prisma.fileObject.create({
     data: {
-      storageProvider: StorageProvider.Temporary,
+      storageProvider: StorageProvider.LOCAL_TEMPORARY_ARTIFACT,
       providerKey: "phase3/main-1.pdf",
       fileName: "main-1.pdf",
       mimeType: "application/pdf",
@@ -887,7 +878,7 @@ test("Phase 3 database constraints protect controlled files, cycles, versions, a
   })
   const secondFile = await prisma.fileObject.create({
     data: {
-      storageProvider: StorageProvider.Temporary,
+      storageProvider: StorageProvider.LOCAL_TEMPORARY_ARTIFACT,
       providerKey: "phase3/main-2.pdf",
       fileName: "main-2.pdf",
       mimeType: "application/pdf",
@@ -1418,7 +1409,10 @@ test("Phase 5 controlled Drive copy is idempotent, authoritative, scoped, stream
       fileObject: { include: { driveIdentity: true } },
     },
   })
-  assert.equal(stored.fileObject.storageProvider, "GoogleDrive")
+  assert.equal(
+    stored.fileObject.storageProvider,
+    StorageProvider.LOCAL_CONTROLLED_FILESYSTEM
+  )
   assert.equal(stored.fileObject.pageCount, 1)
   assert.equal(stored.fileObject.checksum.length, 64)
   assert.ok(stored.fileObject.driveIdentity?.driveFileId)
@@ -1516,7 +1510,7 @@ test("Phase 7 workflow decisions are package-bound, evidence-backed, and concurr
   const fileHash = "a".repeat(64)
   const fileObject = await prisma.fileObject.create({
     data: {
-      storageProvider: StorageProvider.GoogleDrive,
+      storageProvider: StorageProvider.GOOGLE_DRIVE_CONTROLLED,
       providerKey: "phase7-main-file",
       fileName: "phase7.pdf",
       mimeType: "application/pdf",
@@ -2140,7 +2134,7 @@ test("Phase 11 resolves project policies and preserves response evidence", async
   })
   const submittedMain = await prisma.fileObject.create({
     data: {
-      storageProvider: StorageProvider.Temporary,
+      storageProvider: StorageProvider.LOCAL_TEMPORARY_ARTIFACT,
       providerKey: "phase-11/submitted-main.pdf",
       fileName: "submitted-main.pdf",
       mimeType: "application/pdf",
@@ -2279,7 +2273,7 @@ test("Phase 11 resolves project policies and preserves response evidence", async
   })
   const responseFile = await prisma.fileObject.create({
     data: {
-      storageProvider: StorageProvider.Temporary,
+      storageProvider: StorageProvider.LOCAL_TEMPORARY_ARTIFACT,
       providerKey: "phase-11/comment-sheet.pdf",
       fileName: "comment-sheet.pdf",
       mimeType: "application/pdf",
@@ -2289,7 +2283,7 @@ test("Phase 11 resolves project policies and preserves response evidence", async
   })
   const attachment = await prisma.fileObject.create({
     data: {
-      storageProvider: StorageProvider.Temporary,
+      storageProvider: StorageProvider.LOCAL_TEMPORARY_ARTIFACT,
       providerKey: "phase-11/markup.xlsx",
       fileName: "markup.xlsx",
       mimeType:

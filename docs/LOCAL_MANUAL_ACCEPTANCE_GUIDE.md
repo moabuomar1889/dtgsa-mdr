@@ -3,7 +3,7 @@
 ## Safety Boundary
 
 This environment uses only synthetic data and loopback services. Do not add
-Google, Supabase, SMTP, production database, company Drive, VPS, DNS, or
+Google, SMTP, production database, company Drive, VPS, DNS, remote storage, or
 deployment credentials. The local dashboard must show `LOCAL DEVELOPMENT
 APPLICATION SEAL`.
 
@@ -21,7 +21,9 @@ APPLICATION SEAL`.
 
 ```powershell
 pnpm install
+pnpm local:clean
 pnpm local:setup
+pnpm local:seed
 pnpm local:demo
 pnpm local:status
 ```

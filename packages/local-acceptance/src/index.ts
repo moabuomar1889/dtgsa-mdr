@@ -36,7 +36,6 @@ const PRODUCTION_MARKERS = [
   "dtgapps.cc",
   "googleapis.com",
   "accounts.google.com",
-  "supabase.co",
   "cloudflare.com",
   "coolify",
 ]

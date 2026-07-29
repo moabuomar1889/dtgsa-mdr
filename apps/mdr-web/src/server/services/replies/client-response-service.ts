@@ -9,7 +9,6 @@ import {
   IntegrityStatus,
   Prisma,
   RevisionStatus,
-  StorageProvider,
   WorkflowActionType,
   WorkflowStatus,
 } from "@prisma/client"
@@ -23,7 +22,6 @@ import {
 } from "@dtg/client-response-domain"
 import { createArtifactCacheKey } from "@dtg/job-engine"
 import { z } from "zod"
-import { env } from "@/lib/config/env"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
 import {
@@ -32,8 +30,8 @@ import {
   toDefinition,
 } from "@/server/services/replies/client-response-policy-service"
 import {
-  buildStoragePath,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
 import { seedWorkflowStepsForRevision } from "@/server/services/workflow/workflow-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
@@ -94,9 +92,9 @@ async function uploadResponseFile(input: {
     .normalize("NFKC")
     .replace(/[^a-zA-Z0-9._-]/g, "_")
     .slice(0, 180)
-  const uploaded = await uploadBytesToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_SOURCE,
-    path: buildStoragePath(
+  const uploaded = await uploadBytesToStorage({
+    area: "source",
+    providerKeyHint: buildStorageKey(
       "projects",
       input.projectCode,
       input.documentNumber,
@@ -107,15 +105,14 @@ async function uploadResponseFile(input: {
     bytes,
     fileName: safeName,
     mimeType: input.file.type || "application/octet-stream",
-    upsert: false,
   })
   return {
     uploaded,
     checksum,
     fileObject: await prisma.fileObject.create({
       data: {
-        storageProvider: StorageProvider.Supabase,
-        providerKey: `${uploaded.bucket}/${uploaded.path}`,
+        storageProvider: uploaded.storageProvider,
+        providerKey: uploaded.providerKey,
         fileName: safeName,
         mimeType: uploaded.mimeType,
         sizeBytes: BigInt(uploaded.fileSizeBytes),

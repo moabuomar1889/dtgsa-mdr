@@ -1,7 +1,6 @@
 import "server-only"
 import { prisma } from "@/lib/prisma/client"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
-import { createSignedStorageUrl } from "@/server/services/storage/storage-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
@@ -106,13 +105,9 @@ export async function getMdrOverview(user: CurrentAppUser) {
         currentRevisionFiles: await Promise.all(
           (document.currentRevision?.files ?? []).map(async (file) => ({
             ...file,
-            accessUrl:
-              file.storageBucket && file.storagePath
-                ? await createSignedStorageUrl(
-                    file.storageBucket,
-                    file.storagePath
-                  ).catch(() => null)
-                : null,
+            accessUrl: file.providerKey
+              ? `/api/document-files/${file.id}`
+              : null,
           }))
         ),
         permissions: {

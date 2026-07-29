@@ -7,9 +7,8 @@ import {
 } from "node:crypto"
 
 export const AUTH_MODES = {
-  legacySupabase: "LEGACY_SUPABASE",
-  dualTransition: "DUAL_TRANSITION",
   googleWorkspace: "GOOGLE_WORKSPACE",
+  localAcceptanceIdentity: "LOCAL_ACCEPTANCE_IDENTITY",
 } as const
 
 export type AuthMode = (typeof AUTH_MODES)[keyof typeof AUTH_MODES]
@@ -121,8 +120,14 @@ export function assertAuthModeAllowed(
 ) {
   if (nodeEnvironment === "production" && mode !== AUTH_MODES.googleWorkspace) {
     throw new Error(
-      "Production requires GOOGLE_WORKSPACE authentication with no password fallback."
+      "Production requires GOOGLE_WORKSPACE authentication."
     )
+  }
+  if (
+    mode !== AUTH_MODES.googleWorkspace &&
+    mode !== AUTH_MODES.localAcceptanceIdentity
+  ) {
+    throw new Error("The internal identity provider is not supported.")
   }
   return mode
 }

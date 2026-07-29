@@ -1,9 +1,7 @@
 import "server-only"
 import {
   AuditSeverity,
-  DriveFolderType,
   DocumentFileType,
-  StorageProvider,
   WorkflowActionType,
   WorkflowStatus,
 } from "@prisma/client"
@@ -11,10 +9,9 @@ import { z } from "zod"
 import { env } from "@/lib/config/env"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
-import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
 import {
-  buildStoragePath,
-  uploadFileToSupabaseStorage,
+  buildStorageKey,
+  uploadFileToStorage,
 } from "@/server/services/storage/storage-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
@@ -118,7 +115,7 @@ export async function uploadRevisionFile(
   const documentFileType =
     revision.revisionIndex > 0 ? DocumentFileType.REVISION_SOURCE : DocumentFileType.SOURCE
 
-  const storagePath = buildStoragePath(
+  const providerKeyHint = buildStorageKey(
     "projects",
     revision.document.project.code,
     revision.document.dtgsaDocumentNumber,
@@ -127,21 +124,10 @@ export async function uploadRevisionFile(
     file.name
   )
 
-  const uploaded = await uploadFileToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_SOURCE,
-    path: storagePath,
+  const uploaded = await uploadFileToStorage({
+    area: "source",
+    providerKeyHint,
     file,
-    upsert: true,
-  })
-
-  const driveUpload = await uploadProjectFileToGoogleDrive({
-    projectId: revision.document.projectId,
-    folderType:
-      revision.revisionIndex > 0 ? DriveFolderType.REVISIONS : DriveFolderType.MDR,
-    fileName: file.name,
-    bytes: Buffer.from(await file.arrayBuffer()),
-    mimeType: uploaded.mimeType,
-    actorUserId: actor.id,
   })
 
   return prisma.$transaction(async (tx) => {
@@ -150,14 +136,11 @@ export async function uploadRevisionFile(
         documentRevisionId: revision.id,
         projectId: revision.document.projectId,
         type: documentFileType,
-        storageProvider: StorageProvider.Supabase,
+        storageProvider: uploaded.storageProvider,
+        providerKey: uploaded.providerKey,
         fileName: uploaded.fileName,
         mimeType: uploaded.mimeType,
         fileSizeBytes: uploaded.fileSizeBytes,
-        storageBucket: uploaded.bucket,
-        storagePath: uploaded.path,
-        googleDriveFileId: driveUpload?.fileId ?? null,
-        googleDriveFolderId: driveUpload?.folderId ?? null,
         checksum: uploaded.checksum,
         uploadedByUserId: actor.id,
       },
@@ -208,7 +191,8 @@ export async function uploadRevisionFile(
           documentFileType,
           fileName: documentFile.fileName,
           fileSizeBytes: documentFile.fileSizeBytes,
-          googleDriveFileId: documentFile.googleDriveFileId,
+          storageProvider: documentFile.storageProvider,
+          providerKey: documentFile.providerKey,
         },
       },
     })

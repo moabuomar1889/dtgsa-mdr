@@ -176,7 +176,7 @@ async function signWorkflowStep(input: {
       throw new Error("This revision is locked and cannot be changed.")
     }
 
-    if (!input.actor.signatureProfile?.signatureFilePath) {
+    if (!input.actor.signatureProfile?.signatureProviderKey) {
       throw new Error(
         "A signature image must be uploaded in the user profile before signing workflow steps."
       )
@@ -214,9 +214,14 @@ async function signWorkflowStep(input: {
         targetEntityType: "DocumentRevision",
         targetEntityId: revision.id,
         workflowStepType: input.stepType,
-        signatureImagePath:
-          input.actor.signatureProfile?.signatureFilePath ?? null,
-        initialsImagePath: input.actor.signatureProfile?.initialsFilePath ?? null,
+        signatureStorageProvider:
+          input.actor.signatureProfile?.signatureStorageProvider ?? null,
+        signatureProviderKey:
+          input.actor.signatureProfile?.signatureProviderKey ?? null,
+        initialsStorageProvider:
+          input.actor.signatureProfile?.initialsStorageProvider ?? null,
+        initialsProviderKey:
+          input.actor.signatureProfile?.initialsProviderKey ?? null,
         signedAt,
         timezone: input.actor.timezone,
         signatureHash,

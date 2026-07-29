@@ -2,6 +2,12 @@
 
 Date: 2026-07-29
 
+Status: `HISTORICAL_ONLY`
+
+This is a historical Phase 15 decision record. Phase 16.1 completed retirement
+before production use; see
+`docs/reports/PHASE_16_1_SUPABASE_ELIMINATION_REPORT.md`.
+
 Legacy code may be removed only after all of these gates pass:
 
 1. Target path enabled.

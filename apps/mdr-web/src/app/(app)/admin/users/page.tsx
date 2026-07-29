@@ -1,5 +1,3 @@
-import { syncSupabaseUsersAction } from "@/server/actions/platform-admin"
-import { SubmitButton } from "@/components/app/submit-button"
 import { getUserAdminOverview } from "@/server/services/admin/user-admin-service"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -89,13 +87,6 @@ export default async function AdminUsersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <form action={syncSupabaseUsersAction}>
-              <SubmitButton
-                label="Sync Supabase users"
-                pendingLabel="Syncing users"
-                className="w-full"
-              />
-            </form>
             {overview.permissions.map((permission) => (
               <div
                 key={permission.id}
@@ -235,9 +226,9 @@ export default async function AdminUsersPage() {
             </Table>
           ) : (
             <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
-              No platform users have been synchronized into the app-domain user
-              table yet. The RBAC foundation is ready; the next step is wiring
-              Supabase-auth users and signature profiles into this screen.
+              No platform users are available yet. Provision Google Workspace
+              users through the identity administration process, or seed
+              synthetic identities in the isolated local acceptance runtime.
             </div>
           )}
         </CardContent>

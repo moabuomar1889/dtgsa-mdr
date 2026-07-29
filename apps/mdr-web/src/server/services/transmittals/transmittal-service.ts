@@ -4,10 +4,8 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import {
   AuditSeverity,
-  DriveFolderType,
   GeneratedDocumentKind,
   Prisma,
-  StorageProvider,
   SystemSeverity,
   TransmittalStatus,
   WorkflowActionType,
@@ -23,13 +21,11 @@ import {
   hasAnyPermission,
 } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
-import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
 import { queueAndSendEmailNotification } from "@/server/services/email/email-service"
 import { notifyProjectRoles } from "@/server/services/notifications/notification-service"
 import {
-  buildStoragePath,
-  createSignedStorageUrl,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
 import { renderDocxTemplateFromStorage } from "@/server/services/templates/docx-template-service"
 import { findPreferredTransmittalTemplate } from "@/server/services/templates/template-management-service"
@@ -42,17 +38,13 @@ import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
 export type TransmittalDeliveryAdapters = {
-  uploadBytes: typeof uploadBytesToSupabaseStorage
-  uploadToDrive: typeof uploadProjectFileToGoogleDrive
-  createSignedUrl: typeof createSignedStorageUrl
+  uploadBytes: typeof uploadBytesToStorage
   sendEmail: typeof queueAndSendEmailNotification
   notifyRoles: typeof notifyProjectRoles
 }
 
 const defaultDeliveryAdapters: TransmittalDeliveryAdapters = {
-  uploadBytes: uploadBytesToSupabaseStorage,
-  uploadToDrive: uploadProjectFileToGoogleDrive,
-  createSignedUrl: createSignedStorageUrl,
+  uploadBytes: uploadBytesToStorage,
   sendEmail: queueAndSendEmailNotification,
   notifyRoles: notifyProjectRoles,
 }
@@ -584,8 +576,8 @@ export async function deliverTransmittalNow(
     (await renderTransmittalPdfWithTemplate({ transmittal })) ??
     (await fallbackTransmittalPdf)
   const transmittalPdfUpload = await deliveryAdapters.uploadBytes({
-    bucket: env.SUPABASE_STORAGE_BUCKET_GENERATED,
-    path: buildStoragePath(
+    area: "controlled",
+    providerKeyHint: buildStorageKey(
       "projects",
       transmittal.project.code,
       "transmittals",
@@ -595,23 +587,8 @@ export async function deliverTransmittalNow(
     bytes: transmittalPdfBuffer,
     fileName: `${transmittal.transmittalNumber}.pdf`,
     mimeType: "application/pdf",
-    upsert: true,
   })
-  const transmittalDriveUpload = await deliveryAdapters.uploadToDrive({
-    projectId: transmittal.projectId,
-    folderType: DriveFolderType.TRANSMITTALS,
-    fileName: transmittalPdfUpload.fileName,
-    bytes: transmittalPdfBuffer,
-    mimeType: transmittalPdfUpload.mimeType,
-    actorUserId: actor.id,
-  })
-  const transmittalPdfUrl = await deliveryAdapters
-    .createSignedUrl(
-      transmittalPdfUpload.bucket,
-      transmittalPdfUpload.path,
-      60 * 60 * 24 * 7
-    )
-    .catch(() => null)
+  const transmittalPdfUrl = `${env.NEXT_PUBLIC_APP_URL}/api/transmittals/${transmittal.id}/pdf`
 
   await prisma.$transaction(async (tx) => {
     await tx.transmittal.update({
@@ -687,10 +664,8 @@ export async function deliverTransmittalNow(
         transmittalId: transmittal.id,
         kind: GeneratedDocumentKind.TRANSMITTAL_PDF,
         fileName: transmittalPdfUpload.fileName,
-        storageProvider: StorageProvider.Supabase,
-        storageBucket: transmittalPdfUpload.bucket,
-        storagePath: transmittalPdfUpload.path,
-        googleDriveFileId: transmittalDriveUpload?.fileId ?? null,
+        storageProvider: transmittalPdfUpload.storageProvider,
+        providerKey: transmittalPdfUpload.providerKey,
         generatedByUserId: actor.id,
       },
     })

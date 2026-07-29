@@ -62,8 +62,12 @@ export async function createCharacterizationBaseline() {
       timezone: "Asia/Riyadh",
       signatureProfile: {
         create: {
-          signatureFilePath: "synthetic/signature.png",
-          initialsFilePath: "synthetic/initials.png",
+          signatureStorageProvider:
+            StorageProvider.LOCAL_CONTROLLED_FILESYSTEM,
+          signatureProviderKey: "synthetic/signature.png",
+          initialsStorageProvider:
+            StorageProvider.LOCAL_CONTROLLED_FILESYSTEM,
+          initialsProviderKey: "synthetic/initials.png",
           mimeType: "image/png",
         },
       },
@@ -264,11 +268,11 @@ export async function createDocumentFixture(
       documentRevisionId: revision.id,
       projectId,
       type: DocumentFileType.SOURCE,
-      storageProvider: StorageProvider.Temporary,
+      storageProvider: StorageProvider.LOCAL_SOURCE_FILESYSTEM,
+      providerKey: "synthetic-source-file",
       fileName: "synthetic-source.pdf",
       mimeType: "application/pdf",
       fileSizeBytes: 128,
-      storagePath: "synthetic/source.pdf",
       checksum: "synthetic-checksum",
       uploadedByUserId: baseline.actor.id,
     },

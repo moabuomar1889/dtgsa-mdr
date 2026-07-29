@@ -7,12 +7,11 @@ import {
   splitPdfBuffer,
   stampPdfWithText,
 } from "@/lib/pdf/toolkit"
-import { env } from "@/lib/config/env"
 import {
-  buildStoragePath,
-  createSignedStorageUrl,
-  downloadFileFromSupabaseStorage,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  downloadFileFromStorage,
+  storageProviderForArea,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
@@ -21,7 +20,7 @@ type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
 type PdfToolManifestEntry = {
   label: string
   fileName: string
-  storagePath: string
+  providerKey: string
   mimeType: string
 }
 
@@ -82,23 +81,25 @@ async function storePdfToolOutputs(input: {
   }>
 }) {
   const stamp = Date.now().toString()
-  const prefix = buildStoragePath("pdf-tools", input.user.id, stamp, input.operation)
+  const prefix = buildStorageKey("pdf-tools", input.user.id, stamp, input.operation)
 
   const entries = await Promise.all(
     input.outputs.map(async (output, index) => {
-      const upload = await uploadBytesToSupabaseStorage({
-        bucket: env.SUPABASE_STORAGE_BUCKET_TEMP,
-        path: buildStoragePath(prefix, `${index + 1}-${output.fileName}`),
+      const upload = await uploadBytesToStorage({
+        area: "temporary",
+        providerKeyHint: buildStorageKey(
+          prefix,
+          `${index + 1}-${output.fileName}`
+        ),
         bytes: output.bytes,
         fileName: output.fileName,
         mimeType: output.mimeType ?? "application/pdf",
-        upsert: true,
       })
 
       return {
         label: output.label,
         fileName: upload.fileName,
-        storagePath: upload.path,
+        providerKey: upload.providerKey,
         mimeType: upload.mimeType,
       }
     })
@@ -110,16 +111,15 @@ async function storePdfToolOutputs(input: {
     entries,
   }
 
-  const manifestUpload = await uploadBytesToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_TEMP,
-    path: buildStoragePath(prefix, "manifest.json"),
+  const manifestUpload = await uploadBytesToStorage({
+    area: "temporary",
+    providerKeyHint: buildStorageKey(prefix, "manifest.json"),
     bytes: Buffer.from(JSON.stringify(manifest, null, 2), "utf8"),
     fileName: "manifest.json",
     mimeType: "application/json",
-    upsert: true,
   })
 
-  return manifestUpload.path
+  return manifestUpload.providerKey
 }
 
 export async function getPdfToolResult(manifestPath: string | null | undefined) {
@@ -127,8 +127,8 @@ export async function getPdfToolResult(manifestPath: string | null | undefined) 
     return null
   }
 
-  const bytes = await downloadFileFromSupabaseStorage(
-    env.SUPABASE_STORAGE_BUCKET_TEMP,
+  const bytes = await downloadFileFromStorage(
+    storageProviderForArea("temporary"),
     manifestPath
   ).catch(() => null)
 
@@ -143,11 +143,7 @@ export async function getPdfToolResult(manifestPath: string | null | undefined) 
     entries: await Promise.all(
       manifest.entries.map(async (entry) => ({
         ...entry,
-        url: await createSignedStorageUrl(
-          env.SUPABASE_STORAGE_BUCKET_TEMP,
-          entry.storagePath,
-          60 * 60 * 24
-        ).catch(() => null),
+        url: `/api/pdf-tools/download?key=${encodeURIComponent(entry.providerKey)}`,
       }))
     ),
   }

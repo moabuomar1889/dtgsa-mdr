@@ -29,7 +29,7 @@ export default async function ProfilePage() {
               Account
             </Badge>
             <Badge variant="outline">
-              {overview.user.signatureProfile?.signatureFilePath
+              {overview.user.signatureProfile?.signatureProviderKey
                 ? "Signature ready"
                 : "Signature pending"}
             </Badge>

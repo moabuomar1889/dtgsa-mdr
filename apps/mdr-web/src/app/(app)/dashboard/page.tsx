@@ -7,7 +7,7 @@ import {
   ShieldCheckIcon,
   SlidersHorizontalIcon,
 } from "lucide-react"
-import { env, hasGoogleDriveServiceAccount, hasSupabaseServiceRole } from "@/lib/config/env"
+import { env, hasGoogleDriveServiceAccount } from "@/lib/config/env"
 import { getDashboardOverview } from "@/server/services/dashboard/dashboard-overview"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -125,9 +125,9 @@ export default async function DashboardPage() {
 
   const integrationCards = [
     {
-      title: "Supabase service role",
-      value: hasSupabaseServiceRole ? "Ready" : "Missing",
-      detail: "Needed for privileged platform services.",
+      title: "Database authority",
+      value: "PostgreSQL / Prisma",
+      detail: "Application data and migrations use the repository schema.",
     },
     {
       title: "Google Drive account",

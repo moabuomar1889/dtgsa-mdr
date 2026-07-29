@@ -31,7 +31,6 @@ const report = contentByFile.get(
 for (const heading of [
   "OIDC Implementation",
   "Account Linking",
-  "Supabase Transition",
   "Directory Adapter",
   "Group Mappings",
   "Suspension Behavior",

@@ -51,7 +51,7 @@ test("versioned API enforces scopes, boundaries, revocation, and idempotency", a
     assert.equal(allowed.status, 200)
     assert.doesNotMatch(
       await allowed.text(),
-      /googleDrive|storagePath|secretHash/
+      /providerKey|secretHash/
     )
 
     const mutation = {

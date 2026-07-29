@@ -1,22 +1,30 @@
 import "server-only"
 import { createHash } from "node:crypto"
-import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { Readable } from "node:stream"
+import { StorageProvider } from "@prisma/client"
+import type { DriveStorageAdapter } from "@dtg/controlled-storage-domain"
+import { env } from "@/lib/config/env"
+import {
+  createControlledDriveAdapter,
+  createSourceDriveAdapter,
+  createTemporaryArtifactAdapter,
+} from "@/server/services/local/local-provider-factory"
 
 type UploadFileInput = {
-  bucket: string
-  path: string
+  area: StorageArea
+  providerKeyHint: string
   file: File
-  upsert?: boolean
 }
 
 type UploadBytesInput = {
-  bucket: string
-  path: string
+  area: StorageArea
+  providerKeyHint: string
   bytes: Buffer | Uint8Array
   fileName: string
   mimeType?: string | null
-  upsert?: boolean
 }
+
+export type StorageArea = "source" | "controlled" | "temporary"
 
 function normalizePathSegment(value: string) {
   return value
@@ -27,7 +35,7 @@ function normalizePathSegment(value: string) {
     .replace(/^-+|-+$/g, "")
 }
 
-export function buildStoragePath(
+export function buildStorageKey(
   ...segments: Array<string | number | null | undefined>
 ) {
   return segments
@@ -40,84 +48,107 @@ export function buildStoragePath(
     .join("/")
 }
 
-export async function uploadFileToSupabaseStorage(input: UploadFileInput) {
+function isLocalAcceptance() {
+  return process.env.LOCAL_ACCEPTANCE_MODE === "true"
+}
+
+export function storageProviderForArea(area: StorageArea): StorageProvider {
+  if (isLocalAcceptance()) {
+    if (area === "source") return StorageProvider.LOCAL_SOURCE_FILESYSTEM
+    if (area === "controlled") {
+      return StorageProvider.LOCAL_CONTROLLED_FILESYSTEM
+    }
+    return StorageProvider.LOCAL_TEMPORARY_ARTIFACT
+  }
+  return area === "source"
+    ? StorageProvider.GOOGLE_DRIVE_SOURCE
+    : StorageProvider.GOOGLE_DRIVE_CONTROLLED
+}
+
+function adapterForArea(area: StorageArea): DriveStorageAdapter {
+  if (area === "source") return createSourceDriveAdapter()
+  if (area === "controlled") return createControlledDriveAdapter()
+  return createTemporaryArtifactAdapter()
+}
+
+function folderForArea(area: StorageArea) {
+  if (isLocalAcceptance()) return `local-${area}-root`
+  const folder =
+    area === "source"
+      ? env.GOOGLE_DRIVE_PROJECTS_FOLDER_ID ?? env.GOOGLE_DRIVE_ROOT_FOLDER_ID
+      : env.GOOGLE_DRIVE_ROOT_FOLDER_ID
+  if (!folder) {
+    throw new Error(`Storage root for ${area} files is not configured.`)
+  }
+  return folder
+}
+
+async function streamToBuffer(stream: NodeJS.ReadableStream) {
+  const chunks: Buffer[] = []
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk))
+  return Buffer.concat(chunks)
+}
+
+export async function uploadFileToStorage(input: UploadFileInput) {
   const bytes = Buffer.from(await input.file.arrayBuffer())
-  return uploadBytesToSupabaseStorage({
-    bucket: input.bucket,
-    path: input.path,
+  return uploadBytesToStorage({
+    area: input.area,
+    providerKeyHint: input.providerKeyHint,
     bytes,
     fileName: input.file.name,
     mimeType: input.file.type || "application/octet-stream",
-    upsert: input.upsert,
   })
 }
 
-export async function uploadBytesToSupabaseStorage(input: UploadBytesInput) {
-  const supabase = createSupabaseAdminClient()
+export async function uploadBytesToStorage(input: UploadBytesInput) {
   const bytes = Buffer.from(input.bytes)
   const checksum = createHash("sha256").update(bytes).digest("hex")
-
-  const { error } = await supabase.storage
-    .from(input.bucket)
-    .upload(input.path, bytes, {
-      contentType: input.mimeType || "application/octet-stream",
-      upsert: input.upsert ?? false,
-    })
-
-  if (error) {
-    throw new Error(error.message)
-  }
+  const mimeType = input.mimeType || "application/octet-stream"
+  const uploaded = await adapterForArea(input.area).uploadResumable({
+    folderId: folderForArea(input.area),
+    opaqueName: input.providerKeyHint.replaceAll("/", "--"),
+    mimeType,
+    bytes: Readable.from(bytes),
+  })
 
   return {
-    bucket: input.bucket,
-    path: input.path,
+    storageProvider: storageProviderForArea(input.area),
+    providerKey: uploaded.fileId,
     fileName: input.fileName,
     fileSizeBytes: bytes.length,
-    mimeType: input.mimeType || "application/octet-stream",
+    mimeType,
     checksum,
   }
 }
 
-export async function createSignedStorageUrl(
-  bucket: string,
-  path: string,
-  expiresInSeconds = 60 * 60
+export async function downloadFileFromStorage(
+  provider: StorageProvider,
+  providerKey: string
 ) {
-  const supabase = createSupabaseAdminClient()
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .createSignedUrl(path, expiresInSeconds)
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return data.signedUrl
+  const area: StorageArea =
+    provider === StorageProvider.GOOGLE_DRIVE_SOURCE ||
+    provider === StorageProvider.LOCAL_SOURCE_FILESYSTEM
+      ? "source"
+      : provider === StorageProvider.LOCAL_TEMPORARY_ARTIFACT
+        ? "temporary"
+        : "controlled"
+  return streamToBuffer(await adapterForArea(area).read(providerKey))
 }
 
-export async function downloadFileFromSupabaseStorage(
-  bucket: string,
-  path: string
+export async function deleteFilesFromStorage(
+  provider: StorageProvider,
+  providerKeys: string[]
 ) {
-  const supabase = createSupabaseAdminClient()
-  const { data, error } = await supabase.storage.from(bucket).download(path)
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return Buffer.from(await data.arrayBuffer())
-}
-
-export async function deleteFilesFromSupabaseStorage(
-  bucket: string,
-  paths: string[]
-) {
-  if (paths.length === 0) return
-  const supabase = createSupabaseAdminClient()
-  const { error } = await supabase.storage.from(bucket).remove(paths)
-
-  if (error) {
-    throw new Error(error.message)
+  if (providerKeys.length === 0) return
+  const area: StorageArea =
+    provider === StorageProvider.GOOGLE_DRIVE_SOURCE ||
+    provider === StorageProvider.LOCAL_SOURCE_FILESYSTEM
+      ? "source"
+      : provider === StorageProvider.LOCAL_TEMPORARY_ARTIFACT
+        ? "temporary"
+        : "controlled"
+  const adapter = adapterForArea(area)
+  for (const providerKey of providerKeys) {
+    await adapter.deleteTemporary(providerKey)
   }
 }

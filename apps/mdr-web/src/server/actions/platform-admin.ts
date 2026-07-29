@@ -12,7 +12,6 @@ import {
   createGlobalReleasePurpose,
   createGlobalReviewCode,
 } from "@/server/services/masters/master-data-service"
-import { syncSupabaseUsers } from "@/server/services/admin/user-sync-service"
 import { createProjectFromDriveFolder } from "@/server/services/projects/project-management"
 
 function toBoolean(value: FormDataEntryValue | null) {
@@ -112,15 +111,4 @@ export async function createReviewCodeAction(formData: FormData) {
 
   revalidatePath("/masters")
   redirect("/masters")
-}
-
-export async function syncSupabaseUsersAction() {
-  const actor = await requireCurrentAppUser()
-  assertUserHasAnyPermission(actor, PERMISSIONS.usersManage)
-
-  await syncSupabaseUsers()
-
-  revalidatePath("/admin/users")
-  revalidatePath("/dashboard")
-  redirect("/admin/users")
 }

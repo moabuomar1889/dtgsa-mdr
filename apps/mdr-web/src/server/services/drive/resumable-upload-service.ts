@@ -5,15 +5,14 @@ import {
   sha256,
   type DriveStorageAdapter,
 } from "@dtg/controlled-storage-domain"
-import { StorageProvider } from "@prisma/client"
 import { prisma } from "@/lib/prisma/client"
 import {
-  buildStoragePath,
-  deleteFilesFromSupabaseStorage,
-  downloadFileFromSupabaseStorage,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  deleteFilesFromStorage,
+  downloadFileFromStorage,
+  storageProviderForArea,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
-import { env } from "@/lib/config/env"
 import { issueOpaqueToken } from "@dtg/identity-domain"
 
 export interface MalwareScanAdapter {
@@ -88,14 +87,14 @@ export async function acceptUploadPart(input: {
     }
     return existing
   }
-  const providerKey = buildStoragePath(
+  const providerKeyHint = buildStorageKey(
     "resumable",
     session.id,
     `${input.partNumber}.part`
   )
-  await uploadBytesToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_TEMP,
-    path: providerKey,
+  const uploaded = await uploadBytesToStorage({
+    area: "temporary",
+    providerKeyHint,
     bytes: input.bytes,
     fileName: `${input.partNumber}.part`,
   })
@@ -107,7 +106,7 @@ export async function acceptUploadPart(input: {
         offsetBytes: BigInt(input.offsetBytes),
         sizeBytes: input.bytes.length,
         checksum: input.checksum,
-        providerKey,
+        providerKey: uploaded.providerKey,
       },
     })
     await tx.uploadSession.update({
@@ -139,8 +138,8 @@ export async function completeResumableUpload(input: {
     if (Number(part.offsetBytes) !== expectedOffset) {
       throw new Error("Upload parts are not contiguous.")
     }
-    const bytes = await downloadFileFromSupabaseStorage(
-      env.SUPABASE_STORAGE_BUCKET_TEMP,
+    const bytes = await downloadFileFromStorage(
+      storageProviderForArea("temporary"),
       part.providerKey
     )
     if (sha256(bytes) !== part.checksum || bytes.length !== part.sizeBytes) {
@@ -173,7 +172,7 @@ export async function completeResumableUpload(input: {
   const completed = await prisma.$transaction(async (tx) => {
     const file = await tx.fileObject.create({
       data: {
-        storageProvider: StorageProvider.GoogleDrive,
+        storageProvider: storageProviderForArea("controlled"),
         providerKey: uploaded.fileId,
         fileName: session.fileName,
         mimeType: session.mimeType,
@@ -198,8 +197,8 @@ export async function completeResumableUpload(input: {
       },
     })
   })
-  await deleteFilesFromSupabaseStorage(
-    env.SUPABASE_STORAGE_BUCKET_TEMP,
+  await deleteFilesFromStorage(
+    storageProviderForArea("temporary"),
     session.parts.map((part) => part.providerKey)
   )
   return completed

@@ -7,19 +7,16 @@ import {
   DriveFolderType,
   RevisionStatus,
   ScopeLevel,
-  StorageProvider,
   WorkflowActionType,
   WorkflowStatus,
 } from "@prisma/client"
 import { z } from "zod"
-import { env } from "@/lib/config/env"
 import {
   PERMISSIONS,
   ROLE_CODES,
   hasAnyPermission,
 } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
-import { uploadProjectFileToGoogleDrive } from "@/server/services/drive/project-drive-service"
 import { generateDocumentNumber } from "@/server/services/numbering/document-numbering-service"
 import { notifyProjectRoles } from "@/server/services/notifications/notification-service"
 import {
@@ -29,8 +26,8 @@ import {
   sanitizeFileName,
 } from "@/server/services/replies/client-reply-policy"
 import {
-  buildStoragePath,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
 import { seedWorkflowStepsForRevision } from "@/server/services/workflow/workflow-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
@@ -242,9 +239,9 @@ export async function recordClientReply(
     : null
 
   const replyFileUpload = uploadedReturnedFile
-    ? await uploadBytesToSupabaseStorage({
-        bucket: env.SUPABASE_STORAGE_BUCKET_SOURCE,
-        path: buildStoragePath(
+    ? await uploadBytesToStorage({
+        area: "source",
+        providerKeyHint: buildStorageKey(
           "projects",
           document.project.code,
           document.dtgsaDocumentNumber,
@@ -255,21 +252,8 @@ export async function recordClientReply(
         bytes: await uploadedReturnedFile.bytesPromise,
         fileName: uploadedReturnedFile.fileName,
         mimeType: uploadedReturnedFile.mimeType,
-        upsert: true,
       })
     : null
-
-  const replyDriveUpload =
-    uploadedReturnedFile && replyFileUpload
-      ? await uploadProjectFileToGoogleDrive({
-          projectId: document.projectId,
-          folderType: driveTargetFolderType,
-          fileName: uploadedReturnedFile.fileName,
-          bytes: await uploadedReturnedFile.bytesPromise,
-          mimeType: uploadedReturnedFile.mimeType,
-          actorUserId: actor.id,
-        })
-      : null
 
   const result = await prisma.$transaction(async (tx) => {
     const reply = await tx.clientReply.create({
@@ -285,7 +269,7 @@ export async function recordClientReply(
         comments: parsed.comments?.trim() || null,
         driveTargetFolderType,
         driveFileName: replyFileUpload?.fileName ?? driveFileName,
-        driveFileId: replyDriveUpload?.fileId ?? null,
+        driveFileId: replyFileUpload?.providerKey ?? null,
         createdByUserId: actor.id,
       },
     })
@@ -299,14 +283,11 @@ export async function recordClientReply(
             replyState === ClientReplyState.RevisionRequired
               ? DocumentFileType.REJECTED
               : DocumentFileType.CLIENT_REPLY,
-          storageProvider: StorageProvider.Supabase,
+          storageProvider: replyFileUpload.storageProvider,
+          providerKey: replyFileUpload.providerKey,
           fileName: replyFileUpload.fileName,
           mimeType: replyFileUpload.mimeType,
           fileSizeBytes: replyFileUpload.fileSizeBytes,
-          storageBucket: replyFileUpload.bucket,
-          storagePath: replyFileUpload.path,
-          googleDriveFileId: replyDriveUpload?.fileId ?? null,
-          googleDriveFolderId: replyDriveUpload?.folderId ?? null,
           checksum: replyFileUpload.checksum,
           uploadedByUserId: actor.id,
         },
@@ -345,7 +326,7 @@ export async function recordClientReply(
           nextAction: parsed.nextAction,
           replyState,
           driveFileName: replyFileUpload?.fileName ?? driveFileName,
-          driveFileId: replyDriveUpload?.fileId ?? null,
+          providerKey: replyFileUpload?.providerKey ?? null,
         },
       },
     })

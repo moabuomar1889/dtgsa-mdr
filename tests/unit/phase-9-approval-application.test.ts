@@ -157,7 +157,7 @@ test("viewer boundary forwards Range without exposing raw Drive identity", async
   ])
   assert.match(route, /request\.headers\.get\("range"\)/)
   assert.match(route, /Cross-Origin-Resource-Policy/)
-  assert.doesNotMatch(route, /driveFileId|googleDriveFileId|drive\.google/)
+  assert.doesNotMatch(route, /driveFileId|drive\.google/)
   assert.match(viewer, /disableAutoFetch: true/)
   assert.match(viewer, /aria-label/)
   assert.match(styles, /@media \(max-width: 900px\)/)

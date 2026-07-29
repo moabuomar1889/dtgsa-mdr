@@ -15,7 +15,7 @@ export const dashboardMetrics = [
   {
     title: "Locked Stack",
     value: "Aligned",
-    detail: "Next.js 16, React 19, pnpm, shadcn, Prisma, Supabase, DOCX, PDF.",
+    detail: "Next.js 16, React 19, pnpm, shadcn, Prisma, DOCX, and PDF.",
     icon: ShieldCheckIcon,
   },
   {
@@ -27,7 +27,7 @@ export const dashboardMetrics = [
   {
     title: "Pending Inputs",
     value: "Credentials",
-    detail: "Supabase, Google Drive, email provider, and template files are still needed.",
+    detail: "Google Drive, email provider, and template files are still needed.",
     icon: BellRingIcon,
   },
 ] as const
@@ -75,7 +75,6 @@ export const statusDimensions = [
 ] as const
 
 export const environmentInputs = [
-  "Supabase project URL and keys",
   "Database connection strings",
   "Google Drive service account credentials",
   "Email provider credentials",

@@ -1,10 +1,6 @@
 import "server-only"
 import { prisma } from "@/lib/prisma/client"
-import {
-  env,
-  hasGoogleDriveServiceAccount,
-  hasSupabaseServiceRole,
-} from "@/lib/config/env"
+import { env, hasGoogleDriveServiceAccount } from "@/lib/config/env"
 import { getGoogleDriveIntegrationDiagnostic } from "@/server/services/integrations/google-drive-diagnostics"
 
 export async function getSettingsOverview() {
@@ -20,7 +16,8 @@ export async function getSettingsOverview() {
     systemSettings,
     googleDrive,
     integrations: {
-      supabaseServiceRole: hasSupabaseServiceRole,
+      databaseAuthority: "PostgreSQL / Prisma",
+      localProviders: process.env.LOCAL_ACCEPTANCE_MODE === "true",
       googleServiceAccount: hasGoogleDriveServiceAccount,
       emailProvider: env.EMAIL_PROVIDER ?? null,
       libreOfficeConfigured: Boolean(env.LIBREOFFICE_PATH),

@@ -54,23 +54,16 @@ test("production permits only Google Workspace authentication", () => {
     AUTH_MODES.googleWorkspace
   )
   assert.throws(
-    () => assertAuthModeAllowed(AUTH_MODES.legacySupabase, "production"),
-    /Production requires GOOGLE_WORKSPACE/
-  )
-  assert.throws(
-    () => assertAuthModeAllowed(AUTH_MODES.dualTransition, "production"),
+    () =>
+      assertAuthModeAllowed(AUTH_MODES.localAcceptanceIdentity, "production"),
     /Production requires GOOGLE_WORKSPACE/
   )
 })
 
-test("development preserves explicit migration authentication modes", () => {
+test("development permits only the isolated local identity mode", () => {
   assert.equal(
-    assertAuthModeAllowed(AUTH_MODES.legacySupabase, "development"),
-    AUTH_MODES.legacySupabase
-  )
-  assert.equal(
-    assertAuthModeAllowed(AUTH_MODES.dualTransition, "development"),
-    AUTH_MODES.dualTransition
+    assertAuthModeAllowed(AUTH_MODES.localAcceptanceIdentity, "development"),
+    AUTH_MODES.localAcceptanceIdentity
   )
 })
 

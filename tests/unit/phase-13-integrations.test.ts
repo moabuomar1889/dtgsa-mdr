@@ -173,7 +173,7 @@ test("integration output recursively removes secrets and storage identities", ()
     id: "record",
     secretHash: "secret",
     nested: {
-      googleDriveFileId: "drive-private",
+      providerKey: "provider-private",
       safe: "visible",
     },
     bytes: 12n,
@@ -207,9 +207,9 @@ test("SDK stays server-oriented and exposes required operations", async () => {
   assert.doesNotMatch(source, /localStorage|NEXT_PUBLIC|window\./)
 })
 
-test("Phase 13 migration is additive and protects published forms", async () => {
+test("clean baseline includes integrations and protects published forms", async () => {
   const migration = await readFile(
-    "prisma/migrations/20260730070000_phase13_integrations_requests/migration.sql",
+    "prisma/migrations/0001_initial_dtg_signature_platform/migration.sql",
     "utf8"
   )
   assert.match(migration, /IntegrationRequestAttempt/)

@@ -2,15 +2,12 @@ import "server-only"
 import {
   CoverSheetKind,
   ScopeLevel,
-  StorageProvider,
 } from "@prisma/client"
 import { z } from "zod"
-import { env } from "@/lib/config/env"
 import { prisma } from "@/lib/prisma/client"
 import {
-  buildStoragePath,
-  createSignedStorageUrl,
-  uploadFileToSupabaseStorage,
+  buildStorageKey,
+  uploadFileToStorage,
 } from "@/server/services/storage/storage-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
@@ -188,27 +185,17 @@ export async function getTemplateManagementOverview() {
     coverTemplates: await Promise.all(
       coverTemplates.map(async (template) => ({
         ...template,
-        fileUrl:
-          template.storageBucket && template.storagePath
-            ? await createSignedStorageUrl(
-                template.storageBucket,
-                template.storagePath,
-                60 * 60 * 24
-              ).catch(() => null)
-            : null,
+        fileUrl: template.providerKey
+          ? `/api/templates/cover/${template.id}`
+          : null,
       }))
     ),
     transmittalTemplates: await Promise.all(
       transmittalTemplates.map(async (template) => ({
         ...template,
-        fileUrl:
-          template.storageBucket && template.storagePath
-            ? await createSignedStorageUrl(
-                template.storageBucket,
-                template.storagePath,
-                60 * 60 * 24
-              ).catch(() => null)
-            : null,
+        fileUrl: template.providerKey
+          ? `/api/templates/transmittal/${template.id}`
+          : null,
       }))
     ),
   }
@@ -224,16 +211,15 @@ async function storeTemplateFile(input: {
   }
 
   const extension = input.file.name.split(".").pop()?.toLowerCase() ?? "docx"
-  const storagePath = buildStoragePath(
+  const providerKeyHint = buildStorageKey(
     input.pathPrefix,
     `v${input.version}.${extension}`
   )
 
-  return uploadFileToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_SOURCE,
-    path: storagePath,
+  return uploadFileToStorage({
+    area: "source",
+    providerKeyHint,
     file: input.file,
-    upsert: true,
   })
 }
 
@@ -268,7 +254,7 @@ export async function createCoverSheetTemplate(input: {
   })
   const upload = await storeTemplateFile({
     file: input.file,
-    pathPrefix: buildStoragePath(
+    pathPrefix: buildStorageKey(
       "templates",
       "covers",
       scopeFields.scopeLevel.toLowerCase(),
@@ -303,9 +289,8 @@ export async function createCoverSheetTemplate(input: {
         name: parsed.name,
         description: parsed.description || null,
         fileName: upload.fileName,
-        storageProvider: StorageProvider.Supabase,
-        storageBucket: upload.bucket,
-        storagePath: upload.path,
+        storageProvider: upload.storageProvider,
+        providerKey: upload.providerKey,
         version,
         isDefault: parsed.isDefault,
         isActive: true,
@@ -365,7 +350,7 @@ export async function createTransmittalTemplate(input: {
   })
   const upload = await storeTemplateFile({
     file: input.file,
-    pathPrefix: buildStoragePath(
+    pathPrefix: buildStorageKey(
       "templates",
       "transmittals",
       scopeFields.scopeLevel.toLowerCase(),
@@ -397,9 +382,8 @@ export async function createTransmittalTemplate(input: {
         name: parsed.name,
         description: parsed.description || null,
         fileName: upload.fileName,
-        storageProvider: StorageProvider.Supabase,
-        storageBucket: upload.bucket,
-        storagePath: upload.path,
+        storageProvider: upload.storageProvider,
+        providerKey: upload.providerKey,
         version,
         isDefault: parsed.isDefault,
         isActive: true,

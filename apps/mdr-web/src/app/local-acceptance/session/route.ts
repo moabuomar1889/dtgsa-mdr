@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   }
   const completed = await createInternalSession({
     userId: user.id,
-    authMode: "DUAL_TRANSITION",
+    authMode: "LOCAL_ACCEPTANCE_IDENTITY",
     currentToken: request.cookies.get(INTERNAL_SESSION_COOKIE)?.value,
     ipHash: hashOpaqueToken("127.0.0.1"),
     userAgentHash: hashOpaqueToken(

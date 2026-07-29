@@ -2,6 +2,12 @@
 
 Date: 2026-07-29
 
+Status: `HISTORICAL_ONLY`
+
+This document records the retired transition plan. It is not operational
+guidance. Current identity providers are defined in
+`docs/AUTHENTICATION_PROVIDERS.md`; no compatibility mode remains.
+
 ## Modes
 
 Development and staging expose explicit modes:

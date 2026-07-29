@@ -2,6 +2,11 @@
 
 Date: 2026-07-29
 
+Phase 16.1 establishes the clean PostgreSQL/Prisma-only baseline. Current gates
+are owner local UAT, authorized staging verification, and a separately approved
+deployment phase. Earlier phase details below remain historical planning
+context.
+
 ## Completed
 
 - Phases 0-15 are implementation-complete or locally accepted at their stated

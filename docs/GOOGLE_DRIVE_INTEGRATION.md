@@ -1,20 +1,21 @@
 # Google Drive Integration
 
-Date: 2026-07-29
+Date: 2026-07-30
 
-New controlled files use Google Drive File ID as external authority. Display
-names, paths, and parent folders are informational snapshots and may change
-without breaking identity.
+Production file authority uses `GOOGLE_DRIVE_CONTROLLED` and
+`GOOGLE_DRIVE_SOURCE`. Google Drive File ID is the immutable external identity;
+names, paths, and parent folders are descriptive snapshots.
 
-The official adapter supports metadata, stream and byte-range reads,
-server-to-server copy, folder creation, Shared Drives, permission listing and
-removal, restricted grants, moves, resumable uploads, and authorized temporary
-deletion. It never creates a public share link.
+The adapter supports metadata, streaming and range reads, server-side copy,
+folder creation, Shared Drives, restricted permissions, moves, resumable
+uploads, and authorized temporary deletion. It never creates a public share
+link. Application routes enforce authorization and do not expose raw Drive
+credentials or IDs.
 
-Google Picker uses a short-lived, one-time server handoff. The browser submits
-only the selected File ID; the server re-reads MIME, size, Drive location,
-owners, trash state, and access. Ordinary responses return only internal file
-and job IDs.
+Google Picker uses a short-lived one-time handoff. The browser submits the
+selected ID and the server re-reads MIME type, size, Drive location, ownership,
+trash state, and access before accepting it.
 
-Live verification is `BLOCKED_EXTERNAL_CREDENTIALS`. Tests use a deterministic
-fake adapter and never call Google.
+Local acceptance uses filesystem adapters under `.local-runtime`; it does not
+fall back to or contact Drive. Live Drive verification remains
+`BLOCKED_EXTERNAL_CREDENTIALS`.

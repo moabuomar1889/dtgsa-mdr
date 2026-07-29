@@ -10,12 +10,13 @@ import {
   validatePickerMetadata,
   type DriveStorageAdapter,
 } from "@dtg/controlled-storage-domain"
-import { IntegrityStatus, JobState, StorageProvider } from "@prisma/client"
+import { IntegrityStatus, JobState } from "@prisma/client"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { env } from "@/lib/config/env"
 import { prisma } from "@/lib/prisma/client"
 import { hashOpaqueToken, issueOpaqueToken } from "@dtg/identity-domain"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { storageProviderForArea } from "@/server/services/storage/storage-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
 
@@ -110,7 +111,7 @@ export async function reserveControlledMainFile(input: {
     const reservationId = randomUUID()
     const fileObject = await tx.fileObject.create({
       data: {
-        storageProvider: StorageProvider.Temporary,
+        storageProvider: storageProviderForArea("temporary"),
         providerKey: `controlled-reservation:${reservationId}`,
         fileName: metadata.name,
         mimeType: metadata.mimeType,
@@ -244,7 +245,7 @@ export async function processControlledCopyJob(
       await tx.fileObject.update({
         where: { id: controlled.fileObjectId },
         data: {
-          storageProvider: StorageProvider.GoogleDrive,
+          storageProvider: storageProviderForArea("controlled"),
           providerKey: copied.fileId,
           fileName: source.name,
           mimeType: CONTROLLED_PDF_MIME,

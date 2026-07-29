@@ -159,7 +159,7 @@ export default async function PdfToolsPage({
                 </div>
                 {result.entries.map((entry) => (
                   <div
-                    key={entry.storagePath}
+                    key={entry.providerKey}
                     className="rounded-2xl border border-border/60 bg-background/80 p-4"
                   >
                     <p className="font-medium">{entry.label}</p>

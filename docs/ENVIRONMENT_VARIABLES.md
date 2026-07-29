@@ -1,57 +1,70 @@
 # Environment Variables
 
-Date: 2026-07-29
+Date: 2026-07-30
 
-## Ownership and Safety
+Status: `AUTHORITATIVE`
 
-`apps/mdr-web/.env` owns local MDR runtime configuration and remains ignored.
-Root and application example files contain names and safe defaults only.
-Browser-visible values use `NEXT_PUBLIC_`; identity credentials and token keys
-are server-only. Tests construct synthetic loopback-only values and print
-redacted database URLs.
+Example files contain names and safe placeholders only. Never commit secrets or
+print unredacted connection URLs, private keys, token keys, Drive IDs, or
+service credentials.
 
-## Identity
+## Persistence
 
-| Variable                           | Required          | Default              | Purpose                                        |
-| ---------------------------------- | ----------------- | -------------------- | ---------------------------------------------- |
-| `AUTH_MODE`                        | Yes in deployment | `LEGACY_SUPABASE`    | Legacy, dual transition, or Google target mode |
-| `AUTH_COOKIE_DOMAIN`               | No                | host-only            | Optional shared internal cookie domain         |
-| `GOOGLE_CLIENT_ID`                 | Google modes      | none                 | OIDC audience and OAuth client                 |
-| `GOOGLE_CLIENT_SECRET`             | Google modes      | none                 | Server-side code exchange                      |
-| `GOOGLE_REDIRECT_URI`              | Google modes      | none                 | Exact callback URI                             |
-| `GOOGLE_WORKSPACE_ALLOWED_DOMAINS` | Google modes      | none                 | Comma-separated domain allowlist               |
-| `GOOGLE_DIRECTORY_SYNC_ENABLED`    | No                | `false`              | Explicit live Directory gate                   |
-| `GOOGLE_ADMIN_EMAIL`               | Live Directory    | none                 | Delegated admin subject                        |
-| `APP_ENCRYPTION_KEY`               | Yes               | none                 | Transient PKCE encryption                      |
-| `MAGIC_LINK_SECRET`                | No                | `APP_ENCRYPTION_KEY` | Reserved external token key material           |
+| Variable                 | Purpose                                             |
+| ------------------------ | --------------------------------------------------- |
+| `DATABASE_URL`           | Prisma runtime or controlled migration connection   |
+| `DIRECT_DATABASE_URL`    | Explicit direct connection when required by tooling |
+| `MIGRATION_DATABASE_URL` | Least-privilege migration role                      |
+| `RUNTIME_DATABASE_URL`   | Least-privilege application runtime role            |
+| `READONLY_DATABASE_URL`  | Reporting/read-only role                            |
+| `BACKUP_DATABASE_URL`    | Backup role                                         |
 
-Production refuses `LEGACY_SUPABASE` and `DUAL_TRANSITION`, even if legacy
-Supabase variables remain configured.
+Test lifecycle scripts require a distinct loopback-only test URL and reject
+remote hosts and production-like database names.
 
-## Session Windows
+## Internal Identity
 
-| Variable                       | Default |
-| ------------------------------ | ------- |
-| `INTERNAL_SESSION_TTL_MINUTES` | `480`   |
-| `EXTERNAL_SESSION_TTL_MINUTES` | `60`    |
-| `OIDC_TRANSACTION_TTL_MINUTES` | `10`    |
-| `RECENT_AUTH_WINDOW_MINUTES`   | `15`    |
-| `MAGIC_LINK_TTL_MINUTES`       | `30`    |
+| Variable                           | Purpose                                           |
+| ---------------------------------- | ------------------------------------------------- |
+| `AUTH_MODE`                        | `GOOGLE_WORKSPACE` or `LOCAL_ACCEPTANCE_IDENTITY` |
+| `LOCAL_ACCEPTANCE_MODE`            | Explicit local synthetic identity gate            |
+| `AUTH_COOKIE_DOMAIN`               | Optional host-only-compatible cookie domain       |
+| `GOOGLE_CLIENT_ID`                 | OIDC audience/client                              |
+| `GOOGLE_CLIENT_SECRET`             | Server-side OAuth secret                          |
+| `GOOGLE_REDIRECT_URI`              | Exact authorized callback                         |
+| `GOOGLE_WORKSPACE_ALLOWED_DOMAINS` | Internal domain allowlist                         |
+| `APP_ENCRYPTION_KEY`               | Transient PKCE and application encryption         |
 
-All values must be positive integers. Production should shorten windows where
-the operating policy requires stronger assurance.
+Production requires `AUTH_MODE=GOOGLE_WORKSPACE`. Local mode is rejected in
+production. Unknown modes and password-oriented configuration are not accepted.
 
-## Existing Services
+## External Identity and Sessions
 
-Supabase, Google Drive, email, LibreOffice, database, upload, and build metadata
-variables remain documented in `.env.example`. Phase 4 does not print, return,
-or commit their secret values. Google Directory reuses the existing delegated
-service-account key variables but remains disabled by default.
+| Variable                       | Purpose                                |
+| ------------------------------ | -------------------------------------- |
+| `MAGIC_LINK_SECRET`            | External invitation token key material |
+| `INTERNAL_SESSION_TTL_MINUTES` | Internal session lifetime              |
+| `EXTERNAL_SESSION_TTL_MINUTES` | External session lifetime              |
+| `OIDC_TRANSACTION_TTL_MINUTES` | OIDC transaction lifetime              |
+| `RECENT_AUTH_WINDOW_MINUTES`   | Formal-decision recent-auth window     |
+| `MAGIC_LINK_TTL_MINUTES`       | External invitation lifetime           |
 
-## Controlled Drive
+## Google Drive
 
-`GOOGLE_DRIVE_SHARED_DRIVE_ID` identifies the approved Shared Drive when
-available. `GOOGLE_DRIVE_ROOT_FOLDER_ID` identifies the restricted controlled
-root. `GOOGLE_DRIVE_CLIENT_EMAIL` and `GOOGLE_DRIVE_PRIVATE_KEY` belong to the
-service identity. None may be returned in application responses. Picker client
-configuration must use an owner-approved OAuth project and staging origin.
+| Variable                             | Purpose                    |
+| ------------------------------------ | -------------------------- |
+| `GOOGLE_DRIVE_SHARED_DRIVE_ID`       | Approved shared Drive      |
+| `GOOGLE_DRIVE_ROOT_FOLDER_ID`        | Restricted controlled root |
+| `GOOGLE_DRIVE_SOURCE_ROOT_FOLDER_ID` | Restricted source root     |
+| `GOOGLE_DRIVE_CLIENT_EMAIL`          | Service identity           |
+| `GOOGLE_DRIVE_PRIVATE_KEY`           | Server-only service key    |
+
+Local acceptance does not require these values and uses `.local-runtime`
+filesystem roots. Drive identifiers and credentials must never reach browser
+responses.
+
+## Remaining Services
+
+Email, webhook, signing, timestamp, malware, LibreOffice, qpdf, observability,
+and build variables are documented by the corresponding runbooks and example
+files. Live providers stay disabled until separately authorized.

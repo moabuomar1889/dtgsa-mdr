@@ -1,78 +1,78 @@
 # DTG Signature Platform
 
-The repository is a pnpm modular monorepo for the DTG document-control,
-approval, verification, integration, and General Requests platform. It
-preserves characterized MDR/PDI behavior while providing five independently
-buildable deployment units and shared domain packages.
+The DTG Signature Platform is a pnpm modular monorepo for document control,
+PDI-to-MDR promotion, internal approvals, controlled signatures, client
+responses, verification, integrations, General Requests, and durable jobs.
+
+## Architecture
+
+- PostgreSQL is the only application database.
+- Prisma is the only ORM and migration authority.
+- Google Workspace OIDC is the production internal identity provider.
+- PostgreSQL-backed Magic Links authenticate external clients.
+- Google Drive owns production files.
+- Local acceptance uses synthetic identity and filesystem providers.
+
+See `docs/POSTGRESQL_PRISMA_ONLY_ARCHITECTURE.md`,
+`docs/AUTHENTICATION_PROVIDERS.md`, and `docs/FILE_STORAGE_PROVIDERS.md`.
 
 ## Requirements
 
 - Node.js 24
 - pnpm 11
-- Local PostgreSQL only for the disposable integration suite
+- Windows x64 for the bundled local PostgreSQL acceptance runtime
 
-## Install
+## Install and Run Locally
 
 ```powershell
 $env:CI='true'
 pnpm install --frozen-lockfile
 pnpm exec prisma generate
-```
-
-## Run
-
-```text
-pnpm dev:mdr       MDR and document-control application on port 3000
-pnpm dev:approve   Approval and General Requests application on port 3001
-pnpm dev:verify    Public verification application on port 3002
-pnpm dev:api       Integration API on port 3003
-pnpm dev:worker    Durable background worker
-```
-
-For the complete Docker-free local acceptance environment:
-
-```powershell
+pnpm local:clean
 pnpm local:setup
+pnpm local:seed
 pnpm local:demo
 pnpm local:status
 ```
 
-Open `http://127.0.0.1:3100/local-acceptance` and select a synthetic user.
+Open `http://127.0.0.1:3100/local-acceptance` and select a synthetic user. No
+password is used. The environment is loopback-only and writes ignored
+artifacts beneath `.local-runtime`.
 
-Production mode uses Google Workspace identity for internal employees and
-isolated Magic Links for external clients. Live Google, Drive, signing,
-provider, and deployment credentials are not required for local deterministic
-tests and must be activated only in an authorized staging environment.
+## Applications
+
+```text
+mdr-web       http://127.0.0.1:3100
+approve-web   http://127.0.0.1:3101
+verify-web    http://127.0.0.1:3102
+platform-api  http://127.0.0.1:4100
+worker        background process
+```
 
 ## Validate
 
 ```powershell
+pnpm check:no-supabase
 pnpm lint
 pnpm typecheck
 pnpm test:ci
+pnpm test:e2e:local
 pnpm check:architecture
 pnpm docs:validate
 pnpm build
 pnpm exec prisma validate
 pnpm test:db:migrate
 pnpm test:db:upgrade
+pnpm local:backup-restore
 pnpm audit --audit-level high
 ```
 
-Database-backed tests launch disposable PostgreSQL 17.10 on loopback, apply the
-existing migration, and delete the data directory in `finally`. They never
-reuse `DATABASE_URL` implicitly as `TEST_DATABASE_URL`.
-
-## Architecture
-
-See `docs/MONOREPO_ARCHITECTURE.md`, `docs/PACKAGE_OWNERSHIP.md`,
-`docs/FINAL_GATE_MATRIX.md`, and
-`docs/reports/FINAL_MERGE_IMPLEMENTATION_REPORT.md`.
+Database tests create disposable PostgreSQL on loopback, reject remote or
+production-like names, redact URLs, and delete test data in `finally`.
 
 ## Readiness
 
-The current verdict is `FULL_LOCAL_ACCEPTANCE_COMPLETE` with
-`EXTERNAL_INTEGRATIONS_UNVERIFIED` and `SERVER_DEPLOYMENT_NOT_STARTED`. This
-does not authorize staging or production. The owner must complete
-`docs/LOCAL_MANUAL_ACCEPTANCE_GUIDE.md` before considering a separate
-deployment phase.
+Phase 16.1 is a local-only architecture transition. Live Google Workspace,
+Google Drive, email/webhook, malware/signing providers, public domains, and
+server deployment remain unverified or not started. This repository change
+does not authorize deployment.

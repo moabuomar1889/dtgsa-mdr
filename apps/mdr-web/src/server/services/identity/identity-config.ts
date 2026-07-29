@@ -10,9 +10,12 @@ export function getIdentityConfig() {
     env.AUTH_MODE as AuthMode,
     process.env.NODE_ENV
   )
-  const googleEnabled =
-    !localAcceptance &&
-    (authMode === "GOOGLE_WORKSPACE" || authMode === "DUAL_TRANSITION")
+  if (localAcceptance !== (authMode === "LOCAL_ACCEPTANCE_IDENTITY")) {
+    throw new Error(
+      "LOCAL_ACCEPTANCE_MODE and AUTH_MODE must select the same identity boundary."
+    )
+  }
+  const googleEnabled = authMode === "GOOGLE_WORKSPACE"
 
   if (googleEnabled) {
     if (

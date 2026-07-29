@@ -2,6 +2,12 @@
 
 Date: 2026-07-29
 
+Status: `HISTORICAL_PHASE_15_SNAPSHOT`
+
+Phase 16.1 supersedes provider-retirement statements in this document. Current
+architecture is defined in
+`docs/POSTGRESQL_PRISMA_ONLY_ARCHITECTURE.md`.
+
 Repository: `moabuomar1889/dtgsa-mdr`
 
 Branch: `codex/dtg-signature-platform-merge`

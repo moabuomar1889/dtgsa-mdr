@@ -2,13 +2,10 @@ import "server-only"
 import sharp from "sharp"
 import { AuditSeverity } from "@prisma/client"
 import { z } from "zod"
-import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import { env } from "@/lib/config/env"
 import { prisma } from "@/lib/prisma/client"
 import {
-  buildStoragePath,
-  createSignedStorageUrl,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
@@ -65,21 +62,12 @@ export async function getProfileOverview(userId: string) {
     throw new Error("User profile could not be found.")
   }
 
-  const signatureUrl =
-    user.signatureProfile?.storageBucket && user.signatureProfile.signatureFilePath
-      ? await createSignedStorageUrl(
-          user.signatureProfile.storageBucket,
-          user.signatureProfile.signatureFilePath
-        ).catch(() => null)
-      : null
-
-  const initialsUrl =
-    user.signatureProfile?.storageBucket && user.signatureProfile.initialsFilePath
-      ? await createSignedStorageUrl(
-          user.signatureProfile.storageBucket,
-          user.signatureProfile.initialsFilePath
-        ).catch(() => null)
-      : null
+  const signatureUrl = user.signatureProfile?.signatureProviderKey
+    ? "/api/profile/signature?kind=signature"
+    : null
+  const initialsUrl = user.signatureProfile?.initialsProviderKey
+    ? "/api/profile/signature?kind=initials"
+    : null
 
   return {
     user,
@@ -116,35 +104,43 @@ export async function updateUserProfile(
     })
 
     let signatureUpload:
-      | Awaited<ReturnType<typeof uploadBytesToSupabaseStorage>>
+      | Awaited<ReturnType<typeof uploadBytesToStorage>>
       | null = null
     let initialsUpload:
-      | Awaited<ReturnType<typeof uploadBytesToSupabaseStorage>>
+      | Awaited<ReturnType<typeof uploadBytesToStorage>>
       | null = null
 
     if (signatureFile) {
       const normalized = await normalizeSignatureAsset(signatureFile, "signature")
 
-      signatureUpload = await uploadBytesToSupabaseStorage({
-        bucket: env.SUPABASE_STORAGE_BUCKET_SIGNATURES,
-        path: buildStoragePath("signatures", actor.id, "signature", normalized.fileName),
+      signatureUpload = await uploadBytesToStorage({
+        area: "controlled",
+        providerKeyHint: buildStorageKey(
+          "signatures",
+          actor.id,
+          "signature",
+          normalized.fileName
+        ),
         bytes: normalized.bytes,
         fileName: normalized.fileName,
         mimeType: normalized.mimeType,
-        upsert: true,
       })
     }
 
     if (initialsFile) {
       const normalized = await normalizeSignatureAsset(initialsFile, "initials")
 
-      initialsUpload = await uploadBytesToSupabaseStorage({
-        bucket: env.SUPABASE_STORAGE_BUCKET_SIGNATURES,
-        path: buildStoragePath("signatures", actor.id, "initials", normalized.fileName),
+      initialsUpload = await uploadBytesToStorage({
+        area: "controlled",
+        providerKeyHint: buildStorageKey(
+          "signatures",
+          actor.id,
+          "initials",
+          normalized.fileName
+        ),
         bytes: normalized.bytes,
         fileName: normalized.fileName,
         mimeType: normalized.mimeType,
-        upsert: true,
       })
     }
 
@@ -165,14 +161,17 @@ export async function updateUserProfile(
           id: signatureProfile.id,
         },
         data: {
-          signatureFilePath:
-            signatureUpload?.path ?? signatureProfile.signatureFilePath,
-          initialsFilePath:
-            initialsUpload?.path ?? signatureProfile.initialsFilePath,
-          storageBucket:
-            signatureUpload?.bucket ??
-            initialsUpload?.bucket ??
-            signatureProfile.storageBucket,
+          signatureStorageProvider:
+            signatureUpload?.storageProvider ??
+            signatureProfile.signatureStorageProvider,
+          signatureProviderKey:
+            signatureUpload?.providerKey ??
+            signatureProfile.signatureProviderKey,
+          initialsStorageProvider:
+            initialsUpload?.storageProvider ??
+            signatureProfile.initialsStorageProvider,
+          initialsProviderKey:
+            initialsUpload?.providerKey ?? signatureProfile.initialsProviderKey,
           mimeType: signatureUpload?.mimeType ?? signatureProfile.mimeType,
         },
       })
@@ -180,21 +179,11 @@ export async function updateUserProfile(
       signatureProfile = await tx.signatureProfile.create({
         data: {
           userId: actor.id,
-          signatureFilePath: signatureUpload?.path ?? null,
-          initialsFilePath: initialsUpload?.path ?? null,
-          storageBucket: signatureUpload?.bucket ?? initialsUpload?.bucket ?? null,
+          signatureStorageProvider: signatureUpload?.storageProvider ?? null,
+          signatureProviderKey: signatureUpload?.providerKey ?? null,
+          initialsStorageProvider: initialsUpload?.storageProvider ?? null,
+          initialsProviderKey: initialsUpload?.providerKey ?? null,
           mimeType: signatureUpload?.mimeType ?? null,
-        },
-      })
-    }
-
-    if (actor.authUserId) {
-      const supabaseAdmin = createSupabaseAdminClient()
-      await supabaseAdmin.auth.admin.updateUserById(actor.authUserId, {
-        user_metadata: {
-          full_name: parsed.fullName,
-          job_title: parsed.jobTitle?.trim() || null,
-          timezone: parsed.timezone,
         },
       })
     }
@@ -210,8 +199,8 @@ export async function updateUserProfile(
           fullName: updatedUser.fullName,
           jobTitle: updatedUser.jobTitle,
           timezone: updatedUser.timezone,
-          signatureConfigured: Boolean(signatureProfile?.signatureFilePath),
-          initialsConfigured: Boolean(signatureProfile?.initialsFilePath),
+          signatureConfigured: Boolean(signatureProfile?.signatureProviderKey),
+          initialsConfigured: Boolean(signatureProfile?.initialsProviderKey),
         },
       },
     })

@@ -2,7 +2,6 @@ import "server-only"
 import { createHash, randomUUID } from "node:crypto"
 import {
   FoundationRecordStatus,
-  StorageProvider,
   type ClientResponseCode,
 } from "@prisma/client"
 import {
@@ -16,12 +15,11 @@ import {
   type ResponseCodeDefinition,
 } from "@dtg/client-response-domain"
 import { z } from "zod"
-import { env } from "@/lib/config/env"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
 import {
-  buildStoragePath,
-  uploadBytesToSupabaseStorage,
+  buildStorageKey,
+  uploadBytesToStorage,
 } from "@/server/services/storage/storage-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
@@ -393,9 +391,9 @@ export async function uploadResponseCodeReference(
     throw new Error("Reference files must not exceed 20 MiB.")
   }
   const bytes = Buffer.from(await input.file.arrayBuffer())
-  const uploaded = await uploadBytesToSupabaseStorage({
-    bucket: env.SUPABASE_STORAGE_BUCKET_SOURCE,
-    path: buildStoragePath(
+  const uploaded = await uploadBytesToStorage({
+    area: "source",
+    providerKeyHint: buildStorageKey(
       "client-response-policies",
       codeSet.clientId,
       codeSet.code,
@@ -410,8 +408,8 @@ export async function uploadResponseCodeReference(
   return prisma.$transaction(async (tx) => {
     const fileObject = await tx.fileObject.create({
       data: {
-        storageProvider: StorageProvider.Supabase,
-        providerKey: `${uploaded.bucket}/${uploaded.path}`,
+        storageProvider: uploaded.storageProvider,
+        providerKey: uploaded.providerKey,
         fileName: uploaded.fileName,
         mimeType: uploaded.mimeType,
         sizeBytes: BigInt(uploaded.fileSizeBytes),

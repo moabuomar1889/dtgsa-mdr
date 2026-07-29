@@ -3,7 +3,6 @@ import "server-only"
 import { TransmittalStatus } from "@prisma/client"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { loadTransmittalOverviewRecords } from "@/server/repositories/transmittals/transmittal-read-repository"
-import { createSignedStorageUrl } from "@/server/services/storage/storage-service"
 import { pickPreferredAttachmentFile } from "@/server/services/transmittals/transmittal-policy"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
@@ -47,14 +46,9 @@ export async function getTransmittalOverview(user: CurrentAppUser) {
     transmittals: await Promise.all(
       transmittals.map(async (transmittal) => ({
         ...transmittal,
-        generatedPdfUrl:
-          transmittal.generatedDocuments[0]?.storageBucket &&
-          transmittal.generatedDocuments[0]?.storagePath
-            ? await createSignedStorageUrl(
-                transmittal.generatedDocuments[0].storageBucket,
-                transmittal.generatedDocuments[0].storagePath
-              ).catch(() => null)
-            : null,
+        generatedPdfUrl: transmittal.generatedDocuments[0]?.providerKey
+          ? `/api/generated-documents/${transmittal.generatedDocuments[0].id}`
+          : null,
       }))
     ),
     counts: {

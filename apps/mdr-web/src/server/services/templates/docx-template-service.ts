@@ -2,24 +2,24 @@ import "server-only"
 import Docxtemplater from "docxtemplater"
 import PizZip from "pizzip"
 import { CoverSheetTemplate, TransmittalTemplate } from "@prisma/client"
-import { downloadFileFromSupabaseStorage } from "@/server/services/storage/storage-service"
+import { downloadFileFromStorage } from "@/server/services/storage/storage-service"
 
 type SupportedTemplate = Pick<
   CoverSheetTemplate | TransmittalTemplate,
-  "storageBucket" | "storagePath" | "fileName"
+  "storageProvider" | "providerKey" | "fileName"
 >
 
 export async function renderDocxTemplateFromStorage(
   template: SupportedTemplate,
   data: Record<string, unknown>
 ) {
-  if (!template.storageBucket || !template.storagePath) {
-    throw new Error("The selected DOCX template is not stored in Supabase storage.")
+  if (!template.providerKey) {
+    throw new Error("The selected DOCX template has no provider key.")
   }
 
-  const bytes = await downloadFileFromSupabaseStorage(
-    template.storageBucket,
-    template.storagePath
+  const bytes = await downloadFileFromStorage(
+    template.storageProvider,
+    template.providerKey
   )
   const zip = new PizZip(bytes)
   const doc = new Docxtemplater(zip, {

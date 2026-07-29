@@ -2,6 +2,10 @@
 
 Date: 2026-07-29
 
+Phase 16.1 update: PostgreSQL/Prisma is the only persistence authority and only
+Drive/local filesystem storage providers are active. Provider transition
+language below is historical context.
+
 ## Status
 
 The Phase 15 architecture is a pnpm modular monorepo with five deployment
