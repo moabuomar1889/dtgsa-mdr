@@ -10,10 +10,16 @@ test("local dashboard, service surfaces, CSP, and identity switching", async ({
   request,
 }) => {
   const externalRequests: string[] = []
+  const consoleErrors: string[] = []
   page.on("request", (browserRequest) => {
     const url = new URL(browserRequest.url())
     if (!["127.0.0.1", "localhost"].includes(url.hostname)) {
       externalRequests.push(browserRequest.url())
+    }
+  })
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text())
     }
   })
 
@@ -32,6 +38,7 @@ test("local dashboard, service surfaces, CSP, and identity switching", async ({
 
   const csp = response?.headers()["content-security-policy"] ?? ""
   expect(csp).toContain("default-src 'self'")
+  expect(csp).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'")
   expect(csp).not.toContain("connect-src 'self' https:")
 
   const adminForm = page.locator("form", {
@@ -56,6 +63,9 @@ test("local dashboard, service surfaces, CSP, and identity switching", async ({
   await expect(
     page.getByRole("heading", { name: "Local email sink" })
   ).toBeVisible()
+  expect(consoleErrors.join("\n")).not.toContain(
+    "eval() is not supported in this environment"
+  )
   expect(externalRequests).toEqual([])
 })
 

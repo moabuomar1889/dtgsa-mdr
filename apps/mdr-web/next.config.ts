@@ -2,13 +2,15 @@ import type { NextConfig } from "next"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const localAcceptance = process.env.LOCAL_ACCEPTANCE_MODE === "true"
+const developmentScriptPolicy =
+  process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${developmentScriptPolicy}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob:${localAcceptance ? "" : " https:"}`,
   "font-src 'self' data:",
