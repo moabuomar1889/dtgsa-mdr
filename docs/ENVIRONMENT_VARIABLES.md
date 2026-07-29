@@ -47,3 +47,11 @@ Supabase, Google Drive, email, LibreOffice, database, upload, and build metadata
 variables remain documented in `.env.example`. Phase 4 does not print, return,
 or commit their secret values. Google Directory reuses the existing delegated
 service-account key variables but remains disabled by default.
+
+## Controlled Drive
+
+`GOOGLE_DRIVE_SHARED_DRIVE_ID` identifies the approved Shared Drive when
+available. `GOOGLE_DRIVE_ROOT_FOLDER_ID` identifies the restricted controlled
+root. `GOOGLE_DRIVE_CLIENT_EMAIL` and `GOOGLE_DRIVE_PRIVATE_KEY` belong to the
+service identity. None may be returned in application responses. Picker client
+configuration must use an owner-approved OAuth project and staging origin.

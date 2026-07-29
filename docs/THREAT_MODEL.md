@@ -34,3 +34,13 @@ Live Google configuration, organizational consent, redirect URI ownership,
 email deliverability, delegated Directory access, and production cookie-domain
 behavior require staging credentials and owner-controlled infrastructure.
 These remain external verification gates, not locally proven controls.
+
+## Controlled Drive Extension
+
+Phase 5 adds server-side metadata validation against malicious Picker input,
+opaque controlled names, File ID authority, no public-link API, restricted
+permission reconciliation, hash/size/trash checks, integrity-blocked delivery,
+range validation, no-store headers, resumable-part checksums, malware scanning
+contract, and idempotent copy jobs. Residual risk remains in owner-controlled
+Drive policy, delegated credentials, provider audit retention, malware
+provider selection, and live large-file behavior.

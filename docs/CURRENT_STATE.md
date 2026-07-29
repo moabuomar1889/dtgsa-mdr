@@ -11,7 +11,8 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phases 0, 1, 1.5, 2, and 3: COMPLETE.
 - Phase 4: CODE_COMPLETE / STAGING_READY.
 - Phase 4 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
-- Phase 5: NOT_STARTED.
+- Phase 5: CODE_COMPLETE / STAGING_READY.
+- Phase 5 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
 
 ## Authoritative Workspace
 

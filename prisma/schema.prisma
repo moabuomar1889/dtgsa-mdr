@@ -201,6 +201,9 @@ enum IntegrityStatus {
   Verified
   Mismatch
   Missing
+  TamperDetected
+  PermissionDrift
+  Trashed
 }
 
 enum JobState {
@@ -1436,19 +1439,22 @@ model AuthenticationRateLimit {
 }
 
 model FileObject {
-  id                  String                 @id @default(cuid())
-  storageProvider     StorageProvider
-  providerKey         String
-  fileName            String
-  mimeType            String
-  sizeBytes           BigInt
-  checksum            String
-  checksumAlgorithm   String                 @default("SHA-256")
-  pageCount           Int?
-  createdAt           DateTime               @default(now())
-  deletedAt           DateTime?
-  controlledMainFiles ControlledMainFile[]
-  attachments         ControlledAttachment[]
+  id                   String                   @id @default(cuid())
+  storageProvider      StorageProvider
+  providerKey          String
+  fileName             String
+  mimeType             String
+  sizeBytes            BigInt
+  checksum             String
+  checksumAlgorithm    String                   @default("SHA-256")
+  pageCount            Int?
+  createdAt            DateTime                 @default(now())
+  deletedAt            DateTime?
+  controlledMainFiles  ControlledMainFile[]
+  attachments          ControlledAttachment[]
+  driveIdentity        DriveFileIdentity?
+  integrityChecks      FileIntegrityCheck[]
+  reconciliationIssues ControlledStorageIssue[]
 
   @@unique([storageProvider, providerKey])
   @@index([checksum])
@@ -1465,25 +1471,36 @@ model SourceFileReference {
 }
 
 model DriveFileIdentity {
-  id             String    @id @default(cuid())
-  fileObjectId   String    @unique
-  driveFileId    String    @unique
-  sharedDriveId  String?
-  parentFolderId String?
-  nameSnapshot   String?
-  modifiedTime   DateTime?
+  id               String     @id @default(cuid())
+  fileObjectId     String     @unique
+  driveFileId      String     @unique
+  sharedDriveId    String?
+  parentFolderId   String?
+  nameSnapshot     String?
+  modifiedTime     DateTime?
+  metadataSnapshot Json?
+  permissionsHash  String?
+  trashed          Boolean    @default(false)
+  lastReconciledAt DateTime?
+  fileObject       FileObject @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
 }
 
 model ControlledMainFile {
-  id              String           @id @default(cuid())
-  revisionId      String
-  fileObjectId    String           @unique
-  isActive        Boolean          @default(true)
-  integrityStatus IntegrityStatus  @default(Pending)
-  controlledAt    DateTime         @default(now())
-  supersededAt    DateTime?
-  revision        DocumentRevision @relation(fields: [revisionId], references: [id], onDelete: Restrict)
-  fileObject      FileObject       @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
+  id               String           @id @default(cuid())
+  revisionId       String
+  fileObjectId     String           @unique
+  isActive         Boolean          @default(true)
+  integrityStatus  IntegrityStatus  @default(Pending)
+  controlledAt     DateTime         @default(now())
+  supersededAt     DateTime?
+  sourceDriveId    String?
+  sourceFileId     String?
+  copyJobId        String?          @unique
+  verifiedAt       DateTime?
+  approvalLockedAt DateTime?
+  opaqueFileName   String?
+  revision         DocumentRevision @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+  fileObject       FileObject       @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
 
   @@index([revisionId, isActive])
 }
@@ -1527,43 +1544,100 @@ model FileIntegrityCheck {
   observedHash String?
   checkedAt    DateTime        @default(now())
   details      Json?
+  fileObject   FileObject      @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
 
   @@index([fileObjectId, checkedAt])
 }
 
 model StorageFolderRule {
-  id          String   @id @default(cuid())
-  scopeType   String
-  scopeId     String?
-  folderKind  String
-  providerKey String
-  version     Int
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  scopeType       String
+  scopeId         String?
+  folderKind      String
+  providerKey     String
+  version         Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  displayName     String?
+  routeTemplate   Json?
+  changedByUserId String?
 
   @@unique([scopeType, scopeId, folderKind, version])
 }
 
 model UploadSession {
-  id                String    @id @default(cuid())
+  id                String              @id @default(cuid())
   userId            String
   projectId         String?
-  status            String    @default("Pending")
+  status            String              @default("Pending")
   expectedSizeBytes BigInt?
   expiresAt         DateTime
   completedAt       DateTime?
-  createdAt         DateTime  @default(now())
+  createdAt         DateTime            @default(now())
+  uploadKey         String              @unique
+  fileName          String
+  mimeType          String
+  expectedHash      String?
+  receivedBytes     BigInt              @default(0)
+  fileObjectId      String?
+  idempotencyKey    String              @unique
+  parts             UploadSessionPart[]
+}
+
+model UploadSessionPart {
+  id              String        @id @default(cuid())
+  uploadSessionId String
+  partNumber      Int
+  offsetBytes     BigInt
+  sizeBytes       Int
+  checksum        String
+  providerKey     String
+  createdAt       DateTime      @default(now())
+  session         UploadSession @relation(fields: [uploadSessionId], references: [id], onDelete: Restrict)
+
+  @@unique([uploadSessionId, partNumber])
+  @@unique([uploadSessionId, offsetBytes])
+}
+
+model PickerSelectionHandoff {
+  id                 String    @id @default(cuid())
+  userId             String
+  projectId          String
+  nonceHash          String    @unique
+  selectedFileIdHash String?
+  createdAt          DateTime  @default(now())
+  expiresAt          DateTime
+  consumedAt         DateTime?
+
+  @@index([userId, projectId, expiresAt])
 }
 
 model ReconciliationRun {
-  id            String    @id @default(cuid())
+  id            String                   @id @default(cuid())
   scope         String
   status        String
-  startedAt     DateTime  @default(now())
+  startedAt     DateTime                 @default(now())
   completedAt   DateTime?
-  checkedCount  Int       @default(0)
-  mismatchCount Int       @default(0)
+  checkedCount  Int                      @default(0)
+  mismatchCount Int                      @default(0)
   details       Json?
+  issues        ControlledStorageIssue[]
+}
+
+model ControlledStorageIssue {
+  id                  String            @id @default(cuid())
+  reconciliationRunId String
+  fileObjectId        String
+  issueType           String
+  severity            String
+  details             Json?
+  detectedAt          DateTime          @default(now())
+  resolvedAt          DateTime?
+  run                 ReconciliationRun @relation(fields: [reconciliationRunId], references: [id], onDelete: Restrict)
+  fileObject          FileObject        @relation(fields: [fileObjectId], references: [id], onDelete: Restrict)
+
+  @@index([fileObjectId, resolvedAt])
+  @@index([issueType, detectedAt])
 }
 
 model WorkflowDefinition {

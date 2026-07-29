@@ -12,10 +12,7 @@ import {
   getNextRevisionLabel as compatibilityNextRevision,
   resolveReplyState as compatibilityReplyState,
 } from "@/server/services/replies/client-reply-policy"
-import {
-  hasAnyPermission,
-  ROLE_CODES,
-} from "@dtg/authorization"
+import { hasAnyPermission, ROLE_CODES } from "@dtg/authorization"
 import {
   getNextRevisionLabel,
   resolveReplyState,
@@ -106,11 +103,10 @@ test("platform API exposes only operational foundation endpoints", async () => {
   }
 })
 
-test("worker starts and stops with truthful empty job state", () => {
+test("worker starts and stops with the controlled-copy job registered", () => {
   const logs: string[] = []
-  const runtime = createWorkerRuntime(
-    { NODE_ENV: "test" },
-    (line) => logs.push(line)
+  const runtime = createWorkerRuntime({ NODE_ENV: "test" }, (line) =>
+    logs.push(line)
   )
 
   assert.deepEqual(runtime.start(), {
@@ -123,7 +119,7 @@ test("worker starts and stops with truthful empty job state", () => {
     ready: false,
     stopping: true,
   })
-  assert.match(logs[0], /"jobsRegistered":0/)
+  assert.match(logs[0], /"jobsRegistered":1/)
   assert.match(logs[1], /"signal":"test"/)
 })
 
@@ -144,7 +140,10 @@ test("architecture validator rejects workspace dependency cycles", async () => {
           dependencies: { [dependency]: "workspace:*" },
         })
       )
-      await writeFile(join(directory, "src/index.ts"), "export const value = 1\n")
+      await writeFile(
+        join(directory, "src/index.ts"),
+        "export const value = 1\n"
+      )
     }
 
     const result = spawnSync(

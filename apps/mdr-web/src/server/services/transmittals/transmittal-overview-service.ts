@@ -54,9 +54,7 @@ export async function getTransmittalOverview(user: CurrentAppUser) {
                 transmittal.generatedDocuments[0].storageBucket,
                 transmittal.generatedDocuments[0].storagePath
               ).catch(() => null)
-            : transmittal.generatedDocuments[0]?.googleDriveFileId
-              ? `https://drive.google.com/file/d/${transmittal.generatedDocuments[0].googleDriveFileId}/view`
-              : null,
+            : null,
       }))
     ),
     counts: {

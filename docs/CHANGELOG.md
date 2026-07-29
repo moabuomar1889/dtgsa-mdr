@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-29 - Phase 5 Controlled Google Drive
+
+- Added Drive File ID authority, secure Picker handoff, server-side controlled
+  copy, SHA-256/page verification, restricted permissions, platform delivery,
+  reconciliation, resumable uploads, folder routing, and legacy inventory.
+
 ## 2026-07-29 - Phase 4 Identity and Access
 
 - Added Google Workspace Authorization Code OIDC with state, nonce, PKCE,

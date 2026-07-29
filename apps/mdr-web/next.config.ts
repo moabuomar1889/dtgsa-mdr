@@ -19,6 +19,7 @@ if (supabaseUrl) {
 const nextConfig: NextConfig = {
   transpilePackages: [
     "@dtg/authorization",
+    "@dtg/controlled-storage-domain",
     "@dtg/database",
     "@dtg/document-control-domain",
     "@dtg/identity-domain",

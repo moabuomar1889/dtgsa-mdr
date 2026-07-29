@@ -11,8 +11,8 @@ Date: 2026-07-29
 
 ## Next
 
-- Phase 5: controlled Google Drive using the Phase 3 file authority and Phase 4
-  employee identity.
+- Phase 5: controlled Google Drive is code-complete and staging-ready; live
+  verification is externally blocked.
 - Phases 6-9: document generation, workflow, approvals, and signing evidence.
 - Phases 10-12: verification, client response, and durable integration work.
 - Phases 13-15: operational hardening, release evidence, and final acceptance.

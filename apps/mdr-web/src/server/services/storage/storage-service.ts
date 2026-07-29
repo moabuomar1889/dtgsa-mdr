@@ -27,9 +27,14 @@ function normalizePathSegment(value: string) {
     .replace(/^-+|-+$/g, "")
 }
 
-export function buildStoragePath(...segments: Array<string | number | null | undefined>) {
+export function buildStoragePath(
+  ...segments: Array<string | number | null | undefined>
+) {
   return segments
-    .filter((segment): segment is string | number => segment !== null && typeof segment !== "undefined")
+    .filter(
+      (segment): segment is string | number =>
+        segment !== null && typeof segment !== "undefined"
+    )
     .map((segment) => normalizePathSegment(String(segment)))
     .filter(Boolean)
     .join("/")
@@ -90,7 +95,10 @@ export async function createSignedStorageUrl(
   return data.signedUrl
 }
 
-export async function downloadFileFromSupabaseStorage(bucket: string, path: string) {
+export async function downloadFileFromSupabaseStorage(
+  bucket: string,
+  path: string
+) {
   const supabase = createSupabaseAdminClient()
   const { data, error } = await supabase.storage.from(bucket).download(path)
 
@@ -99,4 +107,17 @@ export async function downloadFileFromSupabaseStorage(bucket: string, path: stri
   }
 
   return Buffer.from(await data.arrayBuffer())
+}
+
+export async function deleteFilesFromSupabaseStorage(
+  bucket: string,
+  paths: string[]
+) {
+  if (paths.length === 0) return
+  const supabase = createSupabaseAdminClient()
+  const { error } = await supabase.storage.from(bucket).remove(paths)
+
+  if (error) {
+    throw new Error(error.message)
+  }
 }

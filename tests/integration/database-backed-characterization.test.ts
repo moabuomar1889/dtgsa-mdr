@@ -59,6 +59,15 @@ import {
 } from "@/server/services/identity/external-portal-service"
 import { synchronizeWorkspaceDirectory } from "@/server/services/identity/directory-sync-service"
 import { upsertGoogleGroupMapping } from "@/server/services/identity/role-mapping-service"
+import { FakeDriveStorageAdapter } from "../../packages/controlled-storage-domain/src/index"
+import {
+  beginPickerSelection,
+  processControlledCopyJob,
+  reserveControlledMainFile,
+} from "@/server/services/drive/controlled-drive-service"
+import { reconcileControlledDrive } from "@/server/services/drive/drive-reconciliation-service"
+import { openControlledFile } from "@/server/services/drive/controlled-file-delivery"
+import { PDFDocument } from "pdf-lib"
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL
 
@@ -1322,4 +1331,129 @@ test("Phase 4 identity persistence enforces immutable subjects, isolated invitat
     3
   )
   assert.equal(session.revokedAt, null)
+})
+
+test("Phase 5 controlled Drive copy is idempotent, authoritative, scoped, streamed, and tamper-evident", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const fixture = await createDocumentFixture(baseline)
+  const pdf = await PDFDocument.create()
+  pdf.addPage([300, 200])
+  const bytes = Buffer.from(await pdf.save())
+  const drive = new FakeDriveStorageAdapter()
+  drive.seed(
+    {
+      fileId: "working-file-1",
+      driveId: "drive-1",
+      name: "Working File.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: bytes.length,
+      parents: ["working-folder"],
+      owners: ["dc@dtg.example"],
+      trashed: false,
+    },
+    bytes
+  )
+
+  const handoff = await beginPickerSelection(
+    baseline.actor,
+    baseline.project.id
+  )
+  const reserved = await reserveControlledMainFile({
+    actor: baseline.actor,
+    revisionId: fixture.revision.id,
+    rawNonce: handoff.nonce,
+    selectedFileId: "working-file-1",
+    adapter: drive,
+  })
+  const verified = await processControlledCopyJob(reserved.jobId, drive)
+  assert.equal(verified.integrityStatus, "Verified")
+  const repeated = await processControlledCopyJob(reserved.jobId, drive)
+  assert.equal(repeated.id, verified.id)
+
+  const stored = await prisma.controlledMainFile.findUniqueOrThrow({
+    where: { id: verified.id },
+    include: {
+      fileObject: { include: { driveIdentity: true } },
+    },
+  })
+  assert.equal(stored.fileObject.storageProvider, "GoogleDrive")
+  assert.equal(stored.fileObject.pageCount, 1)
+  assert.equal(stored.fileObject.checksum.length, 64)
+  assert.ok(stored.fileObject.driveIdentity?.driveFileId)
+  assert.notEqual(
+    stored.fileObject.driveIdentity?.driveFileId,
+    stored.sourceFileId
+  )
+  assert.match(stored.opaqueFileName!, /^[a-f0-9]{48}\.pdf$/)
+
+  const opened = await openControlledFile({
+    actor: baseline.actor,
+    fileObjectId: stored.fileObjectId,
+    rangeHeader: "bytes=0-9",
+    adapter: drive,
+  })
+  assert.equal(opened.status, 206)
+  assert.equal(opened.headers["Cache-Control"], "private, no-store, max-age=0")
+  assert.equal(
+    JSON.stringify(opened).includes(
+      stored.fileObject.driveIdentity!.driveFileId
+    ),
+    false
+  )
+  const delivered: Buffer[] = []
+  for await (const chunk of opened.stream) delivered.push(Buffer.from(chunk))
+  assert.equal(Buffer.concat(delivered).length, 10)
+
+  const secondHandoff = await beginPickerSelection(
+    baseline.actor,
+    baseline.project.id
+  )
+  await assert.rejects(
+    reserveControlledMainFile({
+      actor: baseline.actor,
+      revisionId: fixture.revision.id,
+      rawNonce: secondHandoff.nonce,
+      selectedFileId: "working-file-1",
+      adapter: drive,
+    }),
+    /Unique constraint|one_active_per_revision/
+  )
+
+  const controlledDriveId = stored.fileObject.driveIdentity!.driveFileId
+  drive.files.get(controlledDriveId)!.permissions.push({
+    id: "public-access",
+    type: "anyone",
+    role: "reader",
+  })
+  const reconciliation = await reconcileControlledDrive(drive, {
+    fileObjectIds: [stored.fileObjectId],
+  })
+  assert.equal(reconciliation.checkedCount, 1)
+  assert.equal(reconciliation.mismatchCount, 1)
+  assert.equal(
+    (
+      await prisma.controlledMainFile.findUniqueOrThrow({
+        where: { id: stored.id },
+      })
+    ).integrityStatus,
+    "PermissionDrift"
+  )
+  assert.equal(
+    await prisma.controlledStorageIssue.count({
+      where: {
+        fileObjectId: stored.fileObjectId,
+        issueType: "PERMISSION_DRIFT",
+      },
+    }),
+    1
+  )
+  await assert.rejects(
+    openControlledFile({
+      actor: baseline.actor,
+      fileObjectId: stored.fileObjectId,
+      rangeHeader: null,
+      adapter: drive,
+    }),
+    /integrity-blocked/
+  )
 })

@@ -7,9 +7,15 @@ export type WorkerHealth = {
   stopping: boolean
 }
 
+export const registeredJobTypes = ["DRIVE_CONTROLLED_COPY"] as const
+export type RegisteredJobType = (typeof registeredJobTypes)[number]
+
 export function createWorkerRuntime(
   env: NodeJS.ProcessEnv = process.env,
-  writer: (line: string) => void = console.log
+  writer: (line: string) => void = console.log,
+  handlers: Partial<
+    Record<RegisteredJobType, (jobId: string) => Promise<unknown>>
+  > = {}
 ) {
   const configuration = loadFoundationConfiguration("worker", env, 3004)
   const health: WorkerHealth = {
@@ -26,11 +32,21 @@ export function createWorkerRuntime(
         level: "info",
         event: "worker.started",
         application: configuration.application,
-        details: { build: configuration.build, jobsRegistered: 0 },
+        details: {
+          build: configuration.build,
+          jobsRegistered: registeredJobTypes.length,
+        },
       },
       writer
     )
     return { ...health }
+  }
+
+  async function executeJob(jobType: RegisteredJobType, jobId: string) {
+    if (!health.ready) throw new Error("Worker is not ready.")
+    const handler = handlers[jobType]
+    if (!handler) throw new Error(`Worker handler ${jobType} is unavailable.`)
+    return handler(jobId)
   }
 
   function stop(signal = "internal") {
@@ -53,5 +69,7 @@ export function createWorkerRuntime(
     health,
     start,
     stop,
+    executeJob,
+    registeredJobTypes,
   }
 }

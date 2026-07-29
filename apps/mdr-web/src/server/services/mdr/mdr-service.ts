@@ -98,9 +98,7 @@ export async function getMdrOverview(user: CurrentAppUser) {
                   file.storageBucket,
                   file.storagePath
                 ).catch(() => null)
-              : file.googleDriveFileId
-                ? `https://drive.google.com/file/d/${file.googleDriveFileId}/view`
-                : null,
+              : null,
         }))
       ),
       permissions: {

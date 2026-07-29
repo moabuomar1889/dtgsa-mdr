@@ -145,6 +145,9 @@ async function runWithDatabase(mode) {
     APP_ENCRYPTION_KEY: "test-encryption-key-32-characters!",
     CRON_SECRET: "test-cron-secret-1234",
     GOOGLE_WORKSPACE_ALLOWED_DOMAINS: "dtg.example",
+    GOOGLE_DRIVE_SHARED_DRIVE_ID: "drive-1",
+    GOOGLE_DRIVE_ROOT_FOLDER_ID: "controlled-root",
+    GOOGLE_DRIVE_CLIENT_EMAIL: "service@dtg.example",
     EMAIL_PROVIDER: "",
   }
 
@@ -185,6 +188,10 @@ async function runWithDatabase(mode) {
         adminClient,
         "20260729133000_phase4_identity_and_access"
       )
+      await applyMigrationSql(
+        adminClient,
+        "20260729153000_phase5_controlled_google_drive"
+      )
       await adminClient.end()
       return
     }
@@ -218,6 +225,7 @@ async function runWithDatabase(mode) {
             "tests/unit/database-safety.test.ts",
             "tests/unit/phase-3-database-foundation.test.ts",
             "tests/unit/phase-4-identity-and-access.test.ts",
+            "tests/unit/phase-5-controlled-storage.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",
