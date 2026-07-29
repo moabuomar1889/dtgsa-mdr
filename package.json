@@ -6,6 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "tsx --conditions=react-server --test --test-concurrency=1 tests/unit/database-safety.test.ts tests/characterization/index.test.ts tests/integration/database-backed-characterization.test.ts",
+    "test:unit": "tsx --conditions=react-server --test --test-concurrency=1 tests/unit/database-safety.test.ts",
+    "test:characterization": "tsx --conditions=react-server --test --test-concurrency=1 tests/characterization/index.test.ts",
+    "test:integration": "tsx --conditions=react-server --test --test-concurrency=1 tests/integration/database-backed-characterization.test.ts",
+    "test:ci": "pnpm run test",
     "lint": "eslint .",
     "typecheck": "next build --experimental-build-mode compile",
     "format": "prettier --write .",
@@ -15,6 +20,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx scripts/seed-foundation.ts",
+    "docs:validate:phase1": "node scripts/validate-phase-1-docs.mjs",
     "check:libreoffice": "node scripts/check-libreoffice.mjs"
   },
   "dependencies": {

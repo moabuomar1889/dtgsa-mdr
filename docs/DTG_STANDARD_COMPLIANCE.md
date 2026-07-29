@@ -99,12 +99,18 @@ Executed in Phase 0:
 - Next compile/typecheck mode: passed using `.\node_modules\.bin\next.cmd build --experimental-build-mode compile`
 - Next production build: passed using `.\node_modules\.bin\next.cmd build`
 
+Phase 1 additions:
+
+- Non-interactive unit, characterization, integration, and CI test commands.
+- 63 registered tests with 56 passing deterministic tests and 7 safe database-backed skips.
+- Sanitized generated PDF and Excel fixtures.
+- Fail-closed test-database URL and host validation.
+- No live calls to Supabase, Google Drive, email, LibreOffice, Coolify, or production PostgreSQL.
+
 Known gaps:
 
-- No test script exists in `package.json`.
-- No test/spec files were found.
-- Characterization tests are not yet implemented.
-- Migration tests against an empty database were not executed in Phase 0.
+- Database transaction and rollback characterization remains skipped until an approved disposable PostgreSQL database is configured.
+- Migration tests against an empty database were not executed in Phase 1.
 
 ## CI/CD Requirements
 
@@ -130,7 +136,7 @@ No owner-approved deviations are recorded yet.
 
 ## Remaining Compliance Gaps
 
-- Add characterization tests.
+- Complete database-backed characterization tests using an approved disposable PostgreSQL database.
 - Add detailed target documentation.
 - Introduce modular monorepo boundaries.
 - Replace Supabase password auth with Google Workspace SSO for employees.

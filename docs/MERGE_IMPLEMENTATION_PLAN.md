@@ -30,7 +30,7 @@ Blocked or partial:
 
 ## Phase 1 - Characterization Tests
 
-Status: NOT_STARTED
+Status: COMPLETE_WITH_DOCUMENTED_GAPS
 
 Required tests:
 
@@ -44,11 +44,18 @@ Required tests:
 - Transmittal eligibility.
 - Search and read models.
 - PDF utility behavior.
+- Authorization vocabulary and representative project scoping.
 
 Exit criteria:
 
-- Tests run in CI-friendly non-interactive mode.
-- Existing behavior is protected before package extraction.
+- PASS: tests run in CI-friendly non-interactive mode.
+- PASS: deterministic current behavior is protected before package extraction.
+- PARTIAL: database transaction, rollback, and database-backed read-model behavior is registered as explicit skips until an approved disposable PostgreSQL database is configured.
+
+Phase 2 gate:
+
+- CLOSED pending owner review of `docs/reports/PHASE_1_CHARACTERIZATION_TEST_REPORT.md`.
+- No monorepo, package extraction, authentication, storage, workflow, signature, deployment, or new domain-model work has started.
 
 ## Phase 2 - Monorepo Foundation
 

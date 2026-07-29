@@ -1,10 +1,21 @@
 import "server-only"
-import * as XLSX from "xlsx"
 import { PdiStatus, ScopeLevel } from "@prisma/client"
 import { z } from "zod"
-import { PERMISSIONS, ROLE_CODES, hasAnyPermission } from "@/lib/permissions/rbac"
+import {
+  PERMISSIONS,
+  ROLE_CODES,
+  hasAnyPermission,
+} from "@/lib/permissions/rbac"
+import {
+  normalizePdiImportRow,
+  readPdiWorkbookRows,
+  writePdiWorkbook,
+} from "@/lib/pdi/excel"
 import { prisma } from "@/lib/prisma/client"
-import { createPdiItem, updatePdiClientDocumentNumber } from "@/server/services/pdi/pdi-service"
+import {
+  createPdiItem,
+  updatePdiClientDocumentNumber,
+} from "@/server/services/pdi/pdi-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
@@ -32,10 +43,6 @@ function canManagePdi(user: CurrentAppUser, projectId?: string) {
   })
 }
 
-function normalizeCell(value: unknown) {
-  return typeof value === "string" ? value.trim() : String(value ?? "").trim()
-}
-
 export async function exportPdiWorkbook(input: {
   user: CurrentAppUser
   projectId?: string | null
@@ -44,15 +51,14 @@ export async function exportPdiWorkbook(input: {
     throw new Error("You do not have permission to export this PDI register.")
   }
 
-  const where =
-    input.projectId
-      ? {
-          deletedAt: null,
-          projectId: input.projectId,
-        }
-      : {
-          deletedAt: null,
-        }
+  const where = input.projectId
+    ? {
+        deletedAt: null,
+        projectId: input.projectId,
+      }
+    : {
+        deletedAt: null,
+      }
 
   const items = await prisma.pdiItem.findMany({
     where,
@@ -108,14 +114,7 @@ export async function exportPdiWorkbook(input: {
     Remarks: item.remarks ?? "",
   }))
 
-  const workbook = XLSX.utils.book_new()
-  const worksheet = XLSX.utils.json_to_sheet(rows)
-  XLSX.utils.book_append_sheet(workbook, worksheet, "PDI")
-
-  return XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "buffer",
-  })
+  return writePdiWorkbook(rows)
 }
 
 export async function importPdiWorkbook(
@@ -130,7 +129,9 @@ export async function importPdiWorkbook(
   })
 
   if (!canManagePdi(user, parsed.projectId)) {
-    throw new Error("You do not have permission to import into this PDI register.")
+    throw new Error(
+      "You do not have permission to import into this PDI register."
+    )
   }
 
   const file = input.file instanceof File ? input.file : null
@@ -201,36 +202,26 @@ export async function importPdiWorkbook(
     }),
   ])
 
-  const workbook = XLSX.read(await file.arrayBuffer(), {
-    type: "array",
-  })
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-
-  if (!worksheet) {
-    throw new Error("The workbook does not contain a readable worksheet.")
-  }
-
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, {
-    defval: "",
-  })
+  const rows = readPdiWorkbookRows(await file.arrayBuffer())
 
   let importedCount = 0
 
   for (const row of rows) {
-    const title = normalizeCell(row.Title)
+    const normalizedRow = normalizePdiImportRow(row)
+    const title = normalizedRow.title
 
     if (!title) {
       continue
     }
 
     const discipline = disciplines.find(
-      (item) => item.code === normalizeCell(row.DisciplineCode).toUpperCase()
+      (item) => item.code === normalizedRow.disciplineCode
     )
     const documentType = documentTypes.find(
-      (item) => item.code === normalizeCell(row.DocumentTypeCode).toUpperCase()
+      (item) => item.code === normalizedRow.documentTypeCode
     )
     const releasePurpose = releasePurposes.find(
-      (item) => item.code === normalizeCell(row.ReleasePurposeCode).toUpperCase()
+      (item) => item.code === normalizedRow.releasePurposeCode
     )
 
     if (!discipline || !documentType || !releasePurpose) {
@@ -245,13 +236,13 @@ export async function importPdiWorkbook(
       documentTypeCategoryId: documentType.id,
       releasePurposeId: releasePurpose.id,
       title,
-      revision: normalizeCell(row.Revision) || "00",
-      remarks: normalizeCell(row.Remarks) || undefined,
-      tags: normalizeCell(row.Tags) || undefined,
+      revision: normalizedRow.revision,
+      remarks: normalizedRow.remarks,
+      tags: normalizedRow.tags,
       createdByUserId: user.id,
     })
 
-    const clientDocumentNumber = normalizeCell(row.ClientDocumentNumber)
+    const clientDocumentNumber = normalizedRow.clientDocumentNumber
 
     if (clientDocumentNumber) {
       await updatePdiClientDocumentNumber({
@@ -276,10 +267,16 @@ export async function getPortalPdiOverview(user: CurrentAppUser) {
   const allowedProjectIds = isSystemClientDc
     ? null
     : user.projectRoles
-        .filter((item) => item.role.code === ROLE_CODES.clientDocumentControlUser)
+        .filter(
+          (item) => item.role.code === ROLE_CODES.clientDocumentControlUser
+        )
         .map((item) => item.projectId)
 
-  if (!isSystemClientDc && allowedProjectIds !== null && allowedProjectIds.length === 0) {
+  if (
+    !isSystemClientDc &&
+    allowedProjectIds !== null &&
+    allowedProjectIds.length === 0
+  ) {
     throw new Error("You do not have access to the client portal.")
   }
 
@@ -378,7 +375,9 @@ export async function updatePortalPdiClientDocumentNumber(
   })
 
   if (!canAccessProject) {
-    throw new Error("You do not have access to update this PDI item in the portal.")
+    throw new Error(
+      "You do not have access to update this PDI item in the portal."
+    )
   }
 
   return updatePdiClientDocumentNumber(parsed)

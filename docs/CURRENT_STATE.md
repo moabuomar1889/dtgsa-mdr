@@ -11,7 +11,7 @@ The repository is a working full-stack MDR and Document Control application. It 
 
 The target product is DTG Signature Platform, delivered through staged modernization rather than a greenfield rewrite.
 
-## Local Workspace Note
+## Authoritative Workspace
 
 The active implementation workspace is:
 
@@ -19,23 +19,13 @@ The active implementation workspace is:
 C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr
 ```
 
-A second clone exists at:
+The following obsolete clone is explicitly non-authoritative and must never be used:
 
 ```text
 G:\My Drive\test\dtgsa-mdr
 ```
 
-That second clone is currently at commit:
-
-```text
-1706f0967431c2cee4de6e1158fa6588cc7c2e11
-```
-
-The active workspace is ahead at:
-
-```text
-05eb730a8f7e735a1254c1d1ba7e3133775d5ddc
-```
+It was removed on 2026-07-29 at the owner's request.
 
 The active workspace also contains the required merge-readiness report:
 
@@ -150,13 +140,17 @@ Passed:
 .\node_modules\.bin\next.cmd build
 ```
 
-Not available:
+Available after Phase 1:
 
 ```text
-package.json test script
+pnpm test
+pnpm test:unit
+pnpm test:characterization
+pnpm test:integration
+pnpm test:ci
 ```
 
-No test/spec files were found with the current search.
+The Phase 1 suite contains 63 tests: 56 pass, 0 fail, and 7 database-backed cases skip safely when no approved disposable database is configured.
 
 ## Current Architecture Constraints
 
@@ -172,3 +166,11 @@ No test/spec files were found with the current search.
 ## Phase 0 Verdict
 
 The repository is ready for Phase 1 characterization tests. It is not ready for architecture extraction until those tests protect the existing MDR behavior.
+
+## Phase 1 State
+
+Phase 1 added a Node.js and TypeScript characterization-test foundation without adding dependencies or changing the package manager.
+
+Protected deterministic behavior includes numbering, PDI workbook handling, PDI status decisions, workflow guards, review-code precedence, client-reply effects, revision labels, transmittal policies, read-model shape, authorization vocabulary, and PDF utilities.
+
+Database-backed transaction behavior remains explicitly skipped behind a fail-closed database safety guard. Phase 2 remains closed pending owner review of the Phase 1 report and its known coverage gaps.

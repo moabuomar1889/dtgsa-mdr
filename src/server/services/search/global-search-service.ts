@@ -1,15 +1,15 @@
 import "server-only"
 import { prisma } from "@/lib/prisma/client"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
+import {
+  createEmptySearchResult,
+  normalizeSearchQuery,
+} from "@/lib/search/query"
 import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
 import { resolveAccessibleProjectIds } from "@/server/services/auth/access-scope"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
-
-function normalizeQuery(query: string | null | undefined) {
-  return query?.trim() ?? ""
-}
 
 export async function searchPlatform(
   user: CurrentAppUser,
@@ -23,25 +23,11 @@ export async function searchPlatform(
     PERMISSIONS.clientRepliesManage,
   ])
 
-  const search = normalizeQuery(query)
+  const search = normalizeSearchQuery(query)
   const accessibleProjectIds = await resolveAccessibleProjectIds(user)
 
   if (search.length < 2 || accessibleProjectIds.length === 0) {
-    return {
-      search,
-      counts: {
-        projects: 0,
-        pdiItems: 0,
-        mdrDocuments: 0,
-        transmittals: 0,
-        clientReplies: 0,
-      },
-      projects: [],
-      pdiItems: [],
-      mdrDocuments: [],
-      transmittals: [],
-      clientReplies: [],
-    }
+    return createEmptySearchResult(search)
   }
 
   const projectWhere = {

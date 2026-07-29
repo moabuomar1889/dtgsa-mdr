@@ -9,6 +9,10 @@ import {
 } from "@prisma/client"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma/client"
+import {
+  assertPdiPromotionAvailable,
+  resolvePdiSentStatus,
+} from "@/lib/pdi/policy"
 import { generateDocumentNumber } from "@/server/services/numbering/document-numbering-service"
 import { seedWorkflowStepsForRevision } from "@/server/services/workflow/workflow-service"
 
@@ -316,9 +320,7 @@ export async function markPdiItemSentToClient(input: unknown) {
       throw new Error("The selected PDI item could not be found.")
     }
 
-    const nextStatus = item.clientDocumentNumber
-      ? PdiStatus.ClientNumberReceived
-      : PdiStatus.ClientNumberPending
+    const nextStatus = resolvePdiSentStatus(item.clientDocumentNumber)
 
     const updated = await tx.pdiItem.update({
       where: {
@@ -423,9 +425,7 @@ export async function promotePdiItemToMdr(input: unknown) {
       throw new Error("The selected PDI item could not be found.")
     }
 
-    if (item.mdrDocument) {
-      throw new Error("This PDI item has already been promoted into the MDR.")
-    }
+    assertPdiPromotionAvailable(item.mdrDocument)
 
     const document = await tx.mdrDocument.create({
       data: {
