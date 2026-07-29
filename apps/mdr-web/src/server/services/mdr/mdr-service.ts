@@ -87,28 +87,43 @@ export async function getMdrOverview(user: CurrentAppUser) {
   })
 
   const mappedDocuments = await Promise.all(
-    documents.map(async (document) => ({
-      ...document,
-      currentRevisionFiles: await Promise.all(
-        (document.currentRevision?.files ?? []).map(async (file) => ({
-          ...file,
-          accessUrl:
-            file.storageBucket && file.storagePath
-              ? await createSignedStorageUrl(
-                  file.storageBucket,
-                  file.storagePath
-                ).catch(() => null)
-              : null,
-        }))
-      ),
-      permissions: {
-        canPrepare: canAct(user, document.projectId, "workflowPrepare"),
-        canReview: canAct(user, document.projectId, "workflowReview"),
-        canApprove: canAct(user, document.projectId, "workflowApprove"),
-        canDcCheck: canAct(user, document.projectId, "dcCheck"),
-        canUpload: canAct(user, document.projectId, "workflowPrepare"),
-      },
-    }))
+    documents.map(async (document) => {
+      const signedArtifact = document.currentRevision
+        ? await prisma.generatedArtifactRecord.findFirst({
+            where: {
+              revisionId: document.currentRevision.id,
+              artifactKind: "SIGNED_INTERNALLY_PDF",
+              cleanupStatus: "Available",
+              expiresAt: { gt: new Date() },
+            },
+            orderBy: { generatedAt: "desc" },
+            select: { id: true, expiresAt: true },
+          })
+        : null
+      return {
+        ...document,
+        signedInternalArtifact: signedArtifact,
+        currentRevisionFiles: await Promise.all(
+          (document.currentRevision?.files ?? []).map(async (file) => ({
+            ...file,
+            accessUrl:
+              file.storageBucket && file.storagePath
+                ? await createSignedStorageUrl(
+                    file.storageBucket,
+                    file.storagePath
+                  ).catch(() => null)
+                : null,
+          }))
+        ),
+        permissions: {
+          canPrepare: canAct(user, document.projectId, "workflowPrepare"),
+          canReview: canAct(user, document.projectId, "workflowReview"),
+          canApprove: canAct(user, document.projectId, "workflowApprove"),
+          canDcCheck: canAct(user, document.projectId, "dcCheck"),
+          canUpload: canAct(user, document.projectId, "workflowPrepare"),
+        },
+      }
+    })
   )
 
   return {

@@ -11,6 +11,7 @@ import {
 import {
   generateMergedRevisionPackageAction,
   generateRevisionCoverSheetsAction,
+  requestSignedInternalDownloadAction,
   uploadRevisionFileAction,
 } from "@/server/actions/mdr"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
@@ -334,6 +335,31 @@ export default async function MdrPage() {
                                 />
                               </form>
                             </div>
+                            {document.signedInternalArtifact ? (
+                              <Button asChild>
+                                <a
+                                  href={`/api/downloads/artifacts/${document.signedInternalArtifact.id}`}
+                                >
+                                  Download Signed Internally
+                                </a>
+                              </Button>
+                            ) : (
+                              <form
+                                action={requestSignedInternalDownloadAction}
+                                className="grid gap-2"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="revisionId"
+                                  value={document.currentRevision.id}
+                                />
+                                <SubmitButton
+                                  label="Download Signed Internally"
+                                  pendingLabel="Queuing secure assembly"
+                                  className="w-full"
+                                />
+                              </form>
+                            )}
                             <form
                               action={uploadRevisionFileAction}
                               className="grid gap-2"

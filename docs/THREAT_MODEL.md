@@ -62,3 +62,14 @@ state version are checked server-side. File requests proxy through controlled
 delivery and never disclose Drive identity. Review event inflation is limited
 to bounded active-time increments and remains truthful approximate evidence,
 not proof that every page was read.
+
+# Phase 10 Worker and Delivery Addendum
+
+Unique idempotency keys, lease ownership, stale recovery, attempt history,
+backoff, dead-letter state, and provider response evidence limit duplicate and
+lost work. Signed Internally verifies source hashes, uses encrypted temporary
+storage, private TTL objects, scoped retrieval, no-store headers, and cleanup.
+Large files fail closed without bounded qpdf. Remaining staging risks are
+provider timeout ambiguity, cloud secure-deletion limitations, worker
+credential scope, qpdf sandbox enforcement, and live storage/Drive/email
+behavior.

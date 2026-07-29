@@ -103,7 +103,7 @@ test("platform API exposes only operational foundation endpoints", async () => {
   }
 })
 
-test("worker starts and stops with the controlled-copy job registered", () => {
+test("worker starts and stops with the durable job catalog registered", async () => {
   const logs: string[] = []
   const runtime = createWorkerRuntime({ NODE_ENV: "test" }, (line) =>
     logs.push(line)
@@ -114,12 +114,12 @@ test("worker starts and stops with the controlled-copy job registered", () => {
     ready: true,
     stopping: false,
   })
-  assert.deepEqual(runtime.stop("test"), {
+  assert.deepEqual(await runtime.stop("test"), {
     started: true,
     ready: false,
     stopping: true,
   })
-  assert.match(logs[0], /"jobsRegistered":1/)
+  assert.match(logs[0], /"jobsRegistered":14/)
   assert.match(logs[1], /"signal":"test"/)
 })
 

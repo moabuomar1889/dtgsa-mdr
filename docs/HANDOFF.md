@@ -57,3 +57,11 @@ Keep every approval action bound to assignment, current Package Hash, valid
 ReviewSession, recent authentication, declaration, and idempotency. Workers may
 assemble and deliver artifacts but must not invent or replay approval
 decisions.
+
+# Phase 10 Handoff
+
+Use `@dtg/job-engine` and PostgreSQL for every heavy or external side effect.
+Never mark delivery successful from enqueue state. Client-response work may
+reuse temporary artifact assembly, but must preserve revision lineage, exact
+package hashes, controlled Main authority, TTL cleanup, and authorization.
+Install and benchmark qpdf in staging before accepting inputs above 32 MiB.

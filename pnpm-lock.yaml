@@ -21,6 +21,9 @@ importers:
         specifier: ^8.20.0
         version: 8.20.0
     devDependencies:
+      '@dtg/job-engine':
+        specifier: workspace:*
+        version: link:packages/job-engine
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.2.2
@@ -138,6 +141,9 @@ importers:
       '@dtg/identity-domain':
         specifier: workspace:*
         version: link:../../packages/identity-domain
+      '@dtg/job-engine':
+        specifier: workspace:*
+        version: link:../../packages/job-engine
       '@dtg/pdf-engine':
         specifier: workspace:*
         version: link:../../packages/pdf-engine
@@ -289,9 +295,21 @@ importers:
       '@dtg/configuration':
         specifier: workspace:*
         version: link:../../packages/configuration
+      '@dtg/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@dtg/job-engine':
+        specifier: workspace:*
+        version: link:../../packages/job-engine
       '@dtg/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@prisma/client':
+        specifier: ^7.6.0
+        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+      googleapis:
+        specifier: ^171.4.0
+        version: 171.4.0(supports-color@7.2.0)
     devDependencies:
       '@types/node':
         specifier: ^20
@@ -347,6 +365,16 @@ importers:
         version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
 
   packages/identity-domain: {}
+
+  packages/job-engine:
+    dependencies:
+      '@dtg/pdf-engine':
+        specifier: workspace:*
+        version: link:../pdf-engine
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.37
 
   packages/observability: {}
 

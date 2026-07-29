@@ -121,6 +121,7 @@ export async function reserveControlledMainFile(input: {
     const job = await tx.backgroundJob.create({
       data: {
         jobType: "DRIVE_CONTROLLED_COPY",
+        idempotencyKey: `controlled-copy:${reservationId}`,
         payload: {
           fileObjectId: fileObject.id,
           sourceFileId: metadata.fileId,

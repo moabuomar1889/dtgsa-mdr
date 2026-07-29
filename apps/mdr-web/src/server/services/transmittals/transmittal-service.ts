@@ -415,7 +415,86 @@ export async function createTransmittal(actor: CurrentAppUser, input: unknown) {
   })
 }
 
-export async function sendTransmittal(
+export async function sendTransmittal(actor: CurrentAppUser, input: unknown) {
+  const parsed = transmittalIdSchema.parse(input)
+  const transmittal = await prisma.transmittal.findUnique({
+    where: { id: parsed.transmittalId },
+    select: {
+      id: true,
+      projectId: true,
+      status: true,
+      deletedAt: true,
+      transmittalNumber: true,
+      project: { select: { clientId: true } },
+      _count: { select: { items: true } },
+    },
+  })
+  if (!transmittal || transmittal.deletedAt) {
+    throw new Error("The selected transmittal could not be found.")
+  }
+  assertProjectPermission(actor, transmittal.projectId, "transmittalsManage")
+  if (transmittal.status === TransmittalStatus.Sent) {
+    throw new Error("This transmittal has already been sent.")
+  }
+  if (transmittal._count.items === 0) {
+    throw new Error("A transmittal cannot be sent without attached revisions.")
+  }
+
+  const idempotencyKey = `transmittal:${transmittal.id}:deliver:v1`
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.backgroundJob.findUnique({
+      where: { idempotencyKey },
+    })
+    if (existing) return existing
+
+    const job = await tx.backgroundJob.create({
+      data: {
+        jobType: "TRANSMITTAL_DELIVER",
+        idempotencyKey,
+        correlationId: `transmittal:${transmittal.id}`,
+        priority: 25,
+        maxAttempts: 8,
+        payload: {
+          transmittalId: transmittal.id,
+          actorUserId: actor.id,
+          requestedAt: new Date().toISOString(),
+        },
+      },
+    })
+    await tx.outboxEvent.create({
+      data: {
+        eventType: "transmittal.delivery_requested",
+        aggregateType: "Transmittal",
+        aggregateId: transmittal.id,
+        correlationId: job.correlationId,
+        payload: {
+          jobId: job.id,
+          transmittalNumber: transmittal.transmittalNumber,
+        },
+      },
+    })
+    await tx.auditLog.create({
+      data: {
+        actorUserId: actor.id,
+        action: "transmittal.delivery_requested",
+        entityType: "Transmittal",
+        entityId: transmittal.id,
+        projectId: transmittal.projectId,
+        clientId: transmittal.project.clientId,
+        correlationId: job.correlationId,
+        severity: AuditSeverity.Info,
+        afterSnapshot: {
+          jobId: job.id,
+          idempotencyKey,
+          status: "Queued",
+        },
+      },
+    })
+    return job
+  })
+}
+
+export async function deliverTransmittalNow(
   actor: CurrentAppUser,
   input: unknown,
   deliveryAdapters: TransmittalDeliveryAdapters = defaultDeliveryAdapters

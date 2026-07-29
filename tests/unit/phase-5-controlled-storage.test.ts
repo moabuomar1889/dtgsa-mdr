@@ -234,5 +234,5 @@ test("worker dispatches only the registered controlled-copy job", async () => {
     "completed"
   )
   assert.deepEqual(calls, ["job-1"])
-  runtime.stop()
+  await runtime.stop()
 })

@@ -4,6 +4,7 @@
   "/admin/identity",
   "/api/auth/google/callback",
   "/api/auth/google/start",
+  "/api/downloads/artifacts/[artifactId]",
   "/api/drive/picker/handoff",
   "/api/drive/picker/selection",
   "/api/files/[fileObjectId]",

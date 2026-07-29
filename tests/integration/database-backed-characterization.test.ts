@@ -29,6 +29,7 @@ import { searchPlatform } from "@/server/services/search/global-search-service"
 import { getTaskDashboard } from "@/server/services/tasks/task-dashboard-service"
 import {
   createTransmittal,
+  deliverTransmittalNow,
   sendTransmittal,
   type TransmittalDeliveryAdapters,
 } from "@/server/services/transmittals/transmittal-service"
@@ -92,6 +93,7 @@ import {
   resolvePublishedVisualCover,
   saveVisualCoverDraft,
 } from "@/server/services/templates/visual-cover-template-service"
+import { createPrismaJobStore } from "../../apps/worker/src/prisma-job-store"
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL
 
@@ -636,7 +638,11 @@ test("transmittal database behavior uses fake delivery adapters and rolls back s
       return { count: 1 }
     },
   }
-  await sendTransmittal(baseline.actor, { transmittalId: created.id }, adapters)
+  await deliverTransmittalNow(
+    baseline.actor,
+    { transmittalId: created.id },
+    adapters
+  )
   const sent = await prisma.transmittal.findUniqueOrThrow({
     where: { id: created.id },
     include: { generatedDocuments: true },
@@ -668,7 +674,7 @@ test("transmittal database behavior uses fake delivery adapters and rolls back s
     subject: "Failed synthetic upload",
   })
   await assert.rejects(
-    sendTransmittal(
+    deliverTransmittalNow(
       baseline.actor,
       { transmittalId: rollbackTransmittal.id },
       {
@@ -2002,5 +2008,115 @@ test("Phase 9 review events are append-only and comment timelines preserve closu
   assert.equal(
     await prisma.commentStatusEvent.count({ where: { commentId: comment.id } }),
     2
+  )
+})
+
+test("Phase 10 transmittal requests are durable, idempotent, and not marked sent early", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const ready = await createDocumentFixture(baseline, {
+    documentNumber: "TPR-TST-DWG-1001",
+    workflowStatus: WorkflowStatus.ReadyToSubmit,
+  })
+  const transmittal = await createTransmittal(baseline.actor, {
+    projectId: baseline.project.id,
+    revisionIds: [ready.revision.id],
+    subject: "Durable transmittal delivery",
+  })
+  const first = await sendTransmittal(baseline.actor, {
+    transmittalId: transmittal.id,
+  })
+  const duplicate = await sendTransmittal(baseline.actor, {
+    transmittalId: transmittal.id,
+  })
+  assert.equal(first.id, duplicate.id)
+  assert.equal(first.jobType, "TRANSMITTAL_DELIVER")
+  assert.equal(
+    (
+      await prisma.transmittal.findUniqueOrThrow({
+        where: { id: transmittal.id },
+      })
+    ).status,
+    TransmittalStatus.ReadyToSend
+  )
+  assert.equal(
+    await prisma.backgroundJob.count({
+      where: { idempotencyKey: `transmittal:${transmittal.id}:deliver:v1` },
+    }),
+    1
+  )
+  assert.equal(
+    await prisma.outboxEvent.count({
+      where: {
+        eventType: "transmittal.delivery_requested",
+        aggregateId: transmittal.id,
+      },
+    }),
+    1
+  )
+  assert.equal(
+    await prisma.generatedDocument.count({
+      where: { transmittalId: transmittal.id },
+    }),
+    0
+  )
+})
+
+test("Phase 10 PostgreSQL leases recover and delivery attempts reject duplicates", async () => {
+  const store = createPrismaJobStore(prisma)
+  const queued = await store.enqueue({
+    jobType: "EMAIL_SEND",
+    payload: { messageId: "phase-10" },
+    idempotencyKey: "phase-10:email:one",
+    correlationId: "phase-10-correlation",
+    maxAttempts: 3,
+  })
+  const now = new Date("2026-07-30T00:00:00Z")
+  const firstLease = await store.lease({
+    owner: "worker-a",
+    now,
+    leaseMs: 1_000,
+  })
+  assert.equal(firstLease?.id, queued.id)
+  assert.equal(
+    await store.lease({ owner: "worker-b", now, leaseMs: 1_000 }),
+    null
+  )
+  const recovered = await store.lease({
+    owner: "worker-b",
+    now: new Date(now.getTime() + 1_001),
+    leaseMs: 1_000,
+  })
+  assert.equal(recovered?.id, queued.id)
+  assert.equal(recovered?.attemptCount, 2)
+  await store.complete({
+    jobId: queued.id,
+    owner: "worker-b",
+    now: new Date(now.getTime() + 1_100),
+    metrics: { durationMs: 99 },
+  })
+  assert.equal(
+    (
+      await prisma.backgroundJob.findUniqueOrThrow({
+        where: { id: queued.id },
+      })
+    ).state,
+    "Completed"
+  )
+  await prisma.deliveryAttempt.create({
+    data: {
+      channel: "EMAIL",
+      targetHash: "recipient-hash",
+      idempotencyKey: "phase-10:delivery:one",
+    },
+  })
+  await assert.rejects(
+    prisma.deliveryAttempt.create({
+      data: {
+        channel: "EMAIL",
+        targetHash: "recipient-hash",
+        idempotencyKey: "phase-10:delivery:one",
+      },
+    }),
+    /Unique constraint/
   )
 })

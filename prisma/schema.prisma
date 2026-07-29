@@ -212,6 +212,7 @@ enum JobState {
   Completed
   Failed
   DeadLetter
+  Canceled
 }
 
 enum CommentState {
@@ -1541,21 +1542,29 @@ model ClientResponseFile {
 }
 
 model GeneratedArtifactRecord {
-  id               String    @id @default(cuid())
-  revisionId       String?
-  fileObjectId     String    @unique
-  artifactKind     String
-  authoritative    Boolean   @default(false)
-  generatedAt      DateTime  @default(now())
-  expiresAt        DateTime?
-  sourceManifestId String?
-  assemblyProfile  Json?
-  pdfEngineVersion String?
-  artifactSha256   String?
-  sizeBytes        BigInt?
-  requesterUserId  String?
-  cleanupStatus    String    @default("Pending")
-  cleanedAt        DateTime?
+  id                 String    @id @default(cuid())
+  revisionId         String?
+  fileObjectId       String    @unique
+  artifactKind       String
+  authoritative      Boolean   @default(false)
+  generatedAt        DateTime  @default(now())
+  expiresAt          DateTime?
+  sourceManifestId   String?
+  assemblyProfile    Json?
+  pdfEngineVersion   String?
+  artifactSha256     String?
+  sizeBytes          BigInt?
+  requesterUserId    String?
+  cleanupStatus      String    @default("Pending")
+  cleanedAt          DateTime?
+  packageHash        String?
+  cacheKey           String?   @unique
+  authorizationScope Json?
+  bytesProcessed     BigInt?
+  assemblyDurationMs Int?
+
+  @@index([revisionId, artifactKind, expiresAt])
+  @@index([cleanupStatus, expiresAt])
 }
 
 model FileIntegrityCheck {
@@ -2272,33 +2281,49 @@ model CommentAttachment {
 }
 
 model OutboxEvent {
-  id            String    @id @default(cuid())
-  eventType     String
-  aggregateType String
-  aggregateId   String
-  payload       Json
-  correlationId String?
-  state         JobState  @default(Pending)
-  availableAt   DateTime  @default(now())
-  processedAt   DateTime?
-  createdAt     DateTime  @default(now())
+  id             String    @id @default(cuid())
+  eventType      String
+  aggregateType  String
+  aggregateId    String
+  payload        Json
+  correlationId  String?
+  state          JobState  @default(Pending)
+  availableAt    DateTime  @default(now())
+  processedAt    DateTime?
+  attemptCount   Int       @default(0)
+  leaseOwner     String?
+  leaseExpiresAt DateTime?
+  lastError      Json?
+  deadLetteredAt DateTime?
+  createdAt      DateTime  @default(now())
 
   @@index([state, availableAt])
 }
 
 model BackgroundJob {
-  id             String    @id @default(cuid())
-  jobType        String
-  payload        Json
-  state          JobState  @default(Pending)
-  priority       Int       @default(0)
-  attemptCount   Int       @default(0)
-  nextAttemptAt  DateTime  @default(now())
-  leaseOwner     String?
-  leaseExpiresAt DateTime?
-  correlationId  String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  jobType           String
+  payload           Json
+  state             JobState  @default(Pending)
+  priority          Int       @default(0)
+  attemptCount      Int       @default(0)
+  maxAttempts       Int       @default(5)
+  idempotencyKey    String    @unique
+  nextAttemptAt     DateTime  @default(now())
+  leaseOwner        String?
+  leaseExpiresAt    DateTime?
+  heartbeatAt       DateTime?
+  progress          Int       @default(0)
+  progressMessage   String?
+  cancelRequestedAt DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  deadLetteredAt    DateTime?
+  lastError         Json?
+  metrics           Json?
+  correlationId     String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([state, nextAttemptAt, priority])
 }
@@ -2309,21 +2334,40 @@ model JobAttempt {
   attemptNumber Int
   startedAt     DateTime  @default(now())
   completedAt   DateTime?
+  leaseOwner    String?
+  heartbeatAt   DateTime?
+  durationMs    Int?
+  retryAt       DateTime?
   outcome       String?
   error         Json?
 
   @@unique([jobId, attemptNumber])
 }
 
+model JobArtifact {
+  id           String   @id @default(cuid())
+  jobId        String
+  artifactId   String
+  artifactKind String
+  checksum     String
+  sizeBytes    BigInt
+  createdAt    DateTime @default(now())
+
+  @@unique([jobId, artifactId])
+  @@index([jobId, createdAt])
+}
+
 model DeliveryAttempt {
-  id               String    @id @default(cuid())
-  channel          String
-  targetHash       String
-  idempotencyKey   String    @unique
-  state            JobState  @default(Pending)
-  attemptedAt      DateTime?
-  responseMetadata Json?
-  createdAt        DateTime  @default(now())
+  id                String    @id @default(cuid())
+  channel           String
+  targetHash        String
+  idempotencyKey    String    @unique
+  state             JobState  @default(Pending)
+  attemptedAt       DateTime?
+  responseMetadata  Json?
+  providerMessageId String?
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
 }
 
 model IdempotencyRecord {
@@ -2369,14 +2413,19 @@ model WebhookEndpoint {
 }
 
 model WebhookDelivery {
-  id            String   @id @default(cuid())
-  endpointId    String
-  outboxEventId String
-  state         JobState @default(Pending)
-  attemptCount  Int      @default(0)
-  nextAttemptAt DateTime @default(now())
-  responseCode  Int?
-  createdAt     DateTime @default(now())
+  id               String    @id @default(cuid())
+  endpointId       String
+  outboxEventId    String
+  state            JobState  @default(Pending)
+  attemptCount     Int       @default(0)
+  nextAttemptAt    DateTime  @default(now())
+  responseCode     Int?
+  responseMetadata Json?
+  signatureVersion Int       @default(1)
+  lastError        Json?
+  completedAt      DateTime?
+  deadLetteredAt   DateTime?
+  createdAt        DateTime  @default(now())
 
   @@unique([endpointId, outboxEventId])
 }

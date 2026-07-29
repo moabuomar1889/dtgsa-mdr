@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "@dtg/configuration": "workspace:*",
-    "@dtg/observability": "workspace:*"
+    "@dtg/database": "workspace:*",
+    "@dtg/job-engine": "workspace:*",
+    "@dtg/observability": "workspace:*",
+    "@prisma/client": "^7.6.0",
+    "googleapis": "^171.4.0"
   },
   "devDependencies": {
     "@types/node": "^20",

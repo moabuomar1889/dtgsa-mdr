@@ -15,6 +15,8 @@ Branch: `codex/dtg-signature-platform-merge`
 - Phase 5 live Google verification: `BLOCKED_EXTERNAL_CREDENTIALS`.
 - Phases 6, 7, and 8: COMPLETE / LOCALLY_VERIFIED.
 - Phase 9: COMPLETE / LOCALLY_VERIFIED.
+- Phase 10: COMPLETE / LOCALLY_VERIFIED.
+- Phase 10 live provider and qpdf verification: `STAGING_REQUIRED`.
 
 ## Authoritative Workspace
 
@@ -56,6 +58,7 @@ The additive migration inventory is:
 20260729190000_phase7_workflow_engine
 20260729210000_phase8_cover_designer
 20260729230000_phase9_approval_application
+20260730010000_phase10_durable_worker
 ```
 
 Phase 4 adds internal and external sessions, OIDC transactions, invitation
@@ -74,9 +77,9 @@ called during ordinary tests.
 
 Phase 4 is not production-verified until approved OAuth, redirect, Workspace,
 and delegated Directory credentials are tested in staging. Supabase
-compatibility remains intentionally present for rollback. Controlled Drive,
-the replacement workflow engine, final signing, sealing, and production
-deployment remain later-phase work.
+compatibility remains intentionally present for rollback. Live Drive,
+email/webhook delivery, KMS/HSM signing, qpdf large-file execution, and
+production deployment remain staging or later-phase work.
 
 # Phase 6 Trust Foundation
 
@@ -105,3 +108,12 @@ The approval app now owns the assignment inbox, exact-package PDF.js review,
 truthful review sessions, comments and annotations, atomic decisions, signature
 evidence snapshots, returns, and DC outcomes. Controlled file bytes remain
 behind authorized range delivery.
+
+# Phase 10 Downloads and Worker
+
+PostgreSQL now owns durable jobs, attempts, leases, heartbeats, retry,
+dead-letter, cancellation, progress, correlation, and metrics. MDR queues
+Signed Internally and transmittal requests instead of doing heavy work in the
+request. Signed Internally creates one private, expiring, hash-verified artifact
+without permanent Main PDF duplication. Large-file qpdf and live provider
+delivery require staging infrastructure.

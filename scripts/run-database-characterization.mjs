@@ -208,6 +208,10 @@ async function runWithDatabase(mode) {
         adminClient,
         "20260729230000_phase9_approval_application"
       )
+      await applyMigrationSql(
+        adminClient,
+        "20260730010000_phase10_durable_worker"
+      )
       await adminClient.end()
       return
     }

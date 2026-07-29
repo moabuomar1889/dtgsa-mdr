@@ -21,6 +21,7 @@
     "@dtg/database": "workspace:*",
     "@dtg/document-control-domain": "workspace:*",
     "@dtg/identity-domain": "workspace:*",
+    "@dtg/job-engine": "workspace:*",
     "@dtg/pdf-engine": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.6.0",
