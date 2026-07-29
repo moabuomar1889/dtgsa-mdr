@@ -123,6 +123,12 @@ importers:
       '@dtg/pdf-engine':
         specifier: workspace:*
         version: link:../../packages/pdf-engine
+      '@dtg/trust-domain':
+        specifier: workspace:*
+        version: link:../../packages/trust-domain
+      '@dtg/workflow-engine-domain':
+        specifier: workspace:*
+        version: link:../../packages/workflow-engine-domain
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.72.0(react@19.2.4))
@@ -343,6 +349,15 @@ importers:
       react:
         specifier: 19.2.4
         version: 19.2.4
+
+  packages/workflow-engine-domain:
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.19.37
+      typescript:
+        specifier: ^5
+        version: 5.9.3
 
 packages:
 

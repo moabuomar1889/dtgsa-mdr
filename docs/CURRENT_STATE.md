@@ -75,3 +75,9 @@ deployment remain later-phase work.
 Deterministic package manifests, application seals, approval-evidence
 contracts, structured verification, and tamper-evident audit chains are now
 implemented. Production KMS/HSM, PAdES, and trusted timestamps remain deferred.
+# Phase 7 Workflow Engine
+
+The configurable, versioned workflow engine is locally implemented alongside
+the legacy adapter. Package-bound review eligibility, separation of duties,
+atomic decisions, reassignment, delegation, overrides, and cycle invalidation
+are enforced.

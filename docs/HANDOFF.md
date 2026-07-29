@@ -36,3 +36,8 @@ to production, or weaken Phase 4/5 controls.
 Use `@dtg/trust-domain` for canonical manifests, evidence, seals, timestamps,
 verification, and audit chains. Do not treat signature images or legacy
 Signature Events as trusted file-bound evidence.
+# Phase 7 Handoff
+
+Use the configurable approval engine for new target cases. Keep the fixed
+workflow readable until UI and production-data parity are proven. Never bypass
+Package Hash review eligibility or decision idempotency.

@@ -192,6 +192,14 @@ async function runWithDatabase(mode) {
         adminClient,
         "20260729153000_phase5_controlled_google_drive"
       )
+      await applyMigrationSql(
+        adminClient,
+        "20260729170000_phase6_manifest_and_evidence"
+      )
+      await applyMigrationSql(
+        adminClient,
+        "20260729190000_phase7_workflow_engine"
+      )
       await adminClient.end()
       return
     }
@@ -227,6 +235,7 @@ async function runWithDatabase(mode) {
             "tests/unit/phase-4-identity-and-access.test.ts",
             "tests/unit/phase-5-controlled-storage.test.ts",
             "tests/unit/phase-6-manifest-and-evidence.test.ts",
+            "tests/unit/phase-7-workflow-engine.test.ts",
             "tests/architecture/phase-2-foundation.test.ts",
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",

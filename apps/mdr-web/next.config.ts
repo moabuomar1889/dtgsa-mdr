@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@dtg/authorization",
     "@dtg/controlled-storage-domain",
+    "@dtg/trust-domain",
+    "@dtg/workflow-engine-domain",
     "@dtg/database",
     "@dtg/document-control-domain",
     "@dtg/identity-domain",

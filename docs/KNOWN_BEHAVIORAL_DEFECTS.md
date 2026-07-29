@@ -53,3 +53,9 @@ closes defects 001, 002, and 003. Defect 004 remains characterized.
 - Recommended correction: Require expected-state compare-and-set behavior and
   an idempotency key for every decision command.
 - Target phase: Phase 7 - Workflow Engine.
+# Phase 7 Closure
+
+`MDR-DEFECT-004` is closed for the configurable workflow engine. Decisions now
+use expected-state compare-and-set, serializable transactions, unique
+idempotency keys, and one immutable evidence record. The legacy workflow remains
+available only for migration parity and retains its legacy trust classification.

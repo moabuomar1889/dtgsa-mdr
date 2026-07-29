@@ -68,6 +68,17 @@ import {
 import { reconcileControlledDrive } from "@/server/services/drive/drive-reconciliation-service"
 import { openControlledFile } from "@/server/services/drive/controlled-file-delivery"
 import { PDFDocument } from "pdf-lib"
+import {
+  createWorkflowDraft,
+  invalidateCycleForContentChange,
+  approveSeparationOverride,
+  publishWorkflowVersion,
+  recordWorkflowDecision,
+  reassignWorkflowStep,
+  requestSeparationOverride,
+  startApprovalCycle,
+} from "@/server/services/workflow/approval-engine-service"
+import { DEFAULT_ENGINEERING_WORKFLOW } from "../../packages/workflow-engine-domain/src/index"
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL
 
@@ -1455,5 +1466,257 @@ test("Phase 5 controlled Drive copy is idempotent, authoritative, scoped, stream
       adapter: drive,
     }),
     /integrity-blocked/
+  )
+})
+
+test("Phase 7 workflow decisions are package-bound, evidence-backed, and concurrency-safe", async () => {
+  const baseline = await createCharacterizationBaseline()
+  const fixture = await createDocumentFixture(baseline)
+  const users = await Promise.all(
+    ["reviewer", "approver", "dc", "delegate"].map((name) =>
+      prisma.user.create({
+        data: {
+          email: `${name}@phase7.example`,
+          fullName: `Phase 7 ${name}`,
+        },
+      })
+    )
+  )
+  const fileHash = "a".repeat(64)
+  const fileObject = await prisma.fileObject.create({
+    data: {
+      storageProvider: StorageProvider.GoogleDrive,
+      providerKey: "phase7-main-file",
+      fileName: "phase7.pdf",
+      mimeType: "application/pdf",
+      sizeBytes: 100,
+      checksum: fileHash,
+      pageCount: 1,
+    },
+  })
+  await prisma.controlledMainFile.create({
+    data: {
+      revisionId: fixture.revision.id,
+      fileObjectId: fileObject.id,
+      integrityStatus: "Verified",
+      verifiedAt: new Date(),
+      opaqueFileName: "phase7.pdf",
+    },
+  })
+  const manifest = await prisma.packageManifest.create({
+    data: {
+      revisionId: fixture.revision.id,
+      schemaVersion: "phase7-1",
+      canonicalizationVersion: "1",
+      manifestJson: { document: fixture.document.id },
+    },
+  })
+  const packageHash = "b".repeat(64)
+  await prisma.packageHash.create({
+    data: {
+      manifestId: manifest.id,
+      algorithm: "SHA-256",
+      value: packageHash,
+    },
+  })
+  const draft = await createWorkflowDraft({
+    definitionCode: "ENGINEERING_DEFAULT",
+    definitionName: "Engineering default",
+    policy: DEFAULT_ENGINEERING_WORKFLOW,
+  })
+  await publishWorkflowVersion(draft.id)
+  const assignments = [
+    { stepKey: "prepared", userIds: [baseline.actor.id] },
+    { stepKey: "reviewed", userIds: [users[0]!.id] },
+    { stepKey: "approved", userIds: [users[1]!.id] },
+    { stepKey: "dc-validated", userIds: [users[2]!.id] },
+  ]
+  await assert.rejects(
+    startApprovalCycle({
+      revisionId: fixture.revision.id,
+      definitionVersionId: draft.id,
+      packageHash,
+      assignments: DEFAULT_ENGINEERING_WORKFLOW.steps.map((step) => ({
+        stepKey: step.key,
+        userIds: [baseline.actor.id],
+      })),
+    }),
+    /Separation of duties/
+  )
+  const cycle = await startApprovalCycle({
+    revisionId: fixture.revision.id,
+    definitionVersionId: draft.id,
+    packageHash,
+    assignments,
+  })
+  const prepared = await prisma.workflowStepInstance.findFirstOrThrow({
+    where: { approvalCycleId: cycle.id, stepKey: "prepared" },
+  })
+  assert.equal(prepared.status, "Active")
+  const review = await prisma.reviewSession.create({
+    data: {
+      stepInstanceId: prepared.id,
+      userId: baseline.actor.id,
+      contentHash: packageHash,
+      packageHash,
+      completedAt: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+      declarationAcceptedAt: new Date(),
+    },
+  })
+  const recentAuth = await prisma.recentAuthenticationEvidence.create({
+    data: {
+      userId: baseline.actor.id,
+      provider: "google",
+      method: "oidc",
+      authenticatedAt: new Date(),
+      expiresAt: new Date(Date.now() + 60_000),
+    },
+  })
+  const evidence = {
+    googleSubjectId: "phase7-google-subject",
+    employeeId: baseline.actor.id,
+    employeeName: baseline.actor.fullName,
+    roleSnapshot: { role: "discipline_user" },
+    departmentOrProjectRole: "Prepared By Manager",
+    documentNumber: fixture.document.dtgsaDocumentNumber,
+    revision: fixture.revision.revisionLabel,
+    mainFileSha256: fileHash,
+    workflowSnapshotDigest: "c".repeat(64),
+    declarationVersion: "1",
+    declarationTextHash: "d".repeat(64),
+    commentReferences: [],
+    recentAuthEvidenceId: recentAuth.id,
+    sessionHash: "e".repeat(64),
+    ipHash: "f".repeat(64),
+    userAgentHash: "1".repeat(64),
+    signatureAppearanceVersionId: "appearance-v1",
+  }
+  const command = {
+    stepInstanceId: prepared.id,
+    actorUserId: baseline.actor.id,
+    decision: "APPROVE",
+    expectedStateVersion: 0,
+    idempotencyKey: "phase7-prepare-decision",
+    reviewSessionId: review.id,
+    evidence,
+  }
+  const [first, duplicate] = await Promise.all([
+    recordWorkflowDecision(command),
+    recordWorkflowDecision(command),
+  ])
+  assert.equal(first.id, duplicate.id)
+  assert.equal(
+    await prisma.approvalDecision.count({
+      where: { stepInstanceId: prepared.id },
+    }),
+    1
+  )
+  assert.equal(
+    await prisma.approvalEvidence.count({
+      where: { approvalDecisionId: first.id },
+    }),
+    1
+  )
+  await assert.rejects(
+    recordWorkflowDecision({
+      ...command,
+      idempotencyKey: "phase7-conflicting-decision",
+    }),
+    /not active|state conflict/
+  )
+  assert.equal(
+    (
+      await prisma.workflowStepInstance.findFirstOrThrow({
+        where: { approvalCycleId: cycle.id, stepKey: "reviewed" },
+      })
+    ).status,
+    "Active"
+  )
+  const reviewedStep = await prisma.workflowStepInstance.findFirstOrThrow({
+    where: { approvalCycleId: cycle.id, stepKey: "reviewed" },
+  })
+  const delegation = await prisma.delegation.create({
+    data: {
+      delegatorUserId: users[0]!.id,
+      delegateUserId: users[3]!.id,
+      scope: `workflow-step:${reviewedStep.id}`,
+      startsAt: new Date(Date.now() - 1_000),
+      endsAt: new Date(Date.now() + 60_000),
+    },
+  })
+  await reassignWorkflowStep({
+    stepInstanceId: reviewedStep.id,
+    fromUserId: users[0]!.id,
+    toUserId: users[3]!.id,
+    changedByUserId: baseline.actor.id,
+    reason: "Reviewer acting delegation",
+    delegationId: delegation.id,
+  })
+  await assert.rejects(
+    reassignWorkflowStep({
+      stepInstanceId: reviewedStep.id,
+      fromUserId: users[3]!.id,
+      toUserId: users[1]!.id,
+      changedByUserId: baseline.actor.id,
+      reason: "Would conflict with approver",
+    }),
+    /separation of duties/
+  )
+  const override = await requestSeparationOverride({
+    requesterUserId: baseline.actor.id,
+    scope: `workflow-step:${reviewedStep.id}`,
+    reason: "Emergency coverage",
+    expiresAt: new Date(Date.now() + 60_000),
+  })
+  await assert.rejects(
+    approveSeparationOverride({
+      requestId: override.id,
+      approverUserId: baseline.actor.id,
+    }),
+    /self-approved/
+  )
+  await approveSeparationOverride({
+    requestId: override.id,
+    approverUserId: users[2]!.id,
+  })
+  await reassignWorkflowStep({
+    stepInstanceId: reviewedStep.id,
+    fromUserId: users[3]!.id,
+    toUserId: users[1]!.id,
+    changedByUserId: baseline.actor.id,
+    reason: "Approved emergency coverage",
+    approvedOverrideRequestId: override.id,
+  })
+  assert.equal(
+    await prisma.outboxEvent.count({
+      where: {
+        aggregateId: reviewedStep.id,
+        eventType: "ASSIGNMENT_CHANGED",
+      },
+    }),
+    2
+  )
+  await assert.rejects(
+    prisma.workflowSnapshot.update({
+      where: { id: cycle.snapshotId },
+      data: { content: { tampered: true } },
+    }),
+    /immutable/
+  )
+  await invalidateCycleForContentChange({
+    revisionId: fixture.revision.id,
+    newPackageHash: "9".repeat(64),
+    submittedToClient: false,
+    currentExternalRevision: fixture.revision.revisionLabel,
+  })
+  assert.equal(
+    (await prisma.approvalCycle.findUniqueOrThrow({ where: { id: cycle.id } }))
+      .status,
+    "Invalidated"
+  )
+  assert.equal(
+    await prisma.approvalDecision.count({ where: { id: first.id } }),
+    1
   )
 })

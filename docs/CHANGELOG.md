@@ -23,3 +23,8 @@
 
 Added deterministic package manifests, approval evidence, Ed25519 application
 seals, verification statuses, artifact evidence, and audit hash chains.
+# 2026-07-29 - Phase 7
+
+Added the versioned workflow engine, immutable snapshots, package-bound review,
+atomic evidence-backed decisions, separation of duties, overrides,
+reassignment, delegation, and legacy parity.

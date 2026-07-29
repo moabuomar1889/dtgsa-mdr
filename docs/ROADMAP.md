@@ -23,3 +23,7 @@ explicitly authorized.
 
 Phase 6 trust foundations are complete locally. Phase 7 may consume immutable
 Package Hash and approval-evidence contracts.
+# Phase 7 Status
+
+The workflow engine foundation is complete locally. Phase 8 may add versioned
+cover design while preserving Package Manifest and workflow snapshots.

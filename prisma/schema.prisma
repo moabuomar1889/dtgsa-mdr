@@ -1678,6 +1678,8 @@ model WorkflowDefinitionVersion {
   status       FoundationRecordStatus   @default(Draft)
   publishedAt  DateTime?
   createdAt    DateTime                 @default(now())
+  policyDigest String?
+  supersededAt DateTime?
   definition   WorkflowDefinition       @relation(fields: [definitionId], references: [id], onDelete: Restrict)
   steps        WorkflowDefinitionStep[]
   snapshots    WorkflowSnapshot[]
@@ -1686,16 +1688,25 @@ model WorkflowDefinitionVersion {
 }
 
 model WorkflowDefinitionStep {
-  id              String                    @id @default(cuid())
-  versionId       String
-  stepKey         String
-  stepOrder       Int
-  assignmentType  String
-  assignmentValue String?
-  required        Boolean                   @default(true)
-  quorum          Int                       @default(1)
-  parallelGroupId String?
-  version         WorkflowDefinitionVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
+  id                 String                    @id @default(cuid())
+  versionId          String
+  stepKey            String
+  stepOrder          Int
+  assignmentType     String
+  assignmentValue    String?
+  required           Boolean                   @default(true)
+  quorum             Int                       @default(1)
+  parallelGroupId    String?
+  label              String?
+  reviewRequired     Boolean                   @default(true)
+  commentRequired    Boolean                   @default(false)
+  dcValidation       Boolean                   @default(false)
+  allowAssigneePool  Boolean                   @default(false)
+  fallbackAssignment Json?
+  escalationPolicy   Json?
+  returnTargets      Json?
+  rejectionBehavior  String?
+  version            WorkflowDefinitionVersion @relation(fields: [versionId], references: [id], onDelete: Restrict)
 
   @@unique([versionId, stepKey])
 }
@@ -1716,6 +1727,7 @@ model WorkflowSnapshot {
   snapshotHash        String                    @unique
   content             Json
   createdAt           DateTime                  @default(now())
+  packageHash         String?
   version             WorkflowDefinitionVersion @relation(fields: [definitionVersionId], references: [id], onDelete: Restrict)
   steps               WorkflowSnapshotStep[]
   cycles              ApprovalCycle[]
@@ -1729,24 +1741,28 @@ model WorkflowSnapshotStep {
   assignmentSnapshot Json
   required           Boolean
   quorum             Int
+  parallelGroupId    String?
+  policySnapshot     Json?
   snapshot           WorkflowSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
 
   @@unique([snapshotId, stepKey])
 }
 
 model ApprovalCycle {
-  id          String                 @id @default(cuid())
-  revisionId  String
-  snapshotId  String
-  cycleNumber Int
-  status      String                 @default("Active")
-  isActive    Boolean                @default(true)
-  contentHash String
-  startedAt   DateTime               @default(now())
-  completedAt DateTime?
-  revision    DocumentRevision       @relation(fields: [revisionId], references: [id], onDelete: Restrict)
-  snapshot    WorkflowSnapshot       @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
-  steps       WorkflowStepInstance[]
+  id                 String                 @id @default(cuid())
+  revisionId         String
+  snapshotId         String
+  cycleNumber        Int
+  status             String                 @default("Active")
+  isActive           Boolean                @default(true)
+  contentHash        String
+  startedAt          DateTime               @default(now())
+  completedAt        DateTime?
+  invalidatedAt      DateTime?
+  invalidationReason String?
+  revision           DocumentRevision       @relation(fields: [revisionId], references: [id], onDelete: Restrict)
+  snapshot           WorkflowSnapshot       @relation(fields: [snapshotId], references: [id], onDelete: Restrict)
+  steps              WorkflowStepInstance[]
 
   @@unique([revisionId, cycleNumber])
   @@index([revisionId, isActive])
@@ -1760,6 +1776,11 @@ model WorkflowStepInstance {
   expectedStateVersion Int           @default(0)
   startedAt            DateTime?
   completedAt          DateTime?
+  stepOrder            Int           @default(0)
+  parallelGroupId      String?
+  required             Boolean       @default(true)
+  quorum               Int           @default(1)
+  policySnapshot       Json?
   cycle                ApprovalCycle @relation(fields: [approvalCycleId], references: [id], onDelete: Restrict)
 
   @@unique([approvalCycleId, stepKey])
@@ -1787,17 +1808,24 @@ model ApprovalDecision {
   idempotencyKey       String   @unique
   comments             String?
   decidedAt            DateTime @default(now())
+  approvalEvidenceId   String?  @unique
+  resultHash           String?
 
   @@index([stepInstanceId, decidedAt])
 }
 
 model ReviewSession {
-  id             String    @id @default(cuid())
-  stepInstanceId String
-  userId         String
-  contentHash    String
-  startedAt      DateTime  @default(now())
-  completedAt    DateTime?
+  id                    String    @id @default(cuid())
+  stepInstanceId        String
+  userId                String
+  contentHash           String
+  startedAt             DateTime  @default(now())
+  completedAt           DateTime?
+  expiresAt             DateTime?
+  packageHash           String?
+  declarationAcceptedAt DateTime?
+  downloadedAt          DateTime?
+  revokedAt             DateTime?
 
   @@index([stepInstanceId, userId])
 }
