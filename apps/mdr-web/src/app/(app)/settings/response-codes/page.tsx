@@ -45,13 +45,11 @@ export default async function ResponseCodesPage() {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-5 md:px-6">
-      <Card className="overflow-hidden border-slate-200 bg-[linear-gradient(135deg,#f7f4ec_0%,#fff_45%,#e8f0ed_100%)]">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="overflow-hidden">
         <CardHeader>
-          <Badge className="w-fit bg-emerald-900 text-white">
-            Policy studio
-          </Badge>
-          <CardTitle className="max-w-4xl font-serif text-3xl text-slate-950">
+          <Badge className="w-fit">Policy studio</Badge>
+          <CardTitle className="max-w-4xl text-[22px] font-medium tracking-[-0.02em]">
             Client response meanings belong to published policy, never to a
             hardcoded number.
           </CardTitle>
@@ -68,7 +66,7 @@ export default async function ResponseCodesPage() {
               <select
                 name="clientId"
                 required
-                className="rounded-md border p-2"
+                className="rounded-[7px] border p-2"
               >
                 {overview.clients.map((client) => (
                   <option key={client.id} value={client.id}>
@@ -79,7 +77,7 @@ export default async function ResponseCodesPage() {
               <Input name="code" required placeholder="Policy code" />
               <Input name="name" required placeholder="Policy name" />
               <Input name="description" placeholder="Description" />
-              <select name="fixture" className="rounded-md border p-2">
+              <select name="fixture" className="rounded-[7px] border p-2">
                 <option value="NONE">Empty policy</option>
                 <option value="AIR_PRODUCTS">
                   Air Products development fixture
@@ -103,7 +101,7 @@ export default async function ResponseCodesPage() {
               <select
                 name="sourceVersionId"
                 required
-                className="rounded-md border p-2"
+                className="rounded-[7px] border p-2"
               >
                 {overview.sets.flatMap((set) =>
                   set.versions.map((version) => (
@@ -116,7 +114,7 @@ export default async function ResponseCodesPage() {
               <select
                 name="projectId"
                 required
-                className="rounded-md border p-2"
+                className="rounded-[7px] border p-2"
               >
                 {overview.projects.map((project) => (
                   <option key={project.id} value={project.id}>
@@ -144,7 +142,7 @@ export default async function ResponseCodesPage() {
               <CardContent className="grid gap-4 pt-6 lg:grid-cols-2">
                 <div>
                   <p className="font-semibold">{set.name}</p>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-soft text-sm">
                     Latest version: v{latest?.version ?? 0} /{" "}
                     {latest?.status ?? "Empty"}
                   </p>
@@ -164,7 +162,7 @@ export default async function ResponseCodesPage() {
                 </div>
                 <form
                   action={uploadResponseCodeReferenceAction}
-                  className="grid gap-2 rounded-xl border p-3"
+                  className="grid gap-2 rounded-[10px] border p-3"
                 >
                   <input type="hidden" name="codeSetId" value={set.id} />
                   <Input
@@ -183,10 +181,7 @@ export default async function ResponseCodesPage() {
                     variant="outline"
                   />
                   {references.map((reference) => (
-                    <p
-                      key={reference.id}
-                      className="text-muted-foreground text-xs"
-                    >
+                    <p key={reference.id} className="text-soft text-xs">
                       {reference.referenceKind}:{" "}
                       {reference.file?.fileName ?? "Stored reference"}
                     </p>
@@ -213,13 +208,13 @@ export default async function ResponseCodesPage() {
               {version.codes.map((code, index) => (
                 <div
                   key={code.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border p-3"
                 >
                   <div>
                     <p className="font-semibold">
                       {code.externalCode} - {code.internalLabel}
                     </p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-soft text-sm">
                       {code.exactWording} / {code.outcomeClass}
                     </p>
                   </div>
@@ -261,7 +256,7 @@ export default async function ResponseCodesPage() {
 
             <form
               action={addResponseCodeAction}
-              className="grid gap-4 rounded-2xl border bg-slate-50 p-4"
+              className="border-line bg-raise grid gap-4 rounded-[9px] border p-4"
             >
               <input type="hidden" name="versionId" value={version.id} />
               <div className="grid gap-3 md:grid-cols-2">
@@ -285,14 +280,17 @@ export default async function ResponseCodesPage() {
                   type="number"
                   defaultValue={version.codes.length + 1}
                 />
-                <select name="outcomeClass" className="rounded-md border p-2">
+                <select
+                  name="outcomeClass"
+                  className="rounded-[7px] border p-2"
+                >
                   {CLIENT_RESPONSE_OUTCOMES.map((outcome) => (
                     <option key={outcome}>{outcome}</option>
                   ))}
                 </select>
                 <select
                   name="expectedPrimaryFileKind"
-                  className="rounded-md border p-2"
+                  className="rounded-[7px] border p-2"
                 >
                   <option value="">Any returned file kind</option>
                   {CLIENT_RESPONSE_FILE_KINDS.map((kind) => (
@@ -315,7 +313,7 @@ export default async function ResponseCodesPage() {
               <input type="hidden" name="versionId" value={version.id} />
               <select
                 name="projectId"
-                className="min-w-72 rounded-md border p-2"
+                className="min-w-72 rounded-[7px] border p-2"
               >
                 <option value="">Publish as client default</option>
                 {overview.projects

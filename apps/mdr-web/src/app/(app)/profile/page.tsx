@@ -21,11 +21,11 @@ export default async function ProfilePage() {
   const overview = await getProfileOverview(user.id)
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="w-fit rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg w-fit rounded-[4px] px-1.5 py-0.5">
               Account
             </Badge>
             <Badge variant="outline">
@@ -34,12 +34,13 @@ export default async function ProfilePage() {
                 : "Signature pending"}
             </Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             Profile details and signature assets now live in the platform.
           </CardTitle>
           <CardDescription className="max-w-3xl leading-6">
             Update your account details, timezone, and signing assets here.
-            Workflow signing now depends on this profile being configured cleanly.
+            Workflow signing now depends on this profile being configured
+            cleanly.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
@@ -83,16 +84,16 @@ export default async function ProfilePage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <div className="border-line bg-raise rounded-[9px] border p-4">
                 <div className="mb-3 space-y-1">
                   <p className="font-medium">Signature image</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-soft text-sm">
                     Upload the image used in prepared, reviewed, and approved
                     signing events.
                   </p>
                 </div>
                 {overview.signatureUrl ? (
-                  <div className="relative mb-4 h-28 rounded-lg border border-border/60 bg-white p-2">
+                  <div className="border-line bg-raise relative mb-4 h-28 rounded-[9px] border p-2">
                     <Image
                       src={overview.signatureUrl}
                       alt="Signature preview"
@@ -102,23 +103,23 @@ export default async function ProfilePage() {
                     />
                   </div>
                 ) : (
-                  <div className="mb-4 rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
+                  <div className="border-line text-soft mb-4 rounded-[9px] border border-dashed p-4 text-sm">
                     No signature image uploaded yet.
                   </div>
                 )}
                 <Input name="signatureFile" type="file" accept="image/*" />
               </div>
 
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+              <div className="border-line bg-raise rounded-[9px] border p-4">
                 <div className="mb-3 space-y-1">
                   <p className="font-medium">Initials image</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-soft text-sm">
                     Optional initials image for compact stamps and future PDF
                     tooling.
                   </p>
                 </div>
                 {overview.initialsUrl ? (
-                  <div className="relative mb-4 h-28 rounded-lg border border-border/60 bg-white p-2">
+                  <div className="border-line bg-raise relative mb-4 h-28 rounded-[9px] border p-2">
                     <Image
                       src={overview.initialsUrl}
                       alt="Initials preview"
@@ -128,7 +129,7 @@ export default async function ProfilePage() {
                     />
                   </div>
                 ) : (
-                  <div className="mb-4 rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">
+                  <div className="border-line text-soft mb-4 rounded-[9px] border border-dashed p-4 text-sm">
                     No initials image uploaded yet.
                   </div>
                 )}
@@ -137,26 +138,28 @@ export default async function ProfilePage() {
             </div>
 
             <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <p className="text-sm text-muted-foreground">Signature profile</p>
+              <div className="border-line bg-raise rounded-[9px] border p-4">
+                <p className="text-soft text-sm">Signature profile</p>
                 <p className="mt-2 text-xl font-semibold tracking-tight">
                   {overview.user.signatureProfile ? "Configured" : "Pending"}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Signature events recorded: {overview.user.signatureEvents.length}
+                <p className="text-soft mt-2 text-sm leading-6">
+                  Signature events recorded:{" "}
+                  {overview.user.signatureEvents.length}
                 </p>
               </div>
-              <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-                <p className="text-sm text-muted-foreground">Recent signing activity</p>
+              <div className="border-line bg-raise rounded-[9px] border p-4">
+                <p className="text-soft text-sm">Recent signing activity</p>
                 <div className="mt-2 grid gap-2">
                   {overview.user.signatureEvents.length > 0 ? (
                     overview.user.signatureEvents.map((event) => (
-                      <div key={event.id} className="text-sm text-muted-foreground">
-                        {event.workflowStepType} on {event.signedAt.toLocaleString("en-US")}
+                      <div key={event.id} className="text-soft text-sm">
+                        {event.workflowStepType} on{" "}
+                        {event.signedAt.toLocaleString("en-US")}
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-soft text-sm">
                       No signing events recorded yet.
                     </div>
                   )}

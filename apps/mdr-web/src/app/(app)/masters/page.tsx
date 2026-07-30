@@ -45,7 +45,7 @@ function SimpleMasterForm({
   action,
 }: SimpleMasterFormProps) {
   return (
-    <Card className="border-border/70 bg-card/95 shadow-sm">
+    <Card className="border-line bg-panel">
       <CardHeader>
         <CardTitle className="text-lg">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -87,7 +87,9 @@ function SimpleMasterForm({
   )
 }
 
-function renderNumberingRulePreview(tokens: Array<{ key: string; order: number }>) {
+function renderNumberingRulePreview(
+  tokens: Array<{ key: string; order: number }>
+) {
   return tokens
     .slice()
     .sort((left, right) => left.order - right.order)
@@ -99,17 +101,17 @@ export default async function MastersPage() {
   const masters = await getGlobalMasterData()
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
-          <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+        <Card className="border-line bg-panel">
+          <CardHeader className="border-line bg-head gap-2 border-b">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
                 Master Data
               </Badge>
               <Badge variant="outline">Config driven</Badge>
             </div>
-            <CardTitle className="text-2xl font-semibold tracking-tight">
+            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
               Global coding tables are now backed by real data instead of page
               placeholders.
             </CardTitle>
@@ -121,34 +123,34 @@ export default async function MastersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Disciplines</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Disciplines</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {masters.disciplines.length}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Document types</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Document types</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {masters.documentTypes.length}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Release purposes</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Release purposes</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {masters.releasePurposes.length}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Review codes</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Review codes</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {masters.reviewCodes.length}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Numbering rules</CardTitle>
             <CardDescription>
@@ -160,7 +162,7 @@ export default async function MastersPage() {
             {masters.numberingRules.map((rule) => (
               <div
                 key={rule.id}
-                className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                className="border-line bg-raise rounded-[9px] border p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-medium">{rule.name}</p>
@@ -168,10 +170,8 @@ export default async function MastersPage() {
                     {rule.sequenceScope}
                   </Badge>
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {rule.formatString}
-                </p>
-                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                <p className="text-soft mt-2 text-sm">{rule.formatString}</p>
+                <p className="text-soft mt-1 font-mono text-xs">
                   {renderNumberingRulePreview(
                     rule.tokens.map((token) => ({
                       key: token.key,
@@ -207,7 +207,7 @@ export default async function MastersPage() {
           namePlaceholder="Issued for Review"
           action={createReleasePurposeAction}
         />
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Review code</CardTitle>
             <CardDescription>
@@ -222,7 +222,7 @@ export default async function MastersPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Disciplines</CardTitle>
           </CardHeader>
@@ -238,10 +238,14 @@ export default async function MastersPage() {
               <TableBody>
                 {masters.disciplines.map((discipline) => (
                   <TableRow key={discipline.id}>
-                    <TableCell className="font-medium">{discipline.code}</TableCell>
+                    <TableCell className="font-medium">
+                      {discipline.code}
+                    </TableCell>
                     <TableCell>{discipline.name}</TableCell>
                     <TableCell>
-                      <Badge variant={discipline.isActive ? "default" : "outline"}>
+                      <Badge
+                        variant={discipline.isActive ? "default" : "outline"}
+                      >
                         {discipline.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
@@ -252,7 +256,7 @@ export default async function MastersPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Document types</CardTitle>
           </CardHeader>
@@ -276,7 +280,7 @@ export default async function MastersPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Release purposes</CardTitle>
           </CardHeader>
@@ -300,7 +304,7 @@ export default async function MastersPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Review codes</CardTitle>
           </CardHeader>
@@ -318,7 +322,7 @@ export default async function MastersPage() {
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.code}</TableCell>
                     <TableCell>{item.label}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-soft">
                       {item.requiresResubmittal
                         ? "Resubmit required"
                         : item.finalizesDocument

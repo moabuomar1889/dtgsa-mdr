@@ -78,7 +78,7 @@ export function ClientResponseForm({
             setSubmissionId(id)
             setResponseCodeId(next?.policy?.codes[0]?.id ?? "")
           }}
-          className="rounded-md border p-2"
+          className="rounded-[7px] border p-2"
           required
         >
           {submissions.map((submission) => (
@@ -92,7 +92,7 @@ export function ClientResponseForm({
       </div>
 
       {!selected?.policy ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">
+        <div className="border-warn bg-raise text-warn rounded-[9px] border p-3 text-[12px]">
           Publish a client default or project response-code policy before
           registering this response.
         </div>
@@ -105,7 +105,7 @@ export function ClientResponseForm({
               name="responseCodeId"
               value={responseCodeId}
               onChange={(event) => setResponseCodeId(event.target.value)}
-              className="rounded-md border p-2"
+              className="rounded-[7px] border p-2"
               required
             >
               {selected.policy.codes.map((code) => (
@@ -114,13 +114,13 @@ export function ClientResponseForm({
                 </option>
               ))}
             </select>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-soft text-xs">
               {selected.policy.name} / version {selected.policy.version}
             </p>
           </div>
 
           {selectedCode ? (
-            <div className="grid gap-2 rounded-2xl border bg-slate-50 p-4">
+            <div className="border-line bg-raise grid gap-2 rounded-[9px] border p-4">
               <p className="font-semibold">{selectedCode.exactWording}</p>
               <div className="flex flex-wrap gap-2">
                 <Badge>{selectedCode.effects.outcomeClass}</Badge>
@@ -174,7 +174,7 @@ export function ClientResponseForm({
             <select
               id="primary-kind"
               name="primaryFileKind"
-              className="rounded-md border p-2"
+              className="rounded-[7px] border p-2"
               defaultValue={expectedKind ?? "FULL_DOCUMENT"}
             >
               {CLIENT_RESPONSE_FILE_KINDS.map((kind) => (

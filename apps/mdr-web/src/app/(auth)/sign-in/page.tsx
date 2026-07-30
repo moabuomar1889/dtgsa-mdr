@@ -38,43 +38,41 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         : null
   return (
     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="border-border/60 from-primary/12 gap-3 border-b bg-gradient-to-br via-transparent to-transparent">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-primary/15 text-primary hover:bg-primary/15 rounded-full px-3 py-1">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               DTGSA Document Control
             </Badge>
-            <Badge variant="outline">
-              Secure sign in
-            </Badge>
+            <Badge variant="outline">Secure sign in</Badge>
           </div>
-          <CardTitle className="text-3xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             Enterprise access for PDI, MDR, workflow, transmittals, and audit
             control.
           </CardTitle>
           <CardDescription className="max-w-2xl leading-6">
             Internal employees use Google Workspace identity in the target
-            environment. Local acceptance uses isolated synthetic identities
-            and is unavailable in production.
+            environment. Local acceptance uses isolated synthetic identities and
+            is unavailable in production.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 pt-4 md:grid-cols-3">
-          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
-            <p className="text-muted-foreground text-sm">Auth provider</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Auth provider</p>
             <p className="mt-2 text-xl font-semibold tracking-tight">
               {identityConfig.googleEnabled
                 ? "Google Workspace"
                 : "Local acceptance"}
             </p>
           </div>
-          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
-            <p className="text-muted-foreground text-sm">Workspace mode</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Workspace mode</p>
             <p className="mt-2 text-xl font-semibold tracking-tight">
               Protected app routes
             </p>
           </div>
-          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
-            <p className="text-muted-foreground text-sm">Session authority</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Session authority</p>
             <p className="mt-2 text-xl font-semibold tracking-tight">
               PostgreSQL
             </p>
@@ -82,7 +80,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">Access</CardTitle>
           <CardDescription>
@@ -90,7 +88,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             not part of the platform identity model.
           </CardDescription>
           {errorMessage ? (
-            <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-xl border px-3 py-2 text-sm">
+            <div className="border-bad/30 bg-bad/10 text-bad rounded-[10px] border px-3 py-2 text-sm">
               {errorMessage}
             </div>
           ) : null}
@@ -110,7 +108,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
                   : "Choose a synthetic local identity"}
               </a>
             </Button>
-            <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-4 text-sm leading-6">
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-4 text-sm leading-6">
               {identityConfig.googleEnabled
                 ? "Your Workspace account must belong to an approved domain and be linked to an active platform user."
                 : "Local acceptance identities are test-only records restricted to the loopback runtime."}

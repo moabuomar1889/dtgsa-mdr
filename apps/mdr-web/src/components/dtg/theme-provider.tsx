@@ -29,21 +29,6 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-function readInitialMode(): ThemeMode {
-  if (typeof document === "undefined") return "dark"
-  return document.documentElement.dataset.theme === "light" ? "light" : "dark"
-}
-
-function readInitialAccent(): string {
-  if (typeof window === "undefined") return ACCENTS[0].seed
-  try {
-    const stored = localStorage.getItem("dtg.accent")
-    return /^#[0-9a-f]{6}$/i.test(stored ?? "") ? stored! : ACCENTS[0].seed
-  } catch {
-    return ACCENTS[0].seed
-  }
-}
-
 export function useTheme() {
   const context = useContext(ThemeContext)
   if (!context) {
@@ -53,15 +38,32 @@ export function useTheme() {
 }
 
 export function AppThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>(readInitialMode)
-  const [accent, setAccent] = useState<string>(readInitialAccent)
+  const [mode, setMode] = useState<ThemeMode>("dark")
+  const [accent, setAccent] = useState<string>(ACCENTS[0].seed)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    queueMicrotask(() => {
+      const storedMode = document.documentElement.dataset.theme
+      const storedAccent =
+        document.documentElement.style.getPropertyValue("--accent-seed")
+
+      setMode(storedMode === "light" ? "light" : "dark")
+      if (/^#[0-9a-f]{6}$/i.test(storedAccent)) {
+        setAccent(storedAccent)
+      }
+      setReady(true)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!ready) return
+
     document.documentElement.dataset.theme = mode
     document.documentElement.style.setProperty("--accent-seed", accent)
     localStorage.setItem("dtg.mode", mode)
     localStorage.setItem("dtg.accent", accent)
-  }, [mode, accent])
+  }, [mode, accent, ready])
 
   return (
     <ThemeContext.Provider

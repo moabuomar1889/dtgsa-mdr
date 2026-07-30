@@ -25,15 +25,15 @@ export default async function IdentityAdministrationPage() {
   const overview = await getIdentityAdminOverview()
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-border/70 bg-card/95 overflow-hidden shadow-sm">
-          <CardHeader className="border-border/60 border-b bg-[radial-gradient(circle_at_top_left,oklch(0.82_0.12_78/0.22),transparent_58%)]">
+        <Card className="border-line bg-panel overflow-hidden">
+          <CardHeader className="border-line bg-head border-b">
             <div className="flex flex-wrap gap-2">
               <Badge>Identity control</Badge>
               <Badge variant="outline">Google subject authority</Badge>
             </div>
-            <CardTitle className="text-2xl">
+            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
               Workspace identity and client access
             </CardTitle>
             <CardDescription className="max-w-3xl leading-6">
@@ -51,10 +51,12 @@ export default async function IdentityAdministrationPage() {
             ].map(([label, value]) => (
               <div
                 key={String(label)}
-                className="border-border/60 bg-background/80 rounded-2xl border p-4"
+                className="border-line bg-raise rounded-[9px] border p-4"
               >
-                <p className="text-muted-foreground text-sm">{label}</p>
-                <p className="mt-2 text-2xl font-semibold">{value}</p>
+                <p className="text-soft text-sm">{label}</p>
+                <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+                  {value}
+                </p>
               </div>
             ))}
           </CardContent>
@@ -89,7 +91,7 @@ export default async function IdentityAdministrationPage() {
               {overview.syncRuns.slice(0, 5).map((run) => (
                 <div
                   key={run.id}
-                  className="flex items-center justify-between rounded-xl border p-3 text-sm"
+                  className="flex items-center justify-between rounded-[10px] border p-3 text-sm"
                 >
                   <span>{run.startedAt.toISOString()}</span>
                   <Badge variant="outline">{run.status}</Badge>
@@ -119,7 +121,7 @@ export default async function IdentityAdministrationPage() {
                   Platform role
                   <select
                     name="roleCode"
-                    className="bg-background h-10 rounded-md border px-3"
+                    className="bg-bg h-10 rounded-[7px] border px-3"
                   >
                     {overview.roles.map((role) => (
                       <option key={role.id} value={role.code}>
@@ -132,7 +134,7 @@ export default async function IdentityAdministrationPage() {
                   Project scope
                   <select
                     name="projectId"
-                    className="bg-background h-10 rounded-md border px-3"
+                    className="bg-bg h-10 rounded-[7px] border px-3"
                   >
                     <option value="">System role</option>
                     {overview.projects.map((project) => (
@@ -146,7 +148,7 @@ export default async function IdentityAdministrationPage() {
                   Department
                   <select
                     name="departmentId"
-                    className="bg-background h-10 rounded-md border px-3"
+                    className="bg-bg h-10 rounded-[7px] border px-3"
                   >
                     <option value="">No department</option>
                     {overview.departments.map((department) => (
@@ -166,14 +168,17 @@ export default async function IdentityAdministrationPage() {
 
             <div className="space-y-2">
               {overview.mappings.map((mapping) => (
-                <div key={mapping.id} className="rounded-xl border p-3 text-sm">
+                <div
+                  key={mapping.id}
+                  className="rounded-[10px] border p-3 text-sm"
+                >
                   <div className="flex items-center justify-between gap-3">
                     <code>{mapping.groupId}</code>
                     <Badge variant={mapping.isActive ? "default" : "outline"}>
                       {mapping.roleCode}
                     </Badge>
                   </div>
-                  <p className="text-muted-foreground mt-2 text-xs">
+                  <p className="text-soft mt-2 text-xs">
                     Version {mapping.versions[0]?.version ?? 0}
                     {mapping.projectId ? ` · Project ${mapping.projectId}` : ""}
                   </p>
@@ -212,7 +217,7 @@ export default async function IdentityAdministrationPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <select
                   name="clientId"
-                  className="bg-background h-10 rounded-md border px-3"
+                  className="bg-bg h-10 rounded-[7px] border px-3"
                   required
                 >
                   {overview.clients.map((client) => (
@@ -223,7 +228,7 @@ export default async function IdentityAdministrationPage() {
                 </select>
                 <select
                   name="projectId"
-                  className="bg-background h-10 rounded-md border px-3"
+                  className="bg-bg h-10 rounded-[7px] border px-3"
                 >
                   <option value="">All client projects</option>
                   {overview.projects.map((project) => (
@@ -234,7 +239,7 @@ export default async function IdentityAdministrationPage() {
                 </select>
                 <select
                   name="usePolicy"
-                  className="bg-background h-10 rounded-md border px-3"
+                  className="bg-bg h-10 rounded-[7px] border px-3"
                 >
                   <option value="OneTime">One-time</option>
                   <option value="Reusable">Controlled reusable</option>
@@ -254,7 +259,7 @@ export default async function IdentityAdministrationPage() {
               {overview.invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="rounded-xl border p-3 text-sm"
+                  className="rounded-[10px] border p-3 text-sm"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span>{invitation.identity.identity.user.email}</span>
@@ -323,18 +328,18 @@ export default async function IdentityAdministrationPage() {
                 <form
                   key={review.id}
                   action={approveIdentityLinkReviewAction}
-                  className="grid gap-3 rounded-xl border p-4 sm:grid-cols-[1fr_1fr_auto]"
+                  className="grid gap-3 rounded-[10px] border p-4 sm:grid-cols-[1fr_1fr_auto]"
                 >
                   <input type="hidden" name="reviewId" value={review.id} />
                   <div>
                     <p className="font-medium">{review.email}</p>
-                    <p className="text-muted-foreground text-xs">
+                    <p className="text-soft text-xs">
                       Subject fingerprint: {review.subjectHash.slice(0, 16)}
                     </p>
                   </div>
                   <select
                     name="selectedUserId"
-                    className="bg-background h-10 rounded-md border px-3"
+                    className="bg-bg h-10 rounded-[7px] border px-3"
                     required
                   >
                     {candidates.map((candidate) => (

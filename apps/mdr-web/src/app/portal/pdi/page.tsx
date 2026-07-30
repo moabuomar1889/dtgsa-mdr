@@ -31,15 +31,15 @@ export default async function ClientPortalPdiPage() {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 md:px-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="border-border/60 from-primary/12 gap-3 border-b bg-gradient-to-br via-transparent to-transparent">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-primary/15 text-primary hover:bg-primary/15 rounded-full px-3 py-1">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               Portal PDI
             </Badge>
             <Badge variant="outline">{overview.items.length} line items</Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             Client document numbers can now be completed directly in the secure
             portal.
           </CardTitle>
@@ -54,7 +54,7 @@ export default async function ClientPortalPdiPage() {
             <a
               key={project.id}
               href={`/api/portal/pdi/export?projectId=${project.id}`}
-              className="border-border/60 hover:bg-accent rounded-lg border px-4 py-2 text-sm font-medium"
+              className="border-line rounded-[9px] border px-4 py-2 text-sm font-medium hover:bg-[var(--accent)]"
             >
               Export {project.code} workbook
             </a>
@@ -62,7 +62,7 @@ export default async function ClientPortalPdiPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">Client numbering queue</CardTitle>
           <CardDescription>
@@ -90,7 +90,7 @@ export default async function ClientPortalPdiPage() {
                         <span className="font-medium">
                           {item.project.code} - {item.project.name}
                         </span>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-soft text-xs">
                           {item.project.client.code} -{" "}
                           {item.project.client.name}
                         </span>
@@ -102,7 +102,7 @@ export default async function ClientPortalPdiPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">{item.title}</span>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-soft text-xs">
                           {item.discipline.code} /{" "}
                           {item.documentTypeCategory?.code ?? "N/A"} /{" "}
                           {item.releasePurpose?.code ?? "N/A"} / Rev{" "}
@@ -141,7 +141,7 @@ export default async function ClientPortalPdiPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-6 text-sm leading-6">
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
               No PDI items are currently available for client numbering in this
               portal account.
             </div>

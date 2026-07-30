@@ -30,18 +30,20 @@ export default async function NewProjectPage() {
   ])
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
         <CardHeader className="gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               Project Onboarding Queue
             </Badge>
-            <Badge variant={discovery.status === "ready" ? "default" : "outline"}>
+            <Badge
+              variant={discovery.status === "ready" ? "default" : "outline"}
+            >
               {discovery.status}
             </Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             Create a project by linking it to the correct Shared Drive folder.
           </CardTitle>
           <CardDescription className="max-w-3xl leading-6">
@@ -54,7 +56,7 @@ export default async function NewProjectPage() {
       </Card>
 
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Create project</CardTitle>
             <CardDescription>
@@ -75,7 +77,7 @@ export default async function NewProjectPage() {
               />
             ) : (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+                <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                   No clients exist yet, so project onboarding is paused until
                   the first client record is created.
                 </div>
@@ -87,7 +89,7 @@ export default async function NewProjectPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Discovery status</CardTitle>
             <CardDescription>
@@ -95,29 +97,29 @@ export default async function NewProjectPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Mode</p>
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Mode</p>
               <p className="mt-2 text-lg font-semibold tracking-tight">
                 {discovery.status === "ready"
                   ? "Automatic discovery"
                   : "Manual fallback available"}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Message</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Message</p>
+              <p className="text-soft mt-2 text-sm leading-6">
                 {discovery.status === "ready"
                   ? `${discovery.availableFolders.length} unlinked project folders are ready for onboarding.`
-                  : discovery.message ??
-                    "Drive visibility is not ready yet, but manual folder mapping is enabled."}
+                  : (discovery.message ??
+                    "Drive visibility is not ready yet, but manual folder mapping is enabled.")}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Configured scope</p>
-              <p className="mt-2 break-all text-sm text-muted-foreground">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Configured scope</p>
+              <p className="text-soft mt-2 text-sm break-all">
                 Shared Drive: {discovery.sharedDriveId ?? "Not set"}
               </p>
-              <p className="break-all text-sm text-muted-foreground">
+              <p className="text-soft text-sm break-all">
                 Projects folder: {discovery.projectsFolderId ?? "Not set"}
               </p>
             </div>
@@ -125,7 +127,7 @@ export default async function NewProjectPage() {
         </Card>
       </section>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">Available project folders</CardTitle>
           <CardDescription>
@@ -147,9 +149,11 @@ export default async function NewProjectPage() {
                 <TableBody>
                   {discovery.availableFolders.map((folder) => (
                     <TableRow key={folder.folderId}>
-                      <TableCell className="font-medium">{folder.code}</TableCell>
+                      <TableCell className="font-medium">
+                        {folder.code}
+                      </TableCell>
                       <TableCell>{folder.name}</TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
+                      <TableCell className="text-soft font-mono text-xs">
                         {folder.folderId}
                       </TableCell>
                     </TableRow>
@@ -157,17 +161,17 @@ export default async function NewProjectPage() {
                 </TableBody>
               </Table>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                 Every matching Shared Drive folder is already linked in the
                 system, or there are no matching folders under the configured
                 Projects directory.
               </div>
             )
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
-              Automatic discovery is currently blocked, so the form above accepts
-              manual folder ID and folder name input until the Shared Drive
-              access configuration is corrected.
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
+              Automatic discovery is currently blocked, so the form above
+              accepts manual folder ID and folder name input until the Shared
+              Drive access configuration is corrected.
             </div>
           )}
         </CardContent>

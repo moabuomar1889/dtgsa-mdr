@@ -195,9 +195,9 @@ export function CoverDesignerWorkspace({
   }
 
   return (
-    <div className="grid min-h-[760px] overflow-hidden rounded-[28px] border border-slate-800 bg-[#0d1719] text-slate-100 shadow-2xl xl:grid-cols-[240px_minmax(0,1fr)_280px]">
-      <aside className="border-b border-slate-800 bg-[#101d20] p-4 xl:border-r xl:border-b-0">
-        <p className="text-xs font-semibold tracking-[0.22em] text-teal-300 uppercase">
+    <div className="border-line bg-panel text-text grid min-h-[760px] overflow-hidden rounded-[9px] border shadow-[var(--shadow)] xl:grid-cols-[240px_minmax(0,1fr)_280px]">
+      <aside className="border-line bg-panel2 border-b p-4 xl:border-r xl:border-b-0">
+        <p className="text-accent-txt text-xs font-semibold tracking-[0.22em] uppercase">
           Element library
         </p>
         <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-1">
@@ -215,15 +215,15 @@ export function CoverDesignerWorkspace({
               key={type}
               type="button"
               onClick={() => addElement(type as CoverElementType)}
-              className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-left text-xs text-slate-200 transition hover:border-teal-400 hover:bg-teal-400/10"
+              className="border-edge bg-raise text-muted hover:border-accent hover:bg-accent-bg flex items-center gap-2 rounded-[10px] border px-3 py-2 text-left text-xs transition"
             >
-              <Plus className="size-3.5 text-teal-300" />
+              <Plus className="text-accent-txt size-3.5" />
               {label}
             </button>
           ))}
         </div>
-        <div className="mt-6 border-t border-slate-800 pt-4">
-          <p className="text-xs font-semibold tracking-[0.18em] text-amber-300 uppercase">
+        <div className="border-line mt-6 border-t pt-4">
+          <p className="text-warn text-xs font-semibold tracking-[0.18em] uppercase">
             Layers
           </p>
           <div className="mt-3 max-h-72 space-y-1 overflow-auto">
@@ -236,10 +236,10 @@ export function CoverDesignerWorkspace({
                   onClick={() =>
                     dispatch({ type: "SELECT", ids: [element.id] })
                   }
-                  className={`flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs ${
+                  className={`flex w-full items-center justify-between rounded-[9px] px-2 py-1.5 text-left text-xs ${
                     state.selectedIds.includes(element.id)
-                      ? "bg-teal-400/15 text-teal-200"
-                      : "text-slate-400 hover:bg-slate-800"
+                      ? "bg-accent-bg text-accent-txt"
+                      : "text-soft hover:bg-accent-bg2"
                   }`}
                 >
                   <span className="truncate">{element.id}</span>
@@ -251,11 +251,11 @@ export function CoverDesignerWorkspace({
       </aside>
 
       <main className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 bg-[#132326] px-4 py-3">
+        <div className="border-line bg-head flex flex-wrap items-center gap-2 border-b px-4 py-3">
           <button
             type="button"
             onClick={() => dispatch({ type: "UNDO" })}
-            className="rounded-lg p-2 hover:bg-slate-700"
+            className="hover:bg-accent-bg2 rounded-[9px] p-2"
             title="Undo"
           >
             <Undo2 className="size-4" />
@@ -263,18 +263,18 @@ export function CoverDesignerWorkspace({
           <button
             type="button"
             onClick={() => dispatch({ type: "REDO" })}
-            className="rounded-lg p-2 hover:bg-slate-700"
+            className="hover:bg-accent-bg2 rounded-[9px] p-2"
             title="Redo"
           >
             <Redo2 className="size-4" />
           </button>
-          <span className="mx-1 h-5 w-px bg-slate-700" />
+          <span className="bg-edge mx-1 h-5 w-px" />
           <button
             type="button"
             onClick={() =>
               dispatch({ type: "DUPLICATE", ids: state.selectedIds })
             }
-            className="rounded-lg p-2 hover:bg-slate-700"
+            className="hover:bg-accent-bg2 rounded-[9px] p-2"
             title="Duplicate"
           >
             <Copy className="size-4" />
@@ -282,7 +282,7 @@ export function CoverDesignerWorkspace({
           <button
             type="button"
             onClick={() => dispatch({ type: "DELETE", ids: state.selectedIds })}
-            className="rounded-lg p-2 hover:bg-red-500/20 hover:text-red-300"
+            className="hover:bg-bad/10 hover:text-bad rounded-[9px] p-2"
             title="Delete"
           >
             <Trash2 className="size-4" />
@@ -297,7 +297,7 @@ export function CoverDesignerWorkspace({
                 changes: { locked: !primary.locked },
               })
             }
-            className="rounded-lg p-2 hover:bg-slate-700"
+            className="hover:bg-accent-bg2 rounded-[9px] p-2"
             title="Lock"
           >
             {primary?.locked ? (
@@ -321,7 +321,7 @@ export function CoverDesignerWorkspace({
                 },
               })
             }
-            className="rounded-lg p-2 hover:bg-slate-700"
+            className="hover:bg-accent-bg2 rounded-[9px] p-2"
             title="Bring to front"
           >
             <BringToFront className="size-4" />
@@ -335,19 +335,17 @@ export function CoverDesignerWorkspace({
                 changes: { x: primary ? 0.5 - primary.width / 2 : 0.5 },
               })
             }
-            className="rounded-lg p-2 hover:bg-slate-700"
+            className="hover:bg-accent-bg2 rounded-[9px] p-2"
             title="Align center"
           >
             <AlignCenter className="size-4" />
           </button>
-          <span className="ml-auto text-xs text-slate-400">{message}</span>
+          <span className="text-soft ml-auto text-xs">{message}</span>
           <button
             type="button"
             onClick={() => setPreview((value) => !value)}
-            className={`rounded-xl px-3 py-2 text-xs font-semibold ${
-              preview
-                ? "bg-amber-300 text-slate-950"
-                : "border border-slate-600 text-slate-200"
+            className={`rounded-[10px] px-3 py-2 text-xs font-semibold ${
+              preview ? "bg-warn text-bg" : "border-edge text-muted border"
             }`}
           >
             Preview sample
@@ -355,7 +353,7 @@ export function CoverDesignerWorkspace({
           <button
             type="button"
             onClick={save}
-            className="flex items-center gap-2 rounded-xl bg-teal-400 px-3 py-2 text-xs font-bold text-slate-950"
+            className="bg-accent text-bg flex items-center gap-2 rounded-[10px] px-3 py-2 text-xs font-bold"
           >
             <Save className="size-4" /> Save
           </button>
@@ -363,13 +361,13 @@ export function CoverDesignerWorkspace({
             type="button"
             onClick={publish}
             disabled={issues.length > 0}
-            className="flex items-center gap-2 rounded-xl bg-amber-300 px-3 py-2 text-xs font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
+            className="bg-warn text-bg flex items-center gap-2 rounded-[10px] px-3 py-2 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Send className="size-4" /> Publish
           </button>
         </div>
 
-        <div className="flex items-center gap-3 border-b border-slate-800 px-4 py-2 text-xs text-slate-400">
+        <div className="border-line text-soft flex items-center gap-3 border-b px-4 py-2 text-xs">
           <Grid3X3 className="size-4" />
           <span>
             {state.present.page.size} · {state.present.page.orientation}
@@ -386,27 +384,21 @@ export function CoverDesignerWorkspace({
           <span>{Math.round(zoom * 100)}%</span>
         </div>
 
-        <div className="min-h-[680px] overflow-auto bg-[radial-gradient(circle_at_top,#1d3438_0,#0b1416_65%)] p-10">
+        <div className="bg-bg min-h-[680px] overflow-auto p-10">
           <div
             ref={canvasRef}
             onPointerMove={moveDrag}
             onPointerUp={() => {
               dragRef.current = null
             }}
-            className="relative mx-auto overflow-hidden bg-[#f7f4ea] text-slate-900 shadow-[0_35px_90px_rgba(0,0,0,.48)]"
+            className="bg-raise text-text relative mx-auto overflow-hidden shadow-[var(--shadow)]"
             style={{
               width: dimensions.width * zoom,
               height: dimensions.height * zoom,
-              backgroundImage: state.present.grid.enabled
-                ? "linear-gradient(rgba(15,118,110,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(15,118,110,.12) 1px,transparent 1px)"
-                : undefined,
-              backgroundSize: `${state.present.grid.size * 100}% ${
-                state.present.grid.size * 100
-              }%`,
             }}
           >
             {centerGuide ? (
-              <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[999] w-px bg-amber-500" />
+              <div className="bg-warn pointer-events-none absolute inset-y-0 left-1/2 z-[999] w-px" />
             ) : null}
             {state.present.elements.map((element) => (
               <div
@@ -414,8 +406,8 @@ export function CoverDesignerWorkspace({
                 onPointerDown={(event) => beginDrag(event, element)}
                 className={`absolute cursor-move overflow-hidden border p-1 text-[10px] leading-tight whitespace-pre-line ${
                   state.selectedIds.includes(element.id)
-                    ? "border-teal-600 ring-2 ring-teal-400/50"
-                    : "border-slate-400/60"
+                    ? "border-accent ring-accent-line ring-2"
+                    : "border-edge"
                 } ${element.locked ? "cursor-not-allowed opacity-80" : ""}`}
                 style={{
                   left: `${element.x * 100}%`,
@@ -432,19 +424,19 @@ export function CoverDesignerWorkspace({
         </div>
       </main>
 
-      <aside className="border-t border-slate-800 bg-[#101d20] p-4 xl:border-t-0 xl:border-l">
-        <p className="text-xs font-semibold tracking-[0.22em] text-teal-300 uppercase">
+      <aside className="border-line bg-panel2 border-t p-4 xl:border-t-0 xl:border-l">
+        <p className="text-accent-txt text-xs font-semibold tracking-[0.22em] uppercase">
           Inspector
         </p>
         {primary ? (
           <div className="mt-4 space-y-4 text-xs">
             <div>
-              <label className="text-slate-400">Element</label>
-              <p className="mt-1 font-semibold text-slate-100">{primary.id}</p>
+              <label className="text-soft">Element</label>
+              <p className="text-text mt-1 font-semibold">{primary.id}</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {(["x", "y", "width", "height"] as const).map((field) => (
-                <label key={field} className="text-slate-400">
+                <label key={field} className="text-soft">
                   {field}
                   <input
                     type="number"
@@ -459,13 +451,13 @@ export function CoverDesignerWorkspace({
                         changes: { [field]: Number(event.target.value) },
                       })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1.5 text-slate-100"
+                    className="border-edge bg-raise text-text mt-1 w-full rounded-[9px] border px-2 py-1.5"
                   />
                 </label>
               ))}
             </div>
             {primary.type === "STATIC_TEXT" ? (
-              <label className="block text-slate-400">
+              <label className="text-soft block">
                 Text
                 <textarea
                   value={primary.text ?? ""}
@@ -476,13 +468,13 @@ export function CoverDesignerWorkspace({
                       changes: { text: event.target.value },
                     })
                   }
-                  className="mt-1 min-h-20 w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-slate-100"
+                  className="border-edge bg-raise text-text mt-1 min-h-20 w-full rounded-[9px] border p-2"
                 />
               </label>
             ) : null}
             {primary.type === "BOUND_TEXT" ||
             primary.type === "PACKAGE_HASH" ? (
-              <label className="block text-slate-400">
+              <label className="text-soft block">
                 Binding
                 <select
                   value={primary.binding ?? ""}
@@ -495,7 +487,7 @@ export function CoverDesignerWorkspace({
                       },
                     })
                   }
-                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-slate-100"
+                  className="border-edge bg-raise text-text mt-1 w-full rounded-[9px] border p-2"
                 >
                   <option value="">Choose field</option>
                   {COVER_BINDINGS.map((binding) => (
@@ -508,7 +500,7 @@ export function CoverDesignerWorkspace({
             ) : null}
             {primary.type === "SIGNATURE_BOX" ? (
               <>
-                <label className="block text-slate-400">
+                <label className="text-soft block">
                   Workflow step
                   <input
                     value={primary.workflowStepKey ?? ""}
@@ -519,10 +511,10 @@ export function CoverDesignerWorkspace({
                         changes: { workflowStepKey: event.target.value },
                       })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-slate-100"
+                    className="border-edge bg-raise text-text mt-1 w-full rounded-[9px] border p-2"
                   />
                 </label>
-                <label className="block text-slate-400">
+                <label className="text-soft block">
                   Role label
                   <input
                     value={primary.roleLabel ?? ""}
@@ -533,13 +525,13 @@ export function CoverDesignerWorkspace({
                         changes: { roleLabel: event.target.value },
                       })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-slate-100"
+                    className="border-edge bg-raise text-text mt-1 w-full rounded-[9px] border p-2"
                   />
                 </label>
               </>
             ) : null}
-            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-slate-400">
-              <p className="flex items-center gap-2 text-slate-200">
+            <div className="border-edge bg-raise text-soft rounded-[10px] border p-3">
+              <p className="text-muted flex items-center gap-2">
                 <Grid3X3 className="size-3.5" /> Relative coordinates
               </p>
               <p className="mt-2 leading-5">
@@ -549,17 +541,17 @@ export function CoverDesignerWorkspace({
             </div>
           </div>
         ) : (
-          <div className="mt-4 rounded-xl border border-dashed border-slate-700 p-4 text-xs leading-5 text-slate-500">
+          <div className="border-edge text-dim mt-4 rounded-[10px] border border-dashed p-4 text-xs leading-5">
             Select one or more elements to edit coordinates, bindings, layers,
             and lock state.
           </div>
         )}
-        <div className="mt-6 border-t border-slate-800 pt-4">
-          <p className="text-xs font-semibold tracking-[0.18em] text-amber-300 uppercase">
+        <div className="border-line mt-6 border-t pt-4">
+          <p className="text-warn text-xs font-semibold tracking-[0.18em] uppercase">
             Validation
           </p>
           {issues.length === 0 ? (
-            <p className="mt-3 rounded-xl bg-teal-400/10 p-3 text-xs text-teal-200">
+            <p className="bg-accent/10 text-accent-txt mt-3 rounded-[10px] p-3 text-xs">
               Ready to publish
             </p>
           ) : (
@@ -567,7 +559,7 @@ export function CoverDesignerWorkspace({
               {issues.map((issue, index) => (
                 <p
                   key={`${issue.code}-${index}`}
-                  className="rounded-xl bg-amber-300/10 p-3 text-xs text-amber-200"
+                  className="bg-warn/10 text-warn rounded-[10px] p-3 text-xs"
                 >
                   {issue.message}
                 </p>

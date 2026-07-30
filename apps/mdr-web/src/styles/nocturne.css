@@ -19,6 +19,7 @@
   --ok: #7fc9a1;
   --warn: #d9c184;
   --bad: #d98d84;
+  --overlay: rgba(0, 0, 0, 0.55);
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
 
   --accent: var(--accent-seed);
@@ -55,6 +56,7 @@
   --ok: #3d8f6a;
   --warn: #96701c;
   --bad: #b4544a;
+  --overlay: rgba(27, 29, 43, 0.35);
   --shadow: 0 16px 40px rgba(27, 29, 43, 0.14);
 
   --accent: color-mix(in oklab, var(--accent-seed) 82%, #000000 18%);

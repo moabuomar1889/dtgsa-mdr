@@ -15,19 +15,21 @@ export const dashboardMetrics = [
   {
     title: "Locked Stack",
     value: "Aligned",
-    detail: "Next.js 16, React 19, pnpm, shadcn, Prisma, DOCX, and PDF.",
+    detail: "Next.js 16, React 19, pnpm, DTG Nocturne, Prisma, DOCX, and PDF.",
     icon: ShieldCheckIcon,
   },
   {
     title: "Document Control Scope",
     value: "PDI + MDR",
-    detail: "Workflow, transmittals, client replies, signatures, and auditability.",
+    detail:
+      "Workflow, transmittals, client replies, signatures, and auditability.",
     icon: FileCheck2Icon,
   },
   {
     title: "Pending Inputs",
     value: "Credentials",
-    detail: "Google Drive, email provider, and template files are still needed.",
+    detail:
+      "Google Drive, email provider, and template files are still needed.",
     icon: BellRingIcon,
   },
 ] as const
@@ -36,22 +38,26 @@ export const phaseProgress = [
   {
     phase: "Phase 0",
     status: "Active",
-    summary: "Runtime alignment, app shell, tooling, Prisma foundation, and environment scaffolding.",
+    summary:
+      "Runtime alignment, app shell, tooling, Prisma foundation, and environment scaffolding.",
   },
   {
     phase: "Phase 1",
     status: "Queued",
-    summary: "RBAC, users, signatures, clients, projects, disciplines, review codes, numbering rules, audit foundation.",
+    summary:
+      "RBAC, users, signatures, clients, projects, disciplines, review codes, numbering rules, audit foundation.",
   },
   {
     phase: "Phase 2",
     status: "Queued",
-    summary: "PDI register, Excel flows, client numbering portal, and PDI-to-MDR promotion.",
+    summary:
+      "PDI register, Excel flows, client numbering portal, and PDI-to-MDR promotion.",
   },
   {
     phase: "Phase 3-7",
     status: "Planned",
-    summary: "Workflow, covers, PDF tools, transmittals, client replies, Drive mapping, dashboards, and hardening.",
+    summary:
+      "Workflow, covers, PDF tools, transmittals, client replies, Drive mapping, dashboards, and hardening.",
   },
 ] as const
 

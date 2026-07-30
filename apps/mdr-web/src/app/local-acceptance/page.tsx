@@ -48,23 +48,23 @@ export default async function LocalAcceptancePage() {
   ])
 
   return (
-    <main className="min-h-screen bg-[#f2efe7] px-5 py-8 text-[#17332d]">
+    <main className="bg-bg text-text min-h-screen px-5 py-6">
       <div className="mx-auto grid max-w-7xl gap-6">
-        <header className="overflow-hidden rounded-[2rem] bg-[#17332d] p-8 text-[#f7f0dc] shadow-2xl shadow-[#17332d]/20">
-          <p className="font-mono text-xs tracking-[0.24em] text-[#e7b34f] uppercase">
+        <header className="border-line bg-head overflow-hidden rounded-[9px] border p-6">
+          <p className="text-accent-txt font-mono text-[9.5px] tracking-[0.09em] uppercase">
             Phase 16L / loopback only
           </p>
           <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-              <h1 className="max-w-4xl text-4xl font-semibold tracking-tight md:text-6xl">
+              <h1 className="max-w-4xl text-[22px] font-medium tracking-[-0.02em]">
                 Local acceptance control room
               </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-[#c8d8d2]">
+              <p className="text-soft mt-3 max-w-3xl text-[12px] leading-5">
                 Synthetic identities, simulated providers, persistent local
                 Drive semantics, and an isolated PostgreSQL demonstration.
               </p>
             </div>
-            <span className="rounded-full border border-[#e7b34f]/50 bg-[#e7b34f]/10 px-4 py-2 font-mono text-xs text-[#f7d589]">
+            <span className="border-accent-line bg-accent-bg text-accent-txt rounded-[4px] border px-2 py-1 font-mono text-[10.5px]">
               {LOCAL_ACCEPTANCE_SEAL}
             </span>
           </div>
@@ -79,28 +79,30 @@ export default async function LocalAcceptancePage() {
           ].map(([label, value]) => (
             <article
               key={label}
-              className="rounded-3xl border border-[#17332d]/10 bg-[#fffdf7] p-5 shadow-sm"
+              className="border-line bg-panel rounded-[9px] border p-4"
             >
-              <p className="font-mono text-[11px] tracking-widest text-[#6d7c77] uppercase">
+              <p className="text-dim font-mono text-[9.5px] tracking-[0.09em] uppercase">
                 {label}
               </p>
-              <p className="mt-3 text-2xl font-semibold">{value}</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+                {value}
+              </p>
             </article>
           ))}
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-          <article className="rounded-[2rem] border border-[#17332d]/10 bg-[#fffdf7] p-6">
+          <article className="border-line bg-panel rounded-[9px] border p-5">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="font-mono text-xs tracking-widest text-[#b46b2c] uppercase">
+                <p className="text-accent-txt font-mono text-[9.5px] tracking-[0.09em] uppercase">
                   Local identity selector
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold">
+                <h2 className="mt-2 text-[15px] font-medium">
                   Work as a synthetic user
                 </h2>
               </div>
-              <span className="rounded-full bg-[#dce9df] px-3 py-1 text-xs font-semibold">
+              <span className="bg-accent-bg text-accent-txt rounded-full px-2 py-1 font-mono text-[10px] font-semibold">
                 {users.length} identities
               </span>
             </div>
@@ -110,20 +112,20 @@ export default async function LocalAcceptancePage() {
                   key={user.email}
                   action="/local-acceptance/session"
                   method="post"
-                  className="rounded-2xl border border-[#17332d]/10 bg-[#f7f3e9] p-4"
+                  className="border-line2 bg-raise rounded-[7px] border p-4"
                 >
                   <input type="hidden" name="email" value={user.email} />
-                  <p className="font-semibold">{user.fullName}</p>
-                  <p className="mt-1 font-mono text-xs text-[#6d7c77]">
+                  <p className="font-medium">{user.fullName}</p>
+                  <p className="text-accent-txt mt-1 font-mono text-[10.5px]">
                     {user.email}
                   </p>
-                  <p className="mt-2 text-sm text-[#53635d]">
+                  <p className="text-soft mt-2 text-[11.5px]">
                     {user.jobTitle ?? "Synthetic local user"}
                   </p>
                   <button
                     type="submit"
                     disabled={!user.isActive}
-                    className="mt-4 w-full rounded-xl bg-[#17332d] px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                    className="border-accent bg-accent text-on-accent mt-4 w-full rounded-[8px] border px-4 py-2 text-[12px] font-medium disabled:opacity-40"
                   >
                     {user.isActive ? "Select identity" : "Suspended"}
                   </button>
@@ -133,24 +135,26 @@ export default async function LocalAcceptancePage() {
           </article>
 
           <div className="grid content-start gap-6">
-            <article className="rounded-[2rem] bg-[#e7b34f] p-6 text-[#2f2a1f]">
-              <p className="font-mono text-xs tracking-widest uppercase">
+            <article className="border-line bg-panel rounded-[9px] border p-5">
+              <p className="text-dim font-mono text-[9.5px] tracking-[0.09em] uppercase">
                 Demo projects
               </p>
               <div className="mt-4 grid gap-3">
                 {projects.map((project) => (
                   <div
                     key={project.code}
-                    className="rounded-2xl bg-white/45 p-4"
+                    className="border-line2 bg-raise rounded-[7px] border p-4"
                   >
-                    <p className="font-mono text-xs">{project.code}</p>
-                    <p className="mt-1 font-semibold">{project.name}</p>
+                    <p className="text-accent font-mono text-[10.5px]">
+                      {project.code}
+                    </p>
+                    <p className="mt-1 font-medium">{project.name}</p>
                   </div>
                 ))}
               </div>
             </article>
-            <article className="rounded-[2rem] border border-[#17332d]/10 bg-[#fffdf7] p-6">
-              <p className="font-mono text-xs tracking-widest text-[#6d7c77] uppercase">
+            <article className="border-line bg-panel rounded-[9px] border p-5">
+              <p className="text-dim font-mono text-[9.5px] tracking-[0.09em] uppercase">
                 Runtime
               </p>
               <dl className="mt-4 grid gap-3 text-sm">

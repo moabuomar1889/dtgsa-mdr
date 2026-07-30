@@ -57,17 +57,17 @@ export default async function TransmittalsPage() {
   const overview = await getTransmittalOverview(user)
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
-          <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+        <Card className="border-line bg-panel">
+          <CardHeader className="border-line bg-head gap-2 border-b">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
                 Transmittal Module
               </Badge>
               <Badge variant="outline">Outbound package control</Badge>
             </div>
-            <CardTitle className="text-2xl font-semibold tracking-tight">
+            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
               Approved revisions can now be grouped into real transmittal drafts
               and issued into client-submitted status.
             </CardTitle>
@@ -79,34 +79,34 @@ export default async function TransmittalsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Eligible revisions</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Eligible revisions</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.eligibleDocuments}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Transmittals</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Transmittals</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.total}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Ready to send</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Ready to send</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.readyToSend}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Sent</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Sent</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.sent}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Create transmittal</CardTitle>
             <CardDescription>
@@ -122,7 +122,7 @@ export default async function TransmittalsPage() {
                 action={createTransmittalAction}
               />
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                 No projects exist yet, so there is nothing available for
                 transmittal packaging.
               </div>
@@ -131,7 +131,7 @@ export default async function TransmittalsPage() {
         </Card>
       </section>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">Transmittal records</CardTitle>
           <CardDescription>
@@ -158,10 +158,12 @@ export default async function TransmittalsPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">
-                          {transmittal.project.code} - {transmittal.project.name}
+                          {transmittal.project.code} -{" "}
+                          {transmittal.project.name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          {transmittal.project.client.code} - {transmittal.project.client.name}
+                        <span className="text-soft text-xs">
+                          {transmittal.project.client.code} -{" "}
+                          {transmittal.project.client.name}
                         </span>
                       </div>
                     </TableCell>
@@ -170,7 +172,7 @@ export default async function TransmittalsPage() {
                         <span className="font-medium">
                           {transmittal.transmittalNumber}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-soft text-xs">
                           {transmittal.subject}
                         </span>
                       </div>
@@ -180,10 +182,10 @@ export default async function TransmittalsPage() {
                         {transmittal.items.map((item) => (
                           <span
                             key={item.id}
-                            className="text-xs leading-5 text-muted-foreground"
+                            className="text-soft text-xs leading-5"
                           >
-                            {item.documentRevision.document.dtgsaDocumentNumber} / Rev{" "}
-                            {item.documentRevision.revisionLabel} /{" "}
+                            {item.documentRevision.document.dtgsaDocumentNumber}{" "}
+                            / Rev {item.documentRevision.revisionLabel} /{" "}
                             {item.documentRevision.document.title}
                           </span>
                         ))}
@@ -191,7 +193,9 @@ export default async function TransmittalsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex min-w-40 flex-col gap-2">
-                        <Badge variant={transmittalStatusVariant(transmittal.status)}>
+                        <Badge
+                          variant={transmittalStatusVariant(transmittal.status)}
+                        >
                           {transmittal.status}
                         </Badge>
                         {transmittal.status !== TransmittalStatus.Sent ? (
@@ -219,17 +223,17 @@ export default async function TransmittalsPage() {
                           href={transmittal.generatedPdfUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                          className="text-accent-txt text-sm font-medium underline-offset-4 hover:underline"
                         >
                           Open PDF
                         </a>
                       ) : (
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-soft text-sm">
                           Not generated yet
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-soft text-sm">
                       {transmittal.sentAt
                         ? transmittal.sentAt.toLocaleString("en-US")
                         : "Not yet sent"}
@@ -239,7 +243,7 @@ export default async function TransmittalsPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
               No transmittals exist yet. Create the first draft from approved
               MDR revisions above.
             </div>

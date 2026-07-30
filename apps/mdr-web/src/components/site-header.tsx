@@ -109,7 +109,7 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
           data-h
         >
           <BellIcon className="size-3.5" />
-          <span className="bg-accent text-on-accent absolute -top-0.5 -right-0.5 flex min-w-3.5 items-center justify-center rounded-full px-0.5 font-mono text-[8px] font-semibold">
+          <span className="text-on-accent absolute -top-0.5 -right-0.5 flex min-w-3.5 items-center justify-center rounded-full bg-[var(--accent)] px-0.5 font-mono text-[8px] font-semibold">
             3
           </span>
         </Link>

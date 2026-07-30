@@ -38,19 +38,19 @@ export default async function ClientsPage() {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
-          <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+        <Card className="border-line bg-panel">
+          <CardHeader className="border-line bg-head gap-2 border-b">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
                 Client Management
               </Badge>
               <Badge variant="outline">Phase 1</Badge>
             </div>
-            <CardTitle className="text-2xl font-semibold tracking-tight">
-              Client profiles define the inheritance starting point for projects,
-              numbering, review codes, templates, and contacts.
+            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
+              Client profiles define the inheritance starting point for
+              projects, numbering, review codes, templates, and contacts.
             </CardTitle>
             <CardDescription className="max-w-3xl leading-6">
               This screen is now wired to the real database. Each client created
@@ -60,28 +60,28 @@ export default async function ClientsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 pt-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Total clients</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Total clients</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {formatCount(clients.length)}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Active clients</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Active clients</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {formatCount(activeClients)}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Linked projects</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Linked projects</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {formatCount(totalProjects)}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Create client</CardTitle>
             <CardDescription>
@@ -145,7 +145,7 @@ export default async function ClientsPage() {
         </Card>
       </section>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">Client register</CardTitle>
           <CardDescription>
@@ -173,7 +173,7 @@ export default async function ClientsPage() {
                           {client.code} - {client.name}
                         </span>
                         {client.description ? (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-soft text-xs">
                             {client.description}
                           </span>
                         ) : null}
@@ -192,9 +192,9 @@ export default async function ClientsPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
-              No clients have been created yet. Start by adding the first client,
-              then move to project onboarding.
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
+              No clients have been created yet. Start by adding the first
+              client, then move to project onboarding.
             </div>
           )}
         </CardContent>

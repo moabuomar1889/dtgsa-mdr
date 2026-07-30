@@ -29,17 +29,17 @@ export default async function AdminUsersPage() {
   ).length
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
-          <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+        <Card className="border-line bg-panel">
+          <CardHeader className="border-line bg-head gap-2 border-b">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
                 Users & Roles
               </Badge>
               <Badge variant="outline">RBAC foundation</Badge>
             </div>
-            <CardTitle className="text-2xl font-semibold tracking-tight">
+            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
               Seeded RBAC is now visible with system-role and project-role
               coverage.
             </CardTitle>
@@ -51,34 +51,34 @@ export default async function AdminUsersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Users</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Users</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.users.length}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Roles</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Roles</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.roles.length}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Project assignments</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Project assignments</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {projectAssignments}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Signature profiles</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Signature profiles</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {signatureProfiles}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Permission catalog</CardTitle>
             <CardDescription>
@@ -90,16 +90,16 @@ export default async function AdminUsersPage() {
             {overview.permissions.map((permission) => (
               <div
                 key={permission.id}
-                className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                className="border-line bg-raise rounded-[9px] border p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-medium">{permission.name}</p>
                   <Badge variant="outline">{permission.group}</Badge>
                 </div>
-                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                <p className="text-soft mt-1 font-mono text-xs">
                   {permission.code}
                 </p>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="text-soft mt-2 text-sm">
                   {permission.description}
                 </p>
               </div>
@@ -108,7 +108,7 @@ export default async function AdminUsersPage() {
         </Card>
       </section>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">Role matrix</CardTitle>
           <CardDescription>
@@ -132,7 +132,7 @@ export default async function AdminUsersPage() {
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <span className="font-medium">{role.name}</span>
-                      <span className="font-mono text-xs text-muted-foreground">
+                      <span className="text-soft font-mono text-xs">
                         {role.code}
                       </span>
                     </div>
@@ -153,7 +153,7 @@ export default async function AdminUsersPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">User register</CardTitle>
           <CardDescription>
@@ -178,9 +178,7 @@ export default async function AdminUsersPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">{user.fullName}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {user.email}
-                        </span>
+                        <span className="text-soft text-xs">{user.email}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -192,9 +190,7 @@ export default async function AdminUsersPage() {
                             </Badge>
                           ))
                         ) : (
-                          <span className="text-sm text-muted-foreground">
-                            None
-                          </span>
+                          <span className="text-soft text-sm">None</span>
                         )}
                       </div>
                     </TableCell>
@@ -207,9 +203,7 @@ export default async function AdminUsersPage() {
                             </Badge>
                           ))
                         ) : (
-                          <span className="text-sm text-muted-foreground">
-                            None
-                          </span>
+                          <span className="text-soft text-sm">None</span>
                         )}
                       </div>
                     </TableCell>
@@ -225,7 +219,7 @@ export default async function AdminUsersPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
               No platform users are available yet. Provision Google Workspace
               users through the identity administration process, or seed
               synthetic identities in the isolated local acceptance runtime.

@@ -14,13 +14,13 @@ export default async function PortalAccessPage({
         <CardHeader>
           <CardTitle>DTG client portal access</CardTitle>
         </CardHeader>
-        <CardContent className="text-muted-foreground space-y-4 text-sm leading-6">
+        <CardContent className="text-soft space-y-4 text-sm leading-6">
           <p>
             Open the secure invitation sent by DTG Document Control. Internal
             employee sessions cannot be used on this portal.
           </p>
           {typeof error === "string" ? (
-            <p className="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border p-3">
+            <p className="border-bad/30 bg-bad/10 text-bad rounded-[9px] border p-3">
               {decodeURIComponent(error)}
             </p>
           ) : null}

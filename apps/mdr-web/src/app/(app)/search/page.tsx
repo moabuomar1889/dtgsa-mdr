@@ -21,7 +21,7 @@ type SearchPageProps = {
 
 function EmptyState({ query }: { query: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+    <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
       {query.length >= 2
         ? `No results matched "${query}". Try a project code, document number, transmittal number, or part of a document title.`
         : "Search becomes active once at least two characters are entered."}
@@ -42,20 +42,24 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     0
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               Global Search
             </Badge>
-            <Badge variant="outline">Projects, documents, replies, transmittals</Badge>
+            <Badge variant="outline">
+              Projects, documents, replies, transmittals
+            </Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
-            Search now spans the live project, PDI, MDR, transmittal, and client-reply records.
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
+            Search now spans the live project, PDI, MDR, transmittal, and
+            client-reply records.
           </CardTitle>
           <CardDescription className="max-w-3xl leading-6">
-            Use project codes, DTGSA numbers, client numbers, titles, or transmittal references to jump across the operating dataset.
+            Use project codes, DTGSA numbers, client numbers, titles, or
+            transmittal references to jump across the operating dataset.
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
@@ -67,7 +71,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             />
             <button
               type="submit"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+              className="text-on-accent inline-flex h-10 items-center justify-center rounded-[7px] bg-[var(--accent)] px-4 text-sm font-medium"
             >
               Search
             </button>
@@ -76,34 +80,42 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </Card>
 
       <section className="grid gap-4 md:grid-cols-5">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Projects</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{results.counts.projects}</p>
+            <p className="text-soft text-sm">Projects</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {results.counts.projects}
+            </p>
           </CardContent>
         </Card>
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">PDI</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{results.counts.pdiItems}</p>
+            <p className="text-soft text-sm">PDI</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {results.counts.pdiItems}
+            </p>
           </CardContent>
         </Card>
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">MDR</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{results.counts.mdrDocuments}</p>
+            <p className="text-soft text-sm">MDR</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {results.counts.mdrDocuments}
+            </p>
           </CardContent>
         </Card>
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Transmittals</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{results.counts.transmittals}</p>
+            <p className="text-soft text-sm">Transmittals</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {results.counts.transmittals}
+            </p>
           </CardContent>
         </Card>
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Replies</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <p className="text-soft text-sm">Replies</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
               {results.counts.clientReplies}
             </p>
           </CardContent>
@@ -112,7 +124,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {hasResults ? (
         <div className="grid gap-4 xl:grid-cols-2">
-          <Card className="border-border/70 bg-card/95 shadow-sm">
+          <Card className="border-line bg-panel">
             <CardHeader>
               <CardTitle className="text-lg">Projects</CardTitle>
             </CardHeader>
@@ -121,20 +133,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 results.projects.map((project) => (
                   <div
                     key={project.id}
-                    className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                    className="border-line bg-raise rounded-[9px] border p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-medium">
                           {project.code} - {project.name}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-soft text-sm">
                           {project.client.code} - {project.client.name}
                         </p>
                       </div>
                       <Link
                         href={`/projects/${project.id}`}
-                        className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        className="text-accent-txt text-sm font-medium underline-offset-4 hover:underline"
                       >
                         Open
                       </Link>
@@ -147,7 +159,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-border/70 bg-card/95 shadow-sm">
+          <Card className="border-line bg-panel">
             <CardHeader>
               <CardTitle className="text-lg">PDI + MDR</CardTitle>
             </CardHeader>
@@ -157,23 +169,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   {results.pdiItems.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                      className="border-line bg-raise rounded-[9px] border p-4"
                     >
                       <p className="font-medium">{item.dtgsaDocumentNumber}</p>
-                      <p className="text-sm text-muted-foreground">
-                        PDI / {item.project.code} / {item.discipline.code} / {item.title}
+                      <p className="text-soft text-sm">
+                        PDI / {item.project.code} / {item.discipline.code} /{" "}
+                        {item.title}
                       </p>
                     </div>
                   ))}
                   {results.mdrDocuments.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                      className="border-line bg-raise rounded-[9px] border p-4"
                     >
                       <p className="font-medium">{item.dtgsaDocumentNumber}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-soft text-sm">
                         MDR / {item.project.code} / {item.discipline.code} / Rev{" "}
-                        {item.currentRevision?.revisionLabel ?? "N/A"} / {item.title}
+                        {item.currentRevision?.revisionLabel ?? "N/A"} /{" "}
+                        {item.title}
                       </p>
                     </div>
                   ))}
@@ -184,7 +198,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-border/70 bg-card/95 shadow-sm">
+          <Card className="border-line bg-panel">
             <CardHeader>
               <CardTitle className="text-lg">Transmittals</CardTitle>
             </CardHeader>
@@ -193,11 +207,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 results.transmittals.map((transmittal) => (
                   <div
                     key={transmittal.id}
-                    className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                    className="border-line bg-raise rounded-[9px] border p-4"
                   >
-                    <p className="font-medium">{transmittal.transmittalNumber}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {transmittal.project.code} / {transmittal.subject} / {transmittal._count.items} items
+                    <p className="font-medium">
+                      {transmittal.transmittalNumber}
+                    </p>
+                    <p className="text-soft text-sm">
+                      {transmittal.project.code} / {transmittal.subject} /{" "}
+                      {transmittal._count.items} items
                     </p>
                   </div>
                 ))
@@ -207,7 +224,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-border/70 bg-card/95 shadow-sm">
+          <Card className="border-line bg-panel">
             <CardHeader>
               <CardTitle className="text-lg">Client replies</CardTitle>
             </CardHeader>
@@ -216,13 +233,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 results.clientReplies.map((reply) => (
                   <div
                     key={reply.id}
-                    className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                    className="border-line bg-raise rounded-[9px] border p-4"
                   >
                     <p className="font-medium">
                       {reply.document.dtgsaDocumentNumber} /{" "}
                       {reply.reviewCode.code}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-soft text-sm">
                       {reply.project.code} / {reply.document.title}
                     </p>
                   </div>

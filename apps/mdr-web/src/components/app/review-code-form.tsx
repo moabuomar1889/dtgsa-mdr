@@ -23,7 +23,7 @@ function CheckboxField({
   onCheckedChange: (value: boolean) => void
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/80 p-3">
+    <div className="border-line bg-raise flex items-start gap-3 rounded-[9px] border p-3">
       <Checkbox
         id={id}
         checked={checked}

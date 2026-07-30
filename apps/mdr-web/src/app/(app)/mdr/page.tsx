@@ -148,7 +148,7 @@ function WorkflowActions({
   }
 
   return (
-    <span className="text-muted-foreground text-sm">
+    <span className="text-soft text-sm">
       No workflow action available for your role.
     </span>
   )
@@ -159,16 +159,16 @@ export default async function MdrPage() {
   const overview = await getMdrOverview(user)
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="border-border/60 from-primary/12 gap-3 border-b bg-gradient-to-br via-transparent to-transparent">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-primary/15 text-primary hover:bg-primary/15 rounded-full px-3 py-1">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               MDR Register
             </Badge>
             <Badge variant="outline">Operational register</Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             MDR records are now visible as the operational destination for
             promoted PDI items.
           </CardTitle>
@@ -179,34 +179,34 @@ export default async function MdrPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
-            <p className="text-muted-foreground text-sm">Documents</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Documents</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
               {overview.counts.total}
             </p>
           </div>
-          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
-            <p className="text-muted-foreground text-sm">Draft workflow</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Draft workflow</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
               {overview.counts.readyForWorkflow}
             </p>
           </div>
-          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
-            <p className="text-muted-foreground text-sm">Submitted</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Submitted</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
               {overview.counts.submittedToClient}
             </p>
           </div>
-          <div className="border-border/60 bg-background/80 rounded-2xl border p-4">
-            <p className="text-muted-foreground text-sm">Waiting reply</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Waiting reply</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
               {overview.counts.awaitingReply}
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">MDR documents</CardTitle>
           <CardDescription>
@@ -235,7 +235,7 @@ export default async function MdrPage() {
                         <span className="font-medium">
                           {document.project.code} - {document.project.name}
                         </span>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-soft text-xs">
                           {document.project.client.code} -{" "}
                           {document.project.client.name}
                         </span>
@@ -250,7 +250,7 @@ export default async function MdrPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">{document.title}</span>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-soft text-xs">
                           {document.discipline.code} /{" "}
                           {document.documentTypeCategory?.code ?? "N/A"} /{" "}
                           {document.releasePurpose?.code ?? "N/A"}
@@ -262,7 +262,7 @@ export default async function MdrPage() {
                         <Badge>
                           Rev {document.currentRevision?.revisionLabel ?? "N/A"}
                         </Badge>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-soft text-xs">
                           {document.currentRevision?.workflowStatus ?? "Draft"}{" "}
                           /{" "}
                           {document.currentRevision?.revisionStatus ??
@@ -275,7 +275,7 @@ export default async function MdrPage() {
                         <Badge variant="outline">
                           {document.currentClientReplyState}
                         </Badge>
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-soft text-xs">
                           {document._count.revisions} revisions /{" "}
                           {document._count.clientReplies} replies
                         </span>
@@ -382,14 +382,14 @@ export default async function MdrPage() {
                                 {document.currentRevisionFiles.map((file) => (
                                   <div
                                     key={file.id}
-                                    className="border-border/60 bg-background/70 rounded-xl border p-3"
+                                    className="border-line bg-raise rounded-[10px] border p-3"
                                   >
                                     <div className="flex items-center justify-between gap-3">
                                       <div className="space-y-1">
                                         <p className="text-sm font-medium">
                                           {file.fileName}
                                         </p>
-                                        <p className="text-muted-foreground text-xs">
+                                        <p className="text-soft text-xs">
                                           {file.type} /{" "}
                                           {Math.max(
                                             1,
@@ -420,13 +420,13 @@ export default async function MdrPage() {
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground text-xs">
+                              <span className="text-soft text-xs">
                                 No source files uploaded yet.
                               </span>
                             )}
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-sm">
+                          <span className="text-soft text-sm">
                             No current revision.
                           </span>
                         )}
@@ -437,7 +437,7 @@ export default async function MdrPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="border-border/70 bg-background/80 text-muted-foreground rounded-2xl border border-dashed p-6 text-sm leading-6">
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
               No MDR documents exist yet. Promote a PDI item after client
               numbering is received to create the first MDR record.
             </div>

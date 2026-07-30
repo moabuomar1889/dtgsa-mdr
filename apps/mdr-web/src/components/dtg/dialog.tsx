@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { cn } from "@/lib/utils"
+import { joinClasses } from "@/components/dtg/classes"
 import { Button } from "@/components/dtg/button"
 import { XIcon } from "lucide-react"
 
@@ -38,8 +38,8 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
-      className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+      className={joinClasses(
+        "bg-overlay fixed inset-0 isolate z-50",
         className
       )}
       {...props}
@@ -60,8 +60,8 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
-        className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+        className={joinClasses(
+          "border-edge bg-panel text-text fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[10px] border p-4 text-[12px] shadow-[var(--shadow)] outline-none sm:max-w-[640px]",
           className
         )}
         {...props}
@@ -74,8 +74,7 @@ function DialogContent({
               className="absolute top-2 right-2"
               size="icon-sm"
             >
-              <XIcon
-              />
+              <XIcon />
               <span className="sr-only">Close</span>
             </Button>
           </DialogPrimitive.Close>
@@ -89,7 +88,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
+      className={joinClasses("flex flex-col gap-2", className)}
       {...props}
     />
   )
@@ -106,8 +105,8 @@ function DialogFooter({
   return (
     <div
       data-slot="dialog-footer"
-      className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+      className={joinClasses(
+        "border-line bg-raise -mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-[10px] border-t p-4 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -129,8 +128,8 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn(
-        "font-heading text-base leading-none font-medium",
+      className={joinClasses(
+        "font-heading text-[15px] leading-none font-medium",
         className
       )}
       {...props}
@@ -145,8 +144,8 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+      className={joinClasses(
+        "text-dim *:[a]:hover:text-text text-[11px] *:[a]:underline *:[a]:underline-offset-3",
         className
       )}
       {...props}

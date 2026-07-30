@@ -30,16 +30,16 @@ export default async function NotificationsPage() {
   const feed = await getNotificationsForUser(user.id)
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               Notifications
             </Badge>
             <Badge variant="outline">{feed.unreadCount} unread</Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             Workflow, transmittal, and client-reply alerts now flow into the
             authenticated notification center.
           </CardTitle>
@@ -54,7 +54,7 @@ export default async function NotificationsPage() {
             feed.notifications.map((notification) => (
               <div
                 key={notification.id}
-                className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                className="border-line bg-raise rounded-[9px] border p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="space-y-1">
@@ -66,19 +66,23 @@ export default async function NotificationsPage() {
                         {notification.status}
                       </Badge>
                     </div>
-                    <p className="text-sm leading-6 text-muted-foreground">
+                    <p className="text-soft text-sm leading-6">
                       {notification.body}
                     </p>
-                    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                      <span>{notification.createdAt.toLocaleString("en-US")}</span>
+                    <div className="text-soft flex flex-wrap gap-3 text-xs">
+                      <span>
+                        {notification.createdAt.toLocaleString("en-US")}
+                      </span>
                       {notification.project ? (
                         <span>
-                          {notification.project.code} - {notification.project.name}
+                          {notification.project.code} -{" "}
+                          {notification.project.name}
                         </span>
                       ) : null}
                       {notification.client ? (
                         <span>
-                          {notification.client.code} - {notification.client.name}
+                          {notification.client.code} -{" "}
+                          {notification.client.name}
                         </span>
                       ) : null}
                       {notification.actionUrl ? (
@@ -93,17 +97,14 @@ export default async function NotificationsPage() {
                         name="notificationId"
                         value={notification.id}
                       />
-                      <SubmitButton
-                        label="Mark read"
-                        pendingLabel="Updating"
-                      />
+                      <SubmitButton label="Mark read" pendingLabel="Updating" />
                     </form>
                   ) : null}
                 </div>
               </div>
             ))
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
               No notifications have been generated yet for this account.
             </div>
           )}

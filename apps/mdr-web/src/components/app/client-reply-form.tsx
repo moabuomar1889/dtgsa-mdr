@@ -66,10 +66,7 @@ type ClientReplyFormProps = {
   action: (formData: FormData) => void | Promise<void>
 }
 
-export function ClientReplyForm({
-  documents,
-  action,
-}: ClientReplyFormProps) {
+export function ClientReplyForm({ documents, action }: ClientReplyFormProps) {
   const [documentId, setDocumentId] = useState(documents[0]?.id ?? "")
   const [reviewCodeId, setReviewCodeId] = useState(
     documents[0]?.reviewCodes[0]?.id ?? ""
@@ -89,7 +86,8 @@ export function ClientReplyForm({
   )
   const selectedReviewCode = useMemo(
     () =>
-      selectedDocument?.reviewCodes.find((code) => code.id === reviewCodeId) ?? null,
+      selectedDocument?.reviewCodes.find((code) => code.id === reviewCodeId) ??
+      null,
     [reviewCodeId, selectedDocument]
   )
 
@@ -153,9 +151,9 @@ export function ClientReplyForm({
         </Select>
         <input type="hidden" name="documentId" value={documentId} />
         {selectedDocument ? (
-          <div className="rounded-2xl border border-border/60 bg-background/70 p-3 text-sm">
+          <div className="border-line bg-raise rounded-[9px] border p-3 text-sm">
             <p className="font-medium">{selectedDocument.title}</p>
-            <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <div className="text-soft mt-2 flex flex-wrap gap-2 text-xs">
               <span>
                 {selectedDocument.projectCode} - {selectedDocument.projectName}
               </span>
@@ -176,8 +174,9 @@ export function ClientReplyForm({
             value={reviewCodeId}
             onValueChange={(value) => {
               const nextReviewCode =
-                selectedDocument?.reviewCodes.find((code) => code.id === value) ??
-                null
+                selectedDocument?.reviewCodes.find(
+                  (code) => code.id === value
+                ) ?? null
 
               setReviewCodeId(value)
               applyReviewCodeDefaults(nextReviewCode)
@@ -199,7 +198,7 @@ export function ClientReplyForm({
           </Select>
           <input type="hidden" name="reviewCodeId" value={reviewCodeId} />
           {selectedReviewCode?.description ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-soft text-xs">
               {selectedReviewCode.description}
             </p>
           ) : null}
@@ -282,9 +281,15 @@ export function ClientReplyForm({
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Folder types</SelectLabel>
-                <SelectItem value={DRIVE_FOLDER_TYPE.RECEIVED}>Received</SelectItem>
-                <SelectItem value={DRIVE_FOLDER_TYPE.REJECTED}>Rejected</SelectItem>
-                <SelectItem value={DRIVE_FOLDER_TYPE.REVISIONS}>Revisions</SelectItem>
+                <SelectItem value={DRIVE_FOLDER_TYPE.RECEIVED}>
+                  Received
+                </SelectItem>
+                <SelectItem value={DRIVE_FOLDER_TYPE.REJECTED}>
+                  Rejected
+                </SelectItem>
+                <SelectItem value={DRIVE_FOLDER_TYPE.REVISIONS}>
+                  Revisions
+                </SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -324,9 +329,10 @@ export function ClientReplyForm({
           type="file"
           accept=".pdf,.doc,.docx,.xlsx,.xls,.zip,image/*"
         />
-        <p className="text-xs text-muted-foreground">
-          Upload the reviewed client file here. Rejected PDFs will be renamed automatically using the
-          required <code>Rej-XXXXXXXXXXX.pdf</code> rule before they are mirrored into Drive.
+        <p className="text-soft text-xs">
+          Upload the reviewed client file here. Rejected PDFs will be renamed
+          automatically using the required <code>Rej-XXXXXXXXXXX.pdf</code> rule
+          before they are mirrored into Drive.
         </p>
       </div>
 
@@ -340,7 +346,7 @@ export function ClientReplyForm({
       </div>
 
       {selectedReviewCode ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/60 bg-background/70 p-3 text-xs text-muted-foreground">
+        <div className="border-line bg-raise text-soft flex flex-wrap items-center gap-2 rounded-[9px] border p-3 text-xs">
           <Badge variant="outline">Code {selectedReviewCode.code}</Badge>
           <span>
             {selectedReviewCode.requiresResubmittal

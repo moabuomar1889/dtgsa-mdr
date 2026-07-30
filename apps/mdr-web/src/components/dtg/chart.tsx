@@ -4,10 +4,15 @@ import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
 
-import { cn } from "@/lib/utils"
+import { joinClasses } from "@/components/dtg/classes"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
-const THEMES = { light: "", dark: ".dark" } as const
+const DARK_THEME = "dark" as const
+const LIGHT_THEME = "light" as const
+const THEMES = {
+  [DARK_THEME]: "",
+  [LIGHT_THEME]: '[data-theme="light"]',
+} as const
 
 const INITIAL_DIMENSION = { width: 320, height: 200 } as const
 type TooltipNameType = number | string
@@ -64,8 +69,8 @@ function ChartContainer({
       <div
         data-slot="chart"
         data-chart={chartId}
-        className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+        className={joinClasses(
+          "[&_.recharts-cartesian-axis-tick_text]:fill-soft [&_.recharts-cartesian-grid_line]:stroke-line2 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-line [&_.recharts-polar-grid_*]:stroke-line [&_.recharts-radial-bar-background-sector]:fill-track [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-accent-bg2 [&_.recharts-reference-line_*]:stroke-line flex aspect-video justify-center text-[11px] [&_.recharts-dot]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
           className
         )}
         {...props}
@@ -161,7 +166,7 @@ function ChartTooltipContent({
 
     if (labelFormatter) {
       return (
-        <div className={cn("font-medium", labelClassName)}>
+        <div className={joinClasses("font-medium", labelClassName)}>
           {labelFormatter(value, payload)}
         </div>
       )
@@ -171,7 +176,9 @@ function ChartTooltipContent({
       return null
     }
 
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>
+    return (
+      <div className={joinClasses("font-medium", labelClassName)}>{value}</div>
+    )
   }, [
     label,
     labelFormatter,
@@ -190,8 +197,8 @@ function ChartTooltipContent({
 
   return (
     <div
-      className={cn(
-        "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
+      className={joinClasses(
+        "border-edge bg-panel grid min-w-32 items-start gap-1.5 rounded-[10px] border px-2.5 py-2 text-[11px] shadow-[var(--shadow)]",
         className
       )}
     >
@@ -207,8 +214,8 @@ function ChartTooltipContent({
             return (
               <div
                 key={index}
-                className={cn(
-                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
+                className={joinClasses(
+                  "[&>svg]:text-soft flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
                   indicator === "dot" && "items-center"
                 )}
               >
@@ -221,15 +228,13 @@ function ChartTooltipContent({
                     ) : (
                       !hideIndicator && (
                         <div
-                          className={cn(
+                          className={joinClasses(
                             "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                            {
-                              "h-2.5 w-2.5": indicator === "dot",
-                              "w-1": indicator === "line",
-                              "w-0 border-[1.5px] border-dashed bg-transparent":
-                                indicator === "dashed",
-                              "my-0.5": nestLabel && indicator === "dashed",
-                            }
+                            indicator === "dot" && "h-2.5 w-2.5",
+                            indicator === "line" && "w-1",
+                            indicator === "dashed" &&
+                              "w-0 border-[1.5px] border-dashed bg-transparent",
+                            nestLabel && indicator === "dashed" && "my-0.5"
                           )}
                           style={
                             {
@@ -241,19 +246,19 @@ function ChartTooltipContent({
                       )
                     )}
                     <div
-                      className={cn(
+                      className={joinClasses(
                         "flex flex-1 justify-between leading-none",
                         nestLabel ? "items-end" : "items-center"
                       )}
                     >
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-muted-foreground">
+                        <span className="text-soft">
                           {itemConfig?.label ?? item.name}
                         </span>
                       </div>
                       {item.value != null && (
-                        <span className="font-mono font-medium text-foreground tabular-nums">
+                        <span className="text-text font-mono font-medium tabular-nums">
                           {typeof item.value === "number"
                             ? item.value.toLocaleString()
                             : String(item.value)}
@@ -290,7 +295,7 @@ function ChartLegendContent({
 
   return (
     <div
-      className={cn(
+      className={joinClasses(
         "flex items-center justify-center gap-4",
         verticalAlign === "top" ? "pb-3" : "pt-3",
         className
@@ -305,8 +310,8 @@ function ChartLegendContent({
           return (
             <div
               key={index}
-              className={cn(
-                "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
+              className={joinClasses(
+                "[&>svg]:text-soft flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3"
               )}
             >
               {itemConfig?.icon && !hideIcon ? (

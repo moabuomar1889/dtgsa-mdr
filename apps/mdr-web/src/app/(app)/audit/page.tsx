@@ -37,8 +37,8 @@ export default async function AuditPage() {
 
   if (!overview.allowed) {
     return (
-      <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+      <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Audit access</CardTitle>
             <CardDescription>
@@ -51,16 +51,16 @@ export default async function AuditPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               Audit & System Logs
             </Badge>
             <Badge variant="outline">Read-only traceability</Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             Business actions and technical log entries are now visible in the
             workspace.
           </CardTitle>
@@ -79,7 +79,7 @@ export default async function AuditPage() {
         </TabsList>
 
         <TabsContent value="business">
-          <Card className="border-border/70 bg-card/95 shadow-sm">
+          <Card className="border-line bg-panel">
             <CardHeader>
               <CardTitle className="text-lg">Business audit log</CardTitle>
               <CardDescription>
@@ -102,7 +102,7 @@ export default async function AuditPage() {
                   <TableBody>
                     {overview.auditLogs.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="text-soft text-xs">
                           {formatDate(log.createdAt)}
                         </TableCell>
                         <TableCell>
@@ -114,14 +114,14 @@ export default async function AuditPage() {
                         <TableCell className="text-sm">
                           {log.entityType} / {log.entityId}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="text-soft text-sm">
                           {log.actorUser?.fullName ?? "System"}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="text-soft text-xs">
                           {log.project ? `${log.project.code} / ` : ""}
                           {log.client ? `${log.client.code}` : "—"}
                         </TableCell>
-                        <TableCell className="max-w-80 font-mono text-xs text-muted-foreground">
+                        <TableCell className="text-soft max-w-80 font-mono text-xs">
                           {renderJson(log.afterSnapshot)}
                         </TableCell>
                       </TableRow>
@@ -129,7 +129,7 @@ export default async function AuditPage() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+                <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                   No business audit entries have been recorded yet.
                 </div>
               )}
@@ -138,7 +138,7 @@ export default async function AuditPage() {
         </TabsContent>
 
         <TabsContent value="system">
-          <Card className="border-border/70 bg-card/95 shadow-sm">
+          <Card className="border-line bg-panel">
             <CardHeader>
               <CardTitle className="text-lg">Technical system log</CardTitle>
               <CardDescription>
@@ -160,14 +160,14 @@ export default async function AuditPage() {
                   <TableBody>
                     {overview.systemLogs.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="text-soft text-xs">
                           {formatDate(log.createdAt)}
                         </TableCell>
                         <TableCell>{log.source}</TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
                             <span className="font-medium">{log.action}</span>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-soft text-sm">
                               {log.message}
                             </span>
                           </div>
@@ -175,7 +175,7 @@ export default async function AuditPage() {
                         <TableCell>
                           <Badge variant="outline">{log.severity}</Badge>
                         </TableCell>
-                        <TableCell className="max-w-80 font-mono text-xs text-muted-foreground">
+                        <TableCell className="text-soft max-w-80 font-mono text-xs">
                           {renderJson(log.metadata)}
                         </TableCell>
                       </TableRow>
@@ -183,7 +183,7 @@ export default async function AuditPage() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+                <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                   No technical system log entries have been recorded yet.
                 </div>
               )}

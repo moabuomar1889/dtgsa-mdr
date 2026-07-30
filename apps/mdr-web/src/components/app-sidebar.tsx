@@ -3,7 +3,11 @@
 import * as React from "react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
-import { Sidebar, SidebarContent, SidebarFooter } from "@/components/dtg/sidebar"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+} from "@/components/dtg/sidebar"
 import {
   BookCheckIcon,
   Building2Icon,
@@ -136,18 +140,21 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <NavSecondary label="Platform" items={data.navSecondary} />
       </SidebarContent>
       <SidebarFooter className="border-line bg-panel2 border-t p-2.5">
-        <div className="border-line bg-raise rounded-[8px] border p-2.5">
+        <div
+          aria-label={`${user.name} workspace progress`}
+          className="border-line bg-raise rounded-[8px] border p-2.5"
+        >
           <p className="text-dim text-[9.5px] tracking-[0.09em] uppercase">
             Workspace
           </p>
           <p className="text-muted mt-1 truncate text-[11px] font-medium">
-            {user.name}
+            Operational readiness
           </p>
           <p className="text-dim mt-0.5 truncate font-mono text-[9.5px]">
-            {user.email}
+            68% configured
           </p>
           <div className="bg-track mt-2 h-1 overflow-hidden rounded-[2px]">
-            <div className="bg-accent h-full w-[68%]" />
+            <div className="h-full w-[68%] bg-[var(--accent)]" />
           </div>
         </div>
       </SidebarFooter>

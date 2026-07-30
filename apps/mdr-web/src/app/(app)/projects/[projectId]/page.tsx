@@ -33,16 +33,16 @@ export default async function ProjectDashboardPage({
   const overview = await getProjectDashboard(user, projectId)
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               Project Dashboard
             </Badge>
             <Badge variant="outline">{overview.project.code}</Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             {overview.project.code} - {overview.project.name}
           </CardTitle>
           <CardDescription className="max-w-3xl leading-6">
@@ -53,35 +53,47 @@ export default async function ProjectDashboardPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 pt-4 sm:grid-cols-3 lg:grid-cols-6">
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Documents</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{overview.counts.totalDocuments}</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Documents</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {overview.counts.totalDocuments}
+            </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Ready to submit</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{overview.counts.readyToSubmit}</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Ready to submit</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {overview.counts.readyToSubmit}
+            </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Submitted</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{overview.counts.submitted}</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Submitted</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {overview.counts.submitted}
+            </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Revisions</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{overview.counts.revisions}</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Revisions</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {overview.counts.revisions}
+            </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Transmittals</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{overview.counts.sentTransmittals}</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Transmittals</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {overview.counts.sentTransmittals}
+            </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-            <p className="text-sm text-muted-foreground">Replies</p>
-            <p className="mt-2 text-2xl font-semibold tracking-tight">{overview.counts.replies}</p>
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Replies</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {overview.counts.replies}
+            </p>
           </div>
         </CardContent>
       </Card>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Discipline dashboard</CardTitle>
           </CardHeader>
@@ -99,7 +111,9 @@ export default async function ProjectDashboardPage({
                 <TableBody>
                   {overview.disciplineRows.map((row) => (
                     <TableRow key={row.discipline}>
-                      <TableCell className="font-medium">{row.discipline}</TableCell>
+                      <TableCell className="font-medium">
+                        {row.discipline}
+                      </TableCell>
                       <TableCell>{row.documents}</TableCell>
                       <TableCell>{row.readyToSubmit}</TableCell>
                       <TableCell>{row.submitted}</TableCell>
@@ -108,14 +122,15 @@ export default async function ProjectDashboardPage({
                 </TableBody>
               </Table>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
-                No discipline-level document activity exists for this project yet.
+              <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
+                No discipline-level document activity exists for this project
+                yet.
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Workflow distribution</CardTitle>
           </CardHeader>
@@ -124,14 +139,14 @@ export default async function ProjectDashboardPage({
               overview.workflowBreakdown.map((row) => (
                 <div
                   key={row.label}
-                  className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/80 p-4"
+                  className="border-line bg-raise flex items-center justify-between rounded-[9px] border p-4"
                 >
                   <p className="font-medium">{row.label}</p>
                   <Badge variant="outline">{row.count}</Badge>
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                 Workflow metrics will appear here as documents enter MDR.
               </div>
             )}
@@ -140,7 +155,7 @@ export default async function ProjectDashboardPage({
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Recent transmittals</CardTitle>
           </CardHeader>
@@ -149,26 +164,28 @@ export default async function ProjectDashboardPage({
               overview.project.transmittals.map((transmittal) => (
                 <div
                   key={transmittal.id}
-                  className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                  className="border-line bg-raise rounded-[9px] border p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium">{transmittal.transmittalNumber}</p>
-                      <p className="text-sm text-muted-foreground">{transmittal.subject}</p>
+                      <p className="font-medium">
+                        {transmittal.transmittalNumber}
+                      </p>
+                      <p className="text-soft text-sm">{transmittal.subject}</p>
                     </div>
                     <Badge variant="outline">{transmittal.status}</Badge>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                 No transmittals have been recorded for this project yet.
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Recent replies</CardTitle>
           </CardHeader>
@@ -177,21 +194,24 @@ export default async function ProjectDashboardPage({
               overview.project.clientReplies.map((reply) => (
                 <div
                   key={reply.id}
-                  className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                  className="border-line bg-raise rounded-[9px] border p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-medium">
-                        {reply.document.dtgsaDocumentNumber} / {reply.reviewCode.code}
+                        {reply.document.dtgsaDocumentNumber} /{" "}
+                        {reply.reviewCode.code}
                       </p>
-                      <p className="text-sm text-muted-foreground">{reply.document.title}</p>
+                      <p className="text-soft text-sm">
+                        {reply.document.title}
+                      </p>
                     </div>
                     <Badge variant="outline">{reply.replyState}</Badge>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                 No client replies have been recorded for this project yet.
               </div>
             )}

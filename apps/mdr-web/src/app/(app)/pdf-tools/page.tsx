@@ -39,26 +39,31 @@ export default async function PdfToolsPage({
   const result = await getPdfToolResult(resolvedSearchParams.manifest)
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <Card className="border-border/70 bg-card/95 shadow-sm">
-        <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
           <div className="flex flex-wrap items-center gap-3">
-            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
               PDF Tools
             </Badge>
-            <Badge variant="outline">Merge, split, reorder, rotate, remove, stamp</Badge>
+            <Badge variant="outline">
+              Merge, split, reorder, rotate, remove, stamp
+            </Badge>
           </div>
-          <CardTitle className="text-2xl font-semibold tracking-tight">
-            The practical document-control PDF toolset is now exposed inside the app.
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
+            The practical document-control PDF toolset is now exposed inside the
+            app.
           </CardTitle>
           <CardDescription className="max-w-3xl leading-6">
-            Use these tools for package assembly and operational cleanup work. Results are stored in temporary platform storage and returned as downloadable links.
+            Use these tools for package assembly and operational cleanup work.
+            Results are stored in temporary platform storage and returned as
+            downloadable links.
           </CardDescription>
         </CardHeader>
       </Card>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Toolbox</CardTitle>
           </CardHeader>
@@ -75,23 +80,45 @@ export default async function PdfToolsPage({
 
               <TabsContent value="merge">
                 <form action={mergePdfToolAction} className="grid gap-3">
-                  <Input name="files" type="file" accept=".pdf" multiple required />
-                  <SubmitButton label="Merge PDFs" pendingLabel="Processing" className="w-full" />
+                  <Input
+                    name="files"
+                    type="file"
+                    accept=".pdf"
+                    multiple
+                    required
+                  />
+                  <SubmitButton
+                    label="Merge PDFs"
+                    pendingLabel="Processing"
+                    className="w-full"
+                  />
                 </form>
               </TabsContent>
 
               <TabsContent value="split">
                 <form action={splitPdfToolAction} className="grid gap-3">
                   <Input name="file" type="file" accept=".pdf" required />
-                  <SubmitButton label="Split PDF" pendingLabel="Processing" className="w-full" />
+                  <SubmitButton
+                    label="Split PDF"
+                    pendingLabel="Processing"
+                    className="w-full"
+                  />
                 </form>
               </TabsContent>
 
               <TabsContent value="remove">
                 <form action={removePagesPdfToolAction} className="grid gap-3">
                   <Input name="file" type="file" accept=".pdf" required />
-                  <Input name="pages" placeholder="Pages to remove, e.g. 2,4,5" required />
-                  <SubmitButton label="Remove pages" pendingLabel="Processing" className="w-full" />
+                  <Input
+                    name="pages"
+                    placeholder="Pages to remove, e.g. 2,4,5"
+                    required
+                  />
+                  <SubmitButton
+                    label="Remove pages"
+                    pendingLabel="Processing"
+                    className="w-full"
+                  />
                 </form>
               </TabsContent>
 
@@ -103,24 +130,36 @@ export default async function PdfToolsPage({
                     placeholder="New order, e.g. 1,3,2,4"
                     required
                   />
-                  <SubmitButton label="Reorder PDF" pendingLabel="Processing" className="w-full" />
+                  <SubmitButton
+                    label="Reorder PDF"
+                    pendingLabel="Processing"
+                    className="w-full"
+                  />
                 </form>
               </TabsContent>
 
               <TabsContent value="rotate">
                 <form action={rotatePdfToolAction} className="grid gap-3">
                   <Input name="file" type="file" accept=".pdf" required />
-                  <Input name="pages" placeholder="Pages to rotate, e.g. 1,2" required />
+                  <Input
+                    name="pages"
+                    placeholder="Pages to rotate, e.g. 1,2"
+                    required
+                  />
                   <select
                     name="degreesValue"
-                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    className="border-edge bg-bg h-10 rounded-[7px] border px-3 text-sm"
                     defaultValue="90"
                   >
                     <option value="90">90 degrees</option>
                     <option value="180">180 degrees</option>
                     <option value="270">270 degrees</option>
                   </select>
-                  <SubmitButton label="Rotate pages" pendingLabel="Processing" className="w-full" />
+                  <SubmitButton
+                    label="Rotate pages"
+                    pendingLabel="Processing"
+                    className="w-full"
+                  />
                 </form>
               </TabsContent>
 
@@ -134,42 +173,49 @@ export default async function PdfToolsPage({
                     <Input name="y" placeholder="Y" />
                     <Input name="size" placeholder="Size" />
                   </div>
-                  <SubmitButton label="Stamp PDF" pendingLabel="Processing" className="w-full" />
+                  <SubmitButton
+                    label="Stamp PDF"
+                    pendingLabel="Processing"
+                    className="w-full"
+                  />
                 </form>
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Latest result</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {result ? (
               <>
-                <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
+                <div className="border-line bg-raise rounded-[9px] border p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium capitalize">{result.operation}</p>
-                    <Badge variant="outline">{result.entries.length} file(s)</Badge>
+                    <Badge variant="outline">
+                      {result.entries.length} file(s)
+                    </Badge>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Generated {new Date(result.createdAt).toLocaleString("en-US")}
+                  <p className="text-soft mt-1 text-sm">
+                    Generated{" "}
+                    {new Date(result.createdAt).toLocaleString("en-US")}
                   </p>
                 </div>
                 {result.entries.map((entry) => (
                   <div
                     key={entry.providerKey}
-                    className="rounded-2xl border border-border/60 bg-background/80 p-4"
+                    className="border-line bg-raise rounded-[9px] border p-4"
                   >
                     <p className="font-medium">{entry.label}</p>
-                    <p className="text-sm text-muted-foreground">{entry.fileName}</p>
+                    <p className="text-soft text-sm">{entry.fileName}</p>
                     {entry.url ? (
                       <a
                         href={entry.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-3 inline-block text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        className="text-accent-txt mt-3 inline-block text-sm font-medium underline-offset-4 hover:underline"
                       >
                         Download result
                       </a>
@@ -178,7 +224,7 @@ export default async function PdfToolsPage({
                 ))}
               </>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+              <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                 Run a PDF tool to generate a downloadable output manifest here.
               </div>
             )}

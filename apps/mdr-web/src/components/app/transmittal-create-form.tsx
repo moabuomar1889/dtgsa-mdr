@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { cn } from "@/lib/utils"
+import { joinClasses } from "@/components/dtg/classes"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/dtg/badge"
 import { Input } from "@/components/dtg/input"
@@ -144,7 +144,7 @@ export function TransmittalCreateForm({
           />
         ))}
         {filteredRevisions.length > 0 ? (
-          <div className="grid max-h-80 gap-2 overflow-y-auto rounded-2xl border border-border/60 bg-background/60 p-2">
+          <div className="border-line bg-raise grid max-h-80 gap-2 overflow-y-auto rounded-[9px] border p-2">
             {filteredRevisions.map((revision) => {
               const selected = selectedRevisionIds.includes(revision.id)
 
@@ -153,30 +153,32 @@ export function TransmittalCreateForm({
                   key={revision.id}
                   type="button"
                   onClick={() => toggleRevision(revision.id)}
-                  className={cn(
-                    "grid gap-2 rounded-xl border p-3 text-left transition-colors",
+                  className={joinClasses(
+                    "grid gap-2 rounded-[10px] border p-3 text-left transition-colors",
                     selected
-                      ? "border-primary bg-primary/8"
-                      : "border-border/70 bg-background hover:border-primary/40"
+                      ? "border-accent bg-accent-bg"
+                      : "border-line bg-bg hover:border-accent-line"
                   )}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="space-y-1">
                       <p className="font-medium">{revision.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {revision.dtgsaDocumentNumber} / Rev {revision.revisionLabel}
+                      <p className="text-soft text-xs">
+                        {revision.dtgsaDocumentNumber} / Rev{" "}
+                        {revision.revisionLabel}
                       </p>
                     </div>
                     <Badge variant={selected ? "default" : "outline"}>
                       {selected ? "Selected" : "Available"}
                     </Badge>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <div className="text-soft flex flex-wrap items-center gap-3 text-xs">
                     <span>
                       Client No: {revision.clientDocumentNumber ?? "Pending"}
                     </span>
                     <span>
-                      File: {revision.attachmentFileName ?? "No uploaded file yet"}
+                      File:{" "}
+                      {revision.attachmentFileName ?? "No uploaded file yet"}
                     </span>
                     <span>{formatBytes(revision.attachmentFileSizeBytes)}</span>
                   </div>
@@ -185,7 +187,7 @@ export function TransmittalCreateForm({
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-4 text-sm text-muted-foreground">
+          <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-4 text-sm">
             No current revisions in this project are ready for transmittal yet.
           </div>
         )}
@@ -222,7 +224,11 @@ export function TransmittalCreateForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="transmittal-cc">CC</Label>
-          <Input id="transmittal-cc" name="ccText" placeholder="cc recipients" />
+          <Input
+            id="transmittal-cc"
+            name="ccText"
+            placeholder="cc recipients"
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="transmittal-attention">Attention</Label>

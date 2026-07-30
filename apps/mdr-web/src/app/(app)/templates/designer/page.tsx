@@ -40,23 +40,18 @@ export default async function CoverDesignerPage({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
-      <header className="relative overflow-hidden rounded-[28px] border border-teal-900/40 bg-[linear-gradient(120deg,#102629,#18383a_56%,#3b3020)] p-6 text-white shadow-xl">
-        <div className="absolute -top-20 right-10 size-56 rounded-full border border-teal-200/10" />
-        <div className="relative">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <header className="border-line bg-head overflow-hidden rounded-[9px] border p-5">
+        <div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-teal-300 text-teal-950 hover:bg-teal-300">
-              Document Control
-            </Badge>
-            <Badge className="border-amber-300/40 bg-transparent text-amber-200">
-              Resolution-independent cover studio
-            </Badge>
+            <Badge>Document Control</Badge>
+            <Badge variant="outline">Resolution-independent cover studio</Badge>
           </div>
-          <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight">
+          <h1 className="mt-4 max-w-4xl text-[22px] font-medium tracking-[-0.02em]">
             Design controlled cover pages as structured layouts, not
             screenshots.
           </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-teal-50/75">
+          <p className="text-soft mt-3 max-w-3xl text-[12px] leading-5">
             Build client and project variants, bind workflow evidence, preview
             real page dimensions, and publish immutable versions.
           </p>
@@ -64,10 +59,10 @@ export default async function CoverDesignerPage({
       </header>
 
       <section className="grid gap-4 lg:grid-cols-[360px_1fr]">
-        <div className="border-border/70 bg-card space-y-4 rounded-3xl border p-5">
+        <div className="border-line bg-panel space-y-4 rounded-[9px] border p-5">
           <div>
             <h2 className="font-semibold">Create or clone a draft</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
+            <p className="text-soft mt-1 text-sm">
               Inheritance order: organization, client, project, document type,
               discipline.
             </p>
@@ -77,17 +72,17 @@ export default async function CoverDesignerPage({
               name="code"
               required
               placeholder="CLIENT_PROJECT_COVER"
-              className="bg-background h-10 rounded-xl border px-3 text-sm"
+              className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             />
             <input
               name="name"
               required
               placeholder="Client project cover"
-              className="bg-background h-10 rounded-xl border px-3 text-sm"
+              className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             />
             <select
               name="scopeType"
-              className="bg-background h-10 rounded-xl border px-3 text-sm"
+              className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             >
               <option value="ORGANIZATION">Organization default</option>
               <option value="CLIENT">Client override</option>
@@ -97,7 +92,7 @@ export default async function CoverDesignerPage({
             </select>
             <select
               name="scopeId"
-              className="bg-background h-10 rounded-xl border px-3 text-sm"
+              className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             >
               <option value="">Organization / choose matching scope</option>
               {Object.entries(scopeOptions).flatMap(([scope, options]) =>
@@ -110,7 +105,7 @@ export default async function CoverDesignerPage({
             </select>
             <select
               name="cloneVersionId"
-              className="bg-background h-10 rounded-xl border px-3 text-sm"
+              className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             >
               <option value="">Start from DTG default</option>
               {overview.versions.map((version) => (
@@ -121,7 +116,7 @@ export default async function CoverDesignerPage({
             </select>
             <button
               type="submit"
-              className="bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold"
+              className="border-accent bg-accent text-on-accent rounded-[8px] border px-4 py-2 text-[12px] font-medium"
             >
               Create draft
             </button>
@@ -133,14 +128,14 @@ export default async function CoverDesignerPage({
                 <Link
                   key={version.id}
                   href={`/templates/designer?version=${version.id}`}
-                  className={`block rounded-xl border p-3 text-sm ${
+                  className={`block rounded-[10px] border p-3 text-sm ${
                     selected?.id === version.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border/60 hover:bg-muted/50"
+                      ? "border-accent bg-accent-bg"
+                      : "border-line hover:bg-raise"
                   }`}
                 >
                   <span className="font-medium">{version.name}</span>
-                  <span className="text-muted-foreground mt-1 block text-xs">
+                  <span className="text-soft mt-1 block text-xs">
                     {version.code} - v{version.version} - {version.status}
                   </span>
                 </Link>
@@ -148,8 +143,8 @@ export default async function CoverDesignerPage({
             </div>
           </div>
         </div>
-        <div className="border-border/70 bg-muted/20 text-muted-foreground rounded-3xl border border-dashed p-6 text-sm leading-6">
-          <h2 className="text-foreground font-semibold">Designer help</h2>
+        <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
+          <h2 className="text-text font-semibold">Designer help</h2>
           <p className="mt-2">
             Hold Shift to select multiple elements. Drag to move with snapping.
             Use the inspector for exact relative coordinates, the toolbar for
@@ -169,7 +164,7 @@ export default async function CoverDesignerPage({
           initialTemplate={initialTemplate}
         />
       ) : (
-        <div className="text-muted-foreground rounded-3xl border border-dashed p-10 text-center">
+        <div className="text-soft rounded-[9px] border border-dashed p-10 text-center">
           {selected
             ? "Published and superseded versions are immutable. Clone this version to edit."
             : "Create a draft to open the visual designer."}

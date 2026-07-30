@@ -45,17 +45,17 @@ export default async function PdiPage() {
   const overview = await getPdiOverview()
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-border/70 bg-card/95 shadow-sm">
-          <CardHeader className="gap-3 border-b border-border/60 bg-gradient-to-br from-primary/12 via-transparent to-transparent">
+        <Card className="border-line bg-panel">
+          <CardHeader className="border-line bg-head gap-2 border-b">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/15">
+              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
                 PDI Register
               </Badge>
               <Badge variant="outline">Phase 2 started</Badge>
             </div>
-            <CardTitle className="text-2xl font-semibold tracking-tight">
+            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
               The Project Document Index is now a working register with
               auto-number generation and promotion into the MDR.
             </CardTitle>
@@ -66,34 +66,34 @@ export default async function PdiPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Total lines</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Total lines</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.total}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Waiting on client</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Waiting on client</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.pendingClientNumber}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Client numbers in</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Client numbers in</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.clientNumberReceived}
               </p>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-background/80 p-4">
-              <p className="text-sm text-muted-foreground">Promoted to MDR</p>
-              <p className="mt-2 text-2xl font-semibold tracking-tight">
+            <div className="border-line bg-raise rounded-[9px] border p-4">
+              <p className="text-soft text-sm">Promoted to MDR</p>
+              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
                 {overview.counts.converted}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/70 bg-card/95 shadow-sm">
+        <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Create PDI item</CardTitle>
             <CardDescription>
@@ -118,10 +118,10 @@ export default async function PdiPage() {
                   action={createPdiItemAction}
                 />
 
-                <div className="grid gap-4 rounded-2xl border border-border/60 bg-background/80 p-4">
+                <div className="border-line bg-raise grid gap-4 rounded-[9px] border p-4">
                   <div className="space-y-1">
                     <p className="font-medium">Excel import / export</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-soft text-sm">
                       Export project PDI workbooks for client collaboration, or
                       bulk import Excel rows back into the register.
                     </p>
@@ -140,16 +140,19 @@ export default async function PdiPage() {
 
                     <form
                       action={importPdiWorkbookAction}
-                      className="grid gap-3 rounded-xl border border-border/60 bg-card/60 p-4"
+                      className="border-line bg-panel grid gap-3 rounded-[10px] border p-4"
                     >
                       <div className="grid gap-2">
-                        <label htmlFor="pdi-import-project" className="text-sm font-medium">
+                        <label
+                          htmlFor="pdi-import-project"
+                          className="text-sm font-medium"
+                        >
                           Import target project
                         </label>
                         <select
                           id="pdi-import-project"
                           name="projectId"
-                          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                          className="border-edge bg-bg h-10 rounded-[7px] border px-3 text-sm"
                           defaultValue={overview.projects[0]?.id}
                         >
                           {overview.projects.map((project) => (
@@ -160,7 +163,10 @@ export default async function PdiPage() {
                         </select>
                       </div>
                       <div className="grid gap-2">
-                        <label htmlFor="pdi-import-file" className="text-sm font-medium">
+                        <label
+                          htmlFor="pdi-import-file"
+                          className="text-sm font-medium"
+                        >
                           Excel workbook
                         </label>
                         <Input
@@ -182,7 +188,7 @@ export default async function PdiPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+                <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                   No projects exist yet, so the PDI register cannot be created
                   until the first project is onboarded.
                 </div>
@@ -195,7 +201,7 @@ export default async function PdiPage() {
         </Card>
       </section>
 
-      <Card className="border-border/70 bg-card/95 shadow-sm">
+      <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">PDI line items</CardTitle>
           <CardDescription>
@@ -223,8 +229,9 @@ export default async function PdiPage() {
                         <span className="font-medium">
                           {item.project.code} - {item.project.name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          {item.project.client.code} - {item.project.client.name}
+                        <span className="text-soft text-xs">
+                          {item.project.client.code} -{" "}
+                          {item.project.client.name}
                         </span>
                       </div>
                     </TableCell>
@@ -242,7 +249,11 @@ export default async function PdiPage() {
                               action={updatePdiClientDocumentNumberAction}
                               className="flex flex-col gap-2"
                             >
-                              <input type="hidden" name="pdiItemId" value={item.id} />
+                              <input
+                                type="hidden"
+                                name="pdiItemId"
+                                value={item.id}
+                              />
                               <Input
                                 name="clientDocumentNumber"
                                 defaultValue={item.clientDocumentNumber}
@@ -260,7 +271,11 @@ export default async function PdiPage() {
                           action={updatePdiClientDocumentNumberAction}
                           className="flex min-w-56 flex-col gap-2"
                         >
-                          <input type="hidden" name="pdiItemId" value={item.id} />
+                          <input
+                            type="hidden"
+                            name="pdiItemId"
+                            value={item.id}
+                          />
                           <Input
                             name="clientDocumentNumber"
                             placeholder="Enter client number"
@@ -276,8 +291,9 @@ export default async function PdiPage() {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">{item.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {item.discipline.code} / {item.documentTypeCategory?.code} /{" "}
+                        <span className="text-soft text-xs">
+                          {item.discipline.code} /{" "}
+                          {item.documentTypeCategory?.code} /{" "}
                           {item.releasePurpose?.code} / Rev {item.revision}
                         </span>
                       </div>
@@ -289,7 +305,11 @@ export default async function PdiPage() {
                         </Badge>
                         {item.status === PdiStatus.Draft ? (
                           <form action={markPdiItemSentToClientAction}>
-                            <input type="hidden" name="pdiItemId" value={item.id} />
+                            <input
+                              type="hidden"
+                              name="pdiItemId"
+                              value={item.id}
+                            />
                             <SubmitButton
                               label="Send to client"
                               pendingLabel="Updating"
@@ -303,13 +323,17 @@ export default async function PdiPage() {
                       {item.mdrDocument ? (
                         <div className="flex flex-col gap-1">
                           <Badge>MDR linked</Badge>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-soft text-xs">
                             {item.mdrDocument.currentWorkflowStatus}
                           </span>
                         </div>
                       ) : item.status === PdiStatus.ClientNumberReceived ? (
                         <form action={promotePdiItemToMdrAction}>
-                          <input type="hidden" name="pdiItemId" value={item.id} />
+                          <input
+                            type="hidden"
+                            name="pdiItemId"
+                            value={item.id}
+                          />
                           <SubmitButton
                             label="Promote to MDR"
                             pendingLabel="Promoting"
@@ -317,7 +341,7 @@ export default async function PdiPage() {
                           />
                         </form>
                       ) : (
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-soft text-sm">
                           Waiting for client numbering
                         </span>
                       )}
@@ -327,7 +351,7 @@ export default async function PdiPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-6 text-sm leading-6 text-muted-foreground">
+            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
               No PDI items exist yet. Create the first line from the form above
               to start the numbering and client-collaboration workflow.
             </div>

@@ -25,10 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/dtg/select"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/dtg/toggle-group"
+import { ToggleGroup, ToggleGroupItem } from "@/components/dtg/toggle-group"
 
 export const description = "An interactive area chart"
 
@@ -132,11 +129,11 @@ const chartConfig = {
   },
   desktop: {
     label: "Desktop",
-    color: "var(--primary)",
+    color: "var(--accent)",
   },
   mobile: {
     label: "Mobile",
-    color: "var(--primary)",
+    color: "var(--accent-txt)",
   },
 } satisfies ChartConfig
 
@@ -194,14 +191,14 @@ export function ChartAreaInteractive() {
             >
               <SelectValue placeholder="Last 3 months" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="90d" className="rounded-lg">
+            <SelectContent className="rounded-[10px]">
+              <SelectItem value="90d" className="rounded-[9px]">
                 Last 3 months
               </SelectItem>
-              <SelectItem value="30d" className="rounded-lg">
+              <SelectItem value="30d" className="rounded-[9px]">
                 Last 30 days
               </SelectItem>
-              <SelectItem value="7d" className="rounded-lg">
+              <SelectItem value="7d" className="rounded-[9px]">
                 Last 7 days
               </SelectItem>
             </SelectContent>

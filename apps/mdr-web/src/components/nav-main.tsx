@@ -55,7 +55,7 @@ export function NavMain({
                   (item.url !== "/dashboard" &&
                     pathname.startsWith(`${item.url}/`))
                 }
-                className="text-muted data-active:bg-accent-bg data-active:text-text hover:bg-accent-bg2 hover:text-text [&_svg]:text-soft data-active:[&_svg]:text-accent h-8 rounded-[7px] px-2.5 text-[11.5px] data-active:font-medium data-active:shadow-[inset_2px_0_0_var(--accent)] [&_svg]:size-3.5"
+                className="text-muted hover:bg-accent-bg2 hover:text-text data-[active=true]:bg-accent-bg data-[active=true]:text-text [&_svg]:text-soft data-[active=true]:[&_svg]:text-accent h-8 rounded-[7px] px-2.5 text-[11.5px] data-[active=true]:font-medium data-[active=true]:shadow-[inset_2px_0_0_var(--accent)] [&_svg]:size-3.5"
               >
                 <Link href={item.url}>
                   {item.icon}

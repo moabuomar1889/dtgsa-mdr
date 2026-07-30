@@ -1,16 +1,12 @@
 import * as React from "react"
+import { joinClasses } from "@/components/dtg/classes"
 
-import { cn } from "@/lib/utils"
-
-function Textarea({
-  className,
-  ...props
-}: React.ComponentProps<"textarea">) {
+function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
       data-slot="textarea"
-      className={cn(
-        "min-h-24 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+      className={joinClasses(
+        "border-edge bg-raise text-text placeholder:text-dim focus-visible:border-accent aria-invalid:border-bad min-h-24 w-full rounded-[8px] border px-2.5 py-2 text-[12px] transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45",
         className
       )}
       {...props}

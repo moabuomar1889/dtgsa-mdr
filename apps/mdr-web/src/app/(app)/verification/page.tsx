@@ -19,11 +19,11 @@ export default async function InternalVerificationPage({
     : null
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-4 py-5 md:px-6">
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <Card>
         <CardHeader>
           <Badge className="w-fit">Internal verification</Badge>
-          <CardTitle className="text-3xl">
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             Inspect the complete scoped evidence chain.
           </CardTitle>
         </CardHeader>
@@ -71,7 +71,7 @@ export default async function InternalVerificationPage({
             </CardHeader>
             <CardContent className="grid gap-2 text-sm">
               {evidence.seals.map((seal) => (
-                <div key={seal.id} className="rounded-xl border p-3">
+                <div key={seal.id} className="rounded-[10px] border p-3">
                   {seal.algorithm} / {seal.keyId} / {seal.verificationStatus} /
                   payload {seal.signedPayloadVersion}
                 </div>
@@ -86,7 +86,7 @@ export default async function InternalVerificationPage({
             <CardContent className="grid gap-2 text-sm">
               <p>Cycles: {evidence.cycles.length}</p>
               {evidence.approvals.map((approval) => (
-                <div key={approval.id} className="rounded-xl border p-3">
+                <div key={approval.id} className="rounded-[10px] border p-3">
                   {JSON.stringify(approval.identitySnapshot)} /{" "}
                   {JSON.stringify(approval.roleSnapshot)} /{" "}
                   {approval.createdAt.toISOString()}
