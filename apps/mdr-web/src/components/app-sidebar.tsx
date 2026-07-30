@@ -129,13 +129,22 @@ type SidebarUser = {
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: SidebarUser
+  canViewTransmittals: boolean
 }
 
-export function AppSidebar({ user, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  user,
+  canViewTransmittals,
+  ...props
+}: AppSidebarProps) {
+  const navMain = canViewTransmittals
+    ? data.navMain
+    : data.navMain.filter((item) => item.url !== "/transmittals")
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarContent className="bg-panel2 gap-0 px-2.5 py-3">
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
         <NavSecondary label="Operations" items={data.navOperations} />
         <NavSecondary label="Platform" items={data.navSecondary} />
       </SidebarContent>

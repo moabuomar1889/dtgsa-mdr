@@ -81,3 +81,37 @@ test("local identity endpoint refuses non-synthetic accounts", async ({
   )
   expect(response.status()).toBe(400)
 })
+
+test("transmittal access is permission aware", async ({ page }) => {
+  await page.goto("/local-acceptance")
+  const adminForm = page.locator("form", {
+    has: page.getByText("dc.admin@local.test"),
+  })
+  await adminForm.getByRole("button", { name: "Select identity" }).click()
+
+  await expect(
+    page.getByRole("link", { name: "Transmittals", exact: true })
+  ).toBeVisible()
+  const authorizedResponse = await page.goto("/transmittals")
+  expect(authorizedResponse?.status()).toBe(200)
+  await expect(
+    page.getByText("Transmittal records", { exact: true })
+  ).toBeVisible()
+
+  await page.goto("/local-acceptance")
+  const preparedManagerForm = page.locator("form", {
+    has: page.getByText("prepared.manager@local.test"),
+  })
+  await preparedManagerForm
+    .getByRole("button", { name: "Select identity" })
+    .click()
+
+  await expect(
+    page.getByRole("link", { name: "Transmittals", exact: true })
+  ).toHaveCount(0)
+  const forbiddenResponse = await page.goto("/transmittals")
+  expect(forbiddenResponse?.status()).toBe(403)
+  await expect(
+    page.getByRole("heading", { name: "Access restricted" })
+  ).toBeVisible()
+})

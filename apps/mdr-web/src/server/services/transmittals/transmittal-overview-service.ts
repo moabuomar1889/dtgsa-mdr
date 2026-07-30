@@ -1,6 +1,7 @@
 import "server-only"
 
 import { TransmittalStatus } from "@prisma/client"
+import { forbidden } from "next/navigation"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { loadTransmittalOverviewRecords } from "@/server/repositories/transmittals/transmittal-read-repository"
 import { pickPreferredAttachmentFile } from "@/server/services/transmittals/transmittal-policy"
@@ -16,7 +17,7 @@ export async function getTransmittalOverview(user: CurrentAppUser) {
   })
 
   if (!canManageTransmittals) {
-    throw new Error("You do not have permission to view transmittals.")
+    forbidden()
   }
 
   const { projects, eligibleRevisions, transmittals } =

@@ -30,6 +30,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    authInterrupts: true,
+  },
   transpilePackages: [
     "@dtg/authorization",
     "@dtg/controlled-storage-domain",
