@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { NavigationPendingIndicator } from "@/components/navigation-pending-indicator"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -43,6 +44,7 @@ export function NavMain({
                 <Link href="/projects/new">
                   <FolderPlusIcon className="size-3.5" />
                   <span>New Project</span>
+                  <NavigationPendingIndicator />
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -64,6 +66,7 @@ export function NavMain({
                 <Link href={item.url}>
                   {item.icon}
                   <span>{item.title}</span>
+                  <NavigationPendingIndicator />
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

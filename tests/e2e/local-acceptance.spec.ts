@@ -85,7 +85,41 @@ test("local identity endpoint refuses non-synthetic accounts", async ({
   expect(response.status()).toBe(400)
 })
 
+test("sidebar navigation preserves the application shell", async ({ page }) => {
+  await page.goto("/local-acceptance")
+  const adminForm = page.locator("form", {
+    has: page.getByText("dc.admin@local.test"),
+  })
+  await adminForm.getByRole("button", { name: "Select identity" }).click()
+
+  await page.evaluate(() => {
+    const markedWindow = window as typeof window & {
+      __dtgNavigationMarker?: string
+    }
+    markedWindow.__dtgNavigationMarker = "preserved"
+  })
+  await page.getByRole("link", { name: "Settings", exact: true }).click()
+  await expect(page).toHaveURL(/\/settings$/)
+  await expect(
+    page.getByText("Settings Hierarchy", { exact: true })
+  ).toBeVisible()
+  expect(
+    await page.evaluate(
+      () =>
+        (window as typeof window & { __dtgNavigationMarker?: string })
+          .__dtgNavigationMarker
+    )
+  ).toBe("preserved")
+})
+
 test("protected modules are permission aware", async ({ page }) => {
+  const consoleErrors: string[] = []
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      consoleErrors.push(message.text())
+    }
+  })
+
   await page.goto("/local-acceptance")
   const adminForm = page.locator("form", {
     has: page.getByText("dc.admin@local.test"),
@@ -142,4 +176,7 @@ test("protected modules are permission aware", async ({ page }) => {
       page.getByRole("heading", { name: "Access restricted" })
     ).toBeVisible()
   }
+  expect(consoleErrors.join("\n")).not.toContain(
+    "Encountered a script tag while rendering React component"
+  )
 })

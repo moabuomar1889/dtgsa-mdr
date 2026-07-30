@@ -44,14 +44,24 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     queueMicrotask(() => {
-      const storedMode = document.documentElement.dataset.theme
-      const storedAccent =
-        document.documentElement.style.getPropertyValue("--accent-seed")
+      let nextMode: ThemeMode = "dark"
+      let nextAccent: string = ACCENTS[0].seed
 
-      setMode(storedMode === "light" ? "light" : "dark")
-      if (/^#[0-9a-f]{6}$/i.test(storedAccent)) {
-        setAccent(storedAccent)
+      try {
+        nextMode =
+          localStorage.getItem("dtg.mode") === "light" ? "light" : "dark"
+        const storedAccent = localStorage.getItem("dtg.accent")
+        if (storedAccent && /^#[0-9a-f]{6}$/i.test(storedAccent)) {
+          nextAccent = storedAccent
+        }
+      } catch {
+        // Storage can be unavailable in hardened browser contexts.
       }
+
+      document.documentElement.dataset.theme = nextMode
+      document.documentElement.style.setProperty("--accent-seed", nextAccent)
+      setMode(nextMode)
+      setAccent(nextAccent)
       setReady(true)
     })
   }, [])
@@ -61,8 +71,12 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
 
     document.documentElement.dataset.theme = mode
     document.documentElement.style.setProperty("--accent-seed", accent)
-    localStorage.setItem("dtg.mode", mode)
-    localStorage.setItem("dtg.accent", accent)
+    try {
+      localStorage.setItem("dtg.mode", mode)
+      localStorage.setItem("dtg.accent", accent)
+    } catch {
+      // Keep in-memory theming functional when persistence is unavailable.
+    }
   }, [mode, accent, ready])
 
   return (

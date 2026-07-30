@@ -1,7 +1,9 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { NavigationPendingIndicator } from "@/components/navigation-pending-indicator"
 
 import {
   SidebarGroup,
@@ -46,10 +48,11 @@ export function NavSecondary({
                 }
                 className="text-muted hover:bg-accent-bg2 hover:text-text data-[active=true]:bg-accent-bg data-[active=true]:text-text [&_svg]:text-soft data-[active=true]:[&_svg]:text-accent h-8 rounded-[7px] px-2.5 text-[11.5px] data-[active=true]:font-medium data-[active=true]:shadow-[inset_2px_0_0_var(--accent)] [&_svg]:size-3.5"
               >
-                <a href={item.url}>
+                <Link href={item.url}>
                   {item.icon}
                   <span>{item.title}</span>
-                </a>
+                  <NavigationPendingIndicator />
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
