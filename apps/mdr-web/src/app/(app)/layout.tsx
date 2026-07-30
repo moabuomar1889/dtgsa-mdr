@@ -2,8 +2,8 @@ import type { CSSProperties, ReactNode } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/dtg/sidebar"
-import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { getUserPermissions } from "@/server/services/auth/permission-service"
 
 type AppLayoutProps = {
   children: ReactNode
@@ -16,11 +16,7 @@ export default async function AppLayout({ children }: AppLayoutProps) {
     email: user.email,
     avatar: "",
   }
-  const canViewTransmittals = hasAnyPermission({
-    required: PERMISSIONS.transmittalsManage,
-    systemRoles: user.userRoles.map((item) => item.role.code),
-    projectRoles: user.projectRoles.map((item) => item.role.code),
-  })
+  const permissions = getUserPermissions(user)
 
   return (
     <SidebarProvider
@@ -38,7 +34,7 @@ export default async function AppLayout({ children }: AppLayoutProps) {
           <AppSidebar
             className="border-line top-[50px] bottom-0 h-auto border-r"
             user={shellUser}
-            canViewTransmittals={canViewTransmittals}
+            permissions={permissions}
           />
           <SidebarInset className="bg-bg min-h-0 overflow-y-auto">
             <div className="flex min-h-full flex-col">{children}</div>

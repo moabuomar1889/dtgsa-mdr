@@ -1,23 +1,16 @@
 import "server-only"
 
 import { ClientReplyState } from "@prisma/client"
-import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { loadClientReplyOverviewRecords } from "@/server/repositories/replies/client-reply-read-repository"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { buildApplicableReviewCodes } from "@/server/services/replies/client-reply-policy"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
 
 export async function getClientRepliesOverview(user: CurrentAppUser) {
-  const canManageReplies = hasAnyPermission({
-    required: PERMISSIONS.clientRepliesManage,
-    systemRoles: user.userRoles.map((item) => item.role.code),
-    projectRoles: user.projectRoles.map((item) => item.role.code),
-  })
-
-  if (!canManageReplies) {
-    throw new Error("You do not have permission to view client replies.")
-  }
+  requireUserHasAnyPermission(user, PERMISSIONS.clientRepliesManage)
 
   const { documents, replies, reviewCodes, transmittalLinks } =
     await loadClientReplyOverviewRecords()

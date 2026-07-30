@@ -1,15 +1,30 @@
 import "server-only"
-import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
+import {
+  PERMISSIONS,
+  expandPermissionsFromRoles,
+  hasAnyPermission,
+  type PermissionCode,
+} from "@/lib/permissions/rbac"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
+type RequiredPermission = PermissionCode | PermissionCode[]
 
-export function assertUserHasAnyPermission(
+export function getUserPermissions(user: CurrentAppUser) {
+  return Array.from(
+    expandPermissionsFromRoles([
+      ...user.userRoles.map((item) => item.role.code),
+      ...user.projectRoles.map((item) => item.role.code),
+    ])
+  )
+}
+
+export function userHasAnyPermission(
   user: CurrentAppUser,
-  required: Array<(typeof PERMISSIONS)[keyof typeof PERMISSIONS]> | (typeof PERMISSIONS)[keyof typeof PERMISSIONS],
+  required: RequiredPermission,
   projectId?: string
 ) {
-  const allowed = hasAnyPermission({
+  return hasAnyPermission({
     required,
     systemRoles: user.userRoles.map((item) => item.role.code),
     projectRoles: projectId
@@ -18,8 +33,16 @@ export function assertUserHasAnyPermission(
           .map((item) => item.role.code)
       : user.projectRoles.map((item) => item.role.code),
   })
+}
 
-  if (!allowed) {
+export function assertUserHasAnyPermission(
+  user: CurrentAppUser,
+  required:
+    | Array<(typeof PERMISSIONS)[keyof typeof PERMISSIONS]>
+    | (typeof PERMISSIONS)[keyof typeof PERMISSIONS],
+  projectId?: string
+) {
+  if (!userHasAnyPermission(user, required, projectId)) {
     throw new Error("You do not have permission to perform this action.")
   }
 }

@@ -2,11 +2,11 @@ import "server-only"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 
 export async function requireIdentityAdministrator() {
   const actor = await requireCurrentAppUser()
-  assertUserHasAnyPermission(actor, [
+  requireUserHasAnyPermission(actor, [
     PERMISSIONS.usersManage,
     PERMISSIONS.rolesManage,
   ])

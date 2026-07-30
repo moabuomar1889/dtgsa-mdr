@@ -7,7 +7,7 @@ import {
   stampPdfToolAction,
 } from "@/server/actions/pdf-tools"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getPdfToolResult } from "@/server/services/pdf/pdf-tools-service"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { SubmitButton } from "@/components/app/submit-button"
@@ -34,7 +34,10 @@ export default async function PdfToolsPage({
   searchParams,
 }: PdfToolsPageProps) {
   const user = await requireCurrentAppUser()
-  assertUserHasAnyPermission(user, [PERMISSIONS.mdrManage, PERMISSIONS.dcCheck])
+  requireUserHasAnyPermission(user, [
+    PERMISSIONS.mdrManage,
+    PERMISSIONS.dcCheck,
+  ])
   const resolvedSearchParams = (await searchParams) ?? {}
   const result = await getPdfToolResult(resolvedSearchParams.manifest)
 

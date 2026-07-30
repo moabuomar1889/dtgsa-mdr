@@ -5,7 +5,7 @@ import {
   createTransmittalTemplateAction,
 } from "@/server/actions/templates"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getTemplateManagementOverview } from "@/server/services/templates/template-management-service"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { SubmitButton } from "@/components/app/submit-button"
@@ -89,7 +89,7 @@ function ScopeFields({
 
 export default async function TemplatesPage() {
   const user = await requireCurrentAppUser()
-  assertUserHasAnyPermission(user, PERMISSIONS.templatesManage)
+  requireUserHasAnyPermission(user, PERMISSIONS.templatesManage)
   const overview = await getTemplateManagementOverview()
 
   return (

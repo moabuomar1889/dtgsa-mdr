@@ -1,7 +1,6 @@
 import type { CSSProperties } from "react"
 import type { Metadata } from "next"
 import { IBM_Plex_Mono, Inter } from "next/font/google"
-import Script from "next/script"
 import { AppProviders } from "@/components/providers/app-providers"
 import "./globals.css"
 
@@ -48,13 +47,14 @@ export default function RootLayout({
       className={`${inter.variable} ${ibmPlexMono.variable} h-full antialiased`}
       style={{ "--accent-seed": "var(--default-accent)" } as CSSProperties}
     >
-      <body>
-        <AppProviders>{children}</AppProviders>
-        <Script
+      <head>
+        <script
           id="dtg-theme-bootstrap"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeBootstrap }}
         />
+      </head>
+      <body>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   )

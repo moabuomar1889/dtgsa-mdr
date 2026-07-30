@@ -8,7 +8,7 @@ import { CoverDesignerWorkspace } from "@/components/cover-designer/cover-design
 import { createVisualCoverDraftAction } from "@/server/actions/templates"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getVisualCoverDesignerOverview } from "@/server/services/templates/visual-cover-template-service"
 
 export const dynamic = "force-dynamic"
@@ -19,7 +19,7 @@ export default async function CoverDesignerPage({
   searchParams: Promise<{ version?: string }>
 }) {
   const actor = await requireCurrentAppUser()
-  assertUserHasAnyPermission(actor, PERMISSIONS.templatesManage)
+  requireUserHasAnyPermission(actor, PERMISSIONS.templatesManage)
   const [overview, query] = await Promise.all([
     getVisualCoverDesignerOverview(),
     searchParams,

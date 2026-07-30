@@ -1,4 +1,7 @@
+import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { getUserAdminOverview } from "@/server/services/admin/user-admin-service"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { Badge } from "@/components/dtg/badge"
 import {
   Card,
@@ -19,6 +22,11 @@ import {
 export const dynamic = "force-dynamic"
 
 export default async function AdminUsersPage() {
+  const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, [
+    PERMISSIONS.usersManage,
+    PERMISSIONS.rolesManage,
+  ])
   const overview = await getUserAdminOverview()
   const projectAssignments = overview.users.reduce(
     (sum, user) => sum + user.projectRoles.length,

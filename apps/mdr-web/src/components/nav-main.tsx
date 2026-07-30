@@ -14,12 +14,14 @@ import { FolderPlusIcon } from "lucide-react"
 
 export function NavMain({
   items,
+  canCreateProject,
 }: {
   items: {
     title: string
     url: string
     icon?: React.ReactNode
   }[]
+  canCreateProject: boolean
 }) {
   const pathname = usePathname()
 
@@ -29,21 +31,23 @@ export function NavMain({
         Project
       </SidebarGroupLabel>
       <SidebarGroupContent className="flex flex-col gap-1">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Quick Create"
-              isActive={pathname === "/projects/new"}
-              className="border-accent-line bg-accent-bg text-accent-txt hover:border-accent hover:bg-accent-bg2 h-8 rounded-[7px] border px-2.5 text-[11.5px] font-medium"
-            >
-              <Link href="/projects/new">
-                <FolderPlusIcon className="size-3.5" />
-                <span>New Project</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        {canCreateProject ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip="Quick Create"
+                isActive={pathname === "/projects/new"}
+                className="border-accent-line bg-accent-bg text-accent-txt hover:border-accent hover:bg-accent-bg2 h-8 rounded-[7px] border px-2.5 text-[11.5px] font-medium"
+              >
+                <Link href="/projects/new">
+                  <FolderPlusIcon className="size-3.5" />
+                  <span>New Project</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        ) : null}
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>

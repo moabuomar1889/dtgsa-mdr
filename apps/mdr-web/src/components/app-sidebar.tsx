@@ -3,6 +3,7 @@
 import * as React from "react"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
+import { PERMISSIONS, type PermissionCode } from "@/lib/permissions/rbac"
 import {
   Sidebar,
   SidebarContent,
@@ -27,7 +28,18 @@ import {
   UsersIcon,
 } from "lucide-react"
 
-const data = {
+type NavigationItem = {
+  title: string
+  url: string
+  icon: React.ReactNode
+  requiredPermissions?: readonly PermissionCode[]
+}
+
+const data: {
+  navMain: NavigationItem[]
+  navSecondary: NavigationItem[]
+  navOperations: NavigationItem[]
+} = {
   navMain: [
     {
       title: "Dashboard",
@@ -43,26 +55,37 @@ const data = {
       title: "PDI Register",
       url: "/pdi",
       icon: <BookCheckIcon />,
+      requiredPermissions: [PERMISSIONS.pdiManage, PERMISSIONS.pdiCollaborate],
     },
     {
       title: "MDR",
       url: "/mdr",
       icon: <FileTextIcon />,
+      requiredPermissions: [
+        PERMISSIONS.mdrManage,
+        PERMISSIONS.workflowPrepare,
+        PERMISSIONS.workflowReview,
+        PERMISSIONS.workflowApprove,
+        PERMISSIONS.dcCheck,
+      ],
     },
     {
       title: "Transmittals",
       url: "/transmittals",
       icon: <FileBadge2Icon />,
+      requiredPermissions: [PERMISSIONS.transmittalsManage],
     },
     {
       title: "Client Replies",
       url: "/replies",
       icon: <InboxIcon />,
+      requiredPermissions: [PERMISSIONS.clientRepliesManage],
     },
     {
       title: "PDF Tools",
       url: "/pdf-tools",
       icon: <FileStackIcon />,
+      requiredPermissions: [PERMISSIONS.mdrManage, PERMISSIONS.dcCheck],
     },
     {
       title: "Tasks",
@@ -80,11 +103,13 @@ const data = {
       title: "Users & Roles",
       url: "/admin/users",
       icon: <UsersIcon />,
+      requiredPermissions: [PERMISSIONS.usersManage, PERMISSIONS.rolesManage],
     },
     {
       title: "Identity Control",
       url: "/admin/identity",
       icon: <UsersIcon />,
+      requiredPermissions: [PERMISSIONS.usersManage, PERMISSIONS.rolesManage],
     },
     {
       title: "Search",
@@ -95,6 +120,7 @@ const data = {
       title: "Templates",
       url: "/templates",
       icon: <FileCog2Icon />,
+      requiredPermissions: [PERMISSIONS.templatesManage],
     },
     {
       title: "Reports",
@@ -107,16 +133,19 @@ const data = {
       title: "Clients",
       url: "/clients",
       icon: <Building2Icon />,
+      requiredPermissions: [PERMISSIONS.clientsManage],
     },
     {
       title: "Masters",
       url: "/masters",
       icon: <FileChartColumnIcon />,
+      requiredPermissions: [PERMISSIONS.mastersManage],
     },
     {
       title: "Audit",
       url: "/audit",
       icon: <ShieldCheckIcon />,
+      requiredPermissions: [PERMISSIONS.auditView],
     },
   ],
 }
@@ -129,24 +158,33 @@ type SidebarUser = {
 
 type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   user: SidebarUser
-  canViewTransmittals: boolean
+  permissions: PermissionCode[]
 }
 
-export function AppSidebar({
-  user,
-  canViewTransmittals,
-  ...props
-}: AppSidebarProps) {
-  const navMain = canViewTransmittals
-    ? data.navMain
-    : data.navMain.filter((item) => item.url !== "/transmittals")
+export function AppSidebar({ user, permissions, ...props }: AppSidebarProps) {
+  const grantedPermissions = new Set(permissions)
+  const canAccess = (item: NavigationItem) =>
+    !item.requiredPermissions ||
+    item.requiredPermissions.some((permission) =>
+      grantedPermissions.has(permission)
+    )
+  const navMain = data.navMain.filter(canAccess)
+  const navOperations = data.navOperations.filter(canAccess)
+  const navSecondary = data.navSecondary.filter(canAccess)
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarContent className="bg-panel2 gap-0 px-2.5 py-3">
-        <NavMain items={navMain} />
-        <NavSecondary label="Operations" items={data.navOperations} />
-        <NavSecondary label="Platform" items={data.navSecondary} />
+        <NavMain
+          items={navMain}
+          canCreateProject={grantedPermissions.has(PERMISSIONS.projectsManage)}
+        />
+        {navOperations.length > 0 ? (
+          <NavSecondary label="Operations" items={navOperations} />
+        ) : null}
+        {navSecondary.length > 0 ? (
+          <NavSecondary label="Platform" items={navSecondary} />
+        ) : null}
       </SidebarContent>
       <SidebarFooter className="border-line bg-panel2 border-t p-2.5">
         <div

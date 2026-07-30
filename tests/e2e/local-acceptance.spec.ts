@@ -66,6 +66,9 @@ test("local dashboard, service surfaces, CSP, and identity switching", async ({
   expect(consoleErrors.join("\n")).not.toContain(
     "eval() is not supported in this environment"
   )
+  expect(consoleErrors.join("\n")).not.toContain(
+    "Encountered a script tag while rendering React component"
+  )
   expect(externalRequests).toEqual([])
 })
 
@@ -82,16 +85,27 @@ test("local identity endpoint refuses non-synthetic accounts", async ({
   expect(response.status()).toBe(400)
 })
 
-test("transmittal access is permission aware", async ({ page }) => {
+test("protected modules are permission aware", async ({ page }) => {
   await page.goto("/local-acceptance")
   const adminForm = page.locator("form", {
     has: page.getByText("dc.admin@local.test"),
   })
   await adminForm.getByRole("button", { name: "Select identity" }).click()
 
-  await expect(
-    page.getByRole("link", { name: "Transmittals", exact: true })
-  ).toBeVisible()
+  const protectedLinks = [
+    "Transmittals",
+    "Client Replies",
+    "PDF Tools",
+    "Users & Roles",
+    "Identity Control",
+    "Templates",
+  ]
+  for (const linkName of protectedLinks) {
+    await expect(
+      page.getByRole("link", { name: linkName, exact: true })
+    ).toBeVisible()
+  }
+
   const authorizedResponse = await page.goto("/transmittals")
   expect(authorizedResponse?.status()).toBe(200)
   await expect(
@@ -99,19 +113,33 @@ test("transmittal access is permission aware", async ({ page }) => {
   ).toBeVisible()
 
   await page.goto("/local-acceptance")
-  const preparedManagerForm = page.locator("form", {
-    has: page.getByText("prepared.manager@local.test"),
+  const projectViewerForm = page.locator("form", {
+    has: page.getByText("project.viewer@local.test"),
   })
-  await preparedManagerForm
+  await projectViewerForm
     .getByRole("button", { name: "Select identity" })
     .click()
 
-  await expect(
-    page.getByRole("link", { name: "Transmittals", exact: true })
-  ).toHaveCount(0)
-  const forbiddenResponse = await page.goto("/transmittals")
-  expect(forbiddenResponse?.status()).toBe(403)
-  await expect(
-    page.getByRole("heading", { name: "Access restricted" })
-  ).toBeVisible()
+  for (const linkName of protectedLinks) {
+    await expect(
+      page.getByRole("link", { name: linkName, exact: true })
+    ).toHaveCount(0)
+  }
+
+  const protectedPaths = [
+    "/transmittals",
+    "/replies",
+    "/pdf-tools",
+    "/admin/users",
+    "/admin/identity",
+    "/templates",
+    "/templates/designer",
+  ]
+  for (const path of protectedPaths) {
+    const forbiddenResponse = await page.goto(path)
+    expect(forbiddenResponse?.status(), path).toBe(403)
+    await expect(
+      page.getByRole("heading", { name: "Access restricted" })
+    ).toBeVisible()
+  }
 })

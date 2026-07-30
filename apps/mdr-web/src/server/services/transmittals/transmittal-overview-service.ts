@@ -1,24 +1,16 @@
 import "server-only"
 
 import { TransmittalStatus } from "@prisma/client"
-import { forbidden } from "next/navigation"
-import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { loadTransmittalOverviewRecords } from "@/server/repositories/transmittals/transmittal-read-repository"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { pickPreferredAttachmentFile } from "@/server/services/transmittals/transmittal-policy"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
 
 export async function getTransmittalOverview(user: CurrentAppUser) {
-  const canManageTransmittals = hasAnyPermission({
-    required: PERMISSIONS.transmittalsManage,
-    systemRoles: user.userRoles.map((item) => item.role.code),
-    projectRoles: user.projectRoles.map((item) => item.role.code),
-  })
-
-  if (!canManageTransmittals) {
-    forbidden()
-  }
+  requireUserHasAnyPermission(user, PERMISSIONS.transmittalsManage)
 
   const { projects, eligibleRevisions, transmittals } =
     await loadTransmittalOverviewRecords()
