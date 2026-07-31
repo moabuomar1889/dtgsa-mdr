@@ -34,7 +34,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </Suspense>
         <div className="flex min-h-0 flex-1">
           <Suspense fallback={<AppShellSidebarFallback />}>
-            <AppShellSidebar className="border-line top-[50px] bottom-0 h-auto border-r" />
+            <AppShellSidebar className="border-line top-[var(--header-height)] border-r" />
           </Suspense>
           <SidebarInset className="bg-bg min-h-0 overflow-y-auto">
             <div className="flex min-h-full flex-col">{children}</div>

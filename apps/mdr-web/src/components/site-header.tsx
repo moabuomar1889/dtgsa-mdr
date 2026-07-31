@@ -5,14 +5,17 @@ import { usePathname } from "next/navigation"
 import {
   BellIcon,
   FileCheck2Icon,
-  FolderKanbanIcon,
+  LogOutIcon,
   MoonIcon,
   SearchIcon,
   SunIcon,
 } from "lucide-react"
+import { signOutAction } from "@/server/actions/auth"
 import { useTheme } from "@/components/dtg/theme-provider"
 import { NavUser } from "@/components/nav-user"
+import { ProjectSwitcher } from "@/components/app/project-switcher"
 import { SidebarTrigger } from "@/components/dtg/sidebar"
+import type { ShellProjectOption } from "@/server/services/shell/shell-overview"
 
 type HeaderUser = {
   name: string
@@ -46,9 +49,13 @@ const titleMap: Record<string, string> = {
 export function SiteHeader({
   user,
   unreadNotificationCount,
+  projects,
+  projectCount,
 }: {
   user: HeaderUser
   unreadNotificationCount: number
+  projects: ShellProjectOption[]
+  projectCount: number
 }) {
   const pathname = usePathname()
   const { mode, toggleMode } = useTheme()
@@ -70,15 +77,9 @@ export function SiteHeader({
         </span>
       </Link>
 
-      <Link
-        href="/projects"
-        className="border-edge bg-raise text-muted hidden shrink-0 items-center gap-2 rounded-[7px] border px-2.5 py-1.5 text-[11.5px] whitespace-nowrap lg:flex"
-        data-b
-      >
-        <FolderKanbanIcon className="text-accent size-3.5" />
-        <span className="text-accent font-mono text-[10px]">ALL</span>
-        <span className="max-w-40 truncate">Project portfolio</span>
-      </Link>
+      <div className="hidden shrink-0 lg:block">
+        <ProjectSwitcher projects={projects} projectCount={projectCount} />
+      </div>
 
       <Link
         href="/search"
@@ -99,7 +100,7 @@ export function SiteHeader({
           type="button"
           onClick={toggleMode}
           aria-label={`Use ${mode === "dark" ? "light" : "dark"} theme`}
-          className="border-edge bg-raise text-soft flex size-7 items-center justify-center rounded-[7px] border"
+          className="border-edge bg-raise text-soft flex shrink-0 items-center gap-1.5 rounded-[7px] border px-2.5 py-[5px] text-[11.5px] whitespace-nowrap"
           data-b
         >
           {mode === "dark" ? (
@@ -107,6 +108,9 @@ export function SiteHeader({
           ) : (
             <MoonIcon className="size-3.5" />
           )}
+          <span className="hidden sm:inline">
+            {mode === "dark" ? "Light" : "Dark"}
+          </span>
         </button>
         <Link
           href="/notifications"
@@ -127,6 +131,19 @@ export function SiteHeader({
         </Link>
         <div className="bg-line h-5 w-px" />
         <NavUser user={user} />
+        {/* Design §4 keeps sign-out reachable in one click beside the user
+            block, not only inside the account menu. */}
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            aria-label="Sign out"
+            title="Sign out"
+            className="text-dim flex size-7 items-center justify-center rounded-[7px]"
+            data-h
+          >
+            <LogOutIcon className="size-3.5" />
+          </button>
+        </form>
       </div>
     </header>
   )

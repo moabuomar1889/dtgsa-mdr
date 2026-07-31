@@ -204,3 +204,39 @@ test("protected modules are permission aware", async ({ page }) => {
     "Encountered a script tag while rendering React component"
   )
 })
+
+test("application shell matches the Nocturne design geometry", async ({
+  page,
+}) => {
+  await page.goto("/local-acceptance")
+  const adminForm = page.locator("form", {
+    has: page.getByText("dc.admin@local.test"),
+  })
+  await adminForm.getByRole("button", { name: "Select identity" }).click()
+  await expect(page).toHaveURL(/\/dashboard$/)
+  await page.waitForLoadState("networkidle")
+
+  // Design §4 fixes these exactly; they are read from the live DOM rather than
+  // from class names so a cascade regression in the sidebar primitive is caught.
+  const geometry = await page.evaluate(() => {
+    const header = document.querySelector("header")!.getBoundingClientRect()
+    const sidebar = document
+      .querySelector('[data-slot="sidebar-container"]')!
+      .getBoundingClientRect()
+    return {
+      headerHeight: header.height,
+      sidebarWidth: sidebar.width,
+      sidebarBottom: Math.round(sidebar.bottom),
+      viewportHeight: window.innerHeight,
+    }
+  })
+  expect(geometry.headerHeight).toBe(50)
+  expect(geometry.sidebarWidth).toBe(208)
+  expect(geometry.sidebarBottom).toBe(geometry.viewportHeight)
+
+  // The switcher replaced the static portfolio link.
+  await page.getByRole("button", { name: "Switch project" }).click()
+  await expect(
+    page.getByPlaceholder(/^Search \d+ projects/)
+  ).toBeVisible()
+})

@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { NavCount } from "@/components/nav-count"
 import { NavigationPendingIndicator } from "@/components/navigation-pending-indicator"
 
 import {
@@ -24,6 +25,8 @@ export function NavSecondary({
     title: string
     url: string
     icon: React.ReactNode
+    count?: number
+    countTone?: "accent" | "bad" | "dim"
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   const pathname = usePathname()
@@ -51,6 +54,7 @@ export function NavSecondary({
                 <Link href={item.url}>
                   {item.icon}
                   <span>{item.title}</span>
+                  <NavCount count={item.count} tone={item.countTone} />
                   <NavigationPendingIndicator />
                 </Link>
               </SidebarMenuButton>

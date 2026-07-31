@@ -3,17 +3,24 @@ import { SiteHeader } from "@/components/site-header"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getUserPermissions } from "@/server/services/auth/permission-service"
 import { countUnreadNotificationsForUser } from "@/server/services/notifications/notification-service"
+import { getShellOverview } from "@/server/services/shell/shell-overview"
 
-// Both shell slots resolve the same request-cached session, so rendering them
-// under separate Suspense boundaries costs one query, not two.
+// Both shell slots resolve the same request-cached session and shell overview,
+// so rendering them under separate Suspense boundaries costs one set of
+// queries, not two.
 export async function AppShellHeader() {
   const user = await requireCurrentAppUser()
-  const unreadNotificationCount = await countUnreadNotificationsForUser(user.id)
+  const [unreadNotificationCount, overview] = await Promise.all([
+    countUnreadNotificationsForUser(user.id),
+    getShellOverview(user),
+  ])
 
   return (
     <SiteHeader
       user={{ name: user.fullName, email: user.email, avatar: "" }}
       unreadNotificationCount={unreadNotificationCount}
+      projects={overview.projects}
+      projectCount={overview.counts.projects}
     />
   )
 }
@@ -37,8 +44,18 @@ export function AppShellHeaderFallback() {
 
 export async function AppShellSidebar({ className }: { className?: string }) {
   const user = await requireCurrentAppUser()
+  const overview = await getShellOverview(user)
 
-  return <AppSidebar className={className} permissions={getUserPermissions(user)} />
+  return (
+    <AppSidebar
+      className={className}
+      // The primitive hardcodes `h-svh`, which a utility class cannot reliably
+      // override. The shell sits below a 50px header, so pin the height here.
+      style={{ height: "calc(100svh - var(--header-height))" }}
+      permissions={getUserPermissions(user)}
+      overview={overview}
+    />
+  )
 }
 
 export function AppShellSidebarFallback() {

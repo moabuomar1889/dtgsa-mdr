@@ -393,7 +393,10 @@ or uncached data. The session is therefore read inside the Suspense-wrapped
 shell slots in `components/app/app-shell.tsx`, and the session lookup is
 memoized per request with React `cache()`.
 
-Measured on the warmed local runtime, median of five requests:
+Measured on one warmed local runtime, median of five requests. Absolute
+figures are development-mode and only comparable inside a single server
+lifetime — compare variants back to back on the same server, never against a
+number recorded in an earlier session:
 
 | Route          | Baseline TTFB | Streaming TTFB |
 | -------------- | ------------- | -------------- |
@@ -405,6 +408,37 @@ Measured on the warmed local runtime, median of five requests:
 | `/reports`     | 92 ms         | 51 ms          |
 | `/tasks`       | 85 ms         | 53 ms          |
 | `/projects`    | 209 ms        | 64 ms          |
+
+### 9.1.1 Shell Geometry From the Design Source
+
+The shell is specified by the Claude Design project
+`Document Control System Design`, file `DTGSA MDR - Prototype.dc.html`, and its
+`handoff/CODEX-PROMPT-restyle-to-DTGSA-Nocturne.md`. The token layer already
+matched that source exactly; the shell now follows §4 as well:
+
+- top bar 50 px with brand, project switcher, search, and a right cluster
+  carrying a labelled theme control, notification bubble, user block, and a
+  one-click sign-out;
+- sidebar 208 px on `--panel2` with uppercase eyebrows, one right-aligned mono
+  count per module row, and a bottom-pinned submission-progress card.
+
+`tests/e2e/local-acceptance.spec.ts` asserts the 50 px and 208 px measurements
+from the live DOM, because the sidebar primitive hardcodes `h-svh` and a utility
+class cannot reliably win that cascade. The height is set inline in
+`components/app/app-shell.tsx` for the same reason.
+
+Nav counts are `aria-hidden`. They would otherwise be folded into each link's
+accessible name, changing it from `Client Replies` to `Client Replies 1`.
+
+The design specifies Phosphor icons but its own handoff permits keeping one
+existing set app-wide; Lucide is already used everywhere, so it stays. Do not
+mix the two.
+
+Still to port from the prototype, in its own change: the project-scoped
+information architecture (the prototype scopes navigation to a selected project
+and adds a separate portfolio-level nav), the registers as CSS grid rather than
+`<table>`, and the document-detail, transmittal, PDI, portal, and settings
+screens.
 
 ### 9.2 Recorded Decision: Denial Status Under Streaming
 
