@@ -7,7 +7,12 @@ import {
   updatePdiClientDocumentNumberAction,
 } from "@/server/actions/pdi"
 import { importPdiWorkbookAction } from "@/server/actions/pdi-import"
-import { getPdiOverview } from "@/server/services/pdi/pdi-service"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
+import {
+  getPdiOverview,
+  PDI_REGISTER_PERMISSIONS,
+} from "@/server/services/pdi/pdi-service"
 import { PdiItemForm } from "@/components/app/pdi-item-form"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/dtg/badge"
@@ -42,7 +47,10 @@ function pdiStatusVariant(status: PdiStatus) {
 }
 
 export default async function PdiPage() {
-  const overview = await getPdiOverview()
+  const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, PDI_REGISTER_PERMISSIONS)
+
+  const overview = await getPdiOverview(user)
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">

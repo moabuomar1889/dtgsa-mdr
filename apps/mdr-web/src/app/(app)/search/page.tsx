@@ -1,6 +1,10 @@
 import Link from "next/link"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { searchPlatform } from "@/server/services/search/global-search-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
+import {
+  searchPlatform,
+  SEARCH_PERMISSIONS,
+} from "@/server/services/search/global-search-service"
 import { Badge } from "@/components/dtg/badge"
 import {
   Card,
@@ -32,6 +36,8 @@ function EmptyState({ query }: { query: string }) {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {}
   const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, SEARCH_PERMISSIONS)
+
   const results = await searchPlatform(user, resolvedSearchParams.q)
   const hasResults =
     results.counts.projects +

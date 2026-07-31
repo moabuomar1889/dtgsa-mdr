@@ -4,6 +4,9 @@ import {
   createReleasePurposeAction,
   createReviewCodeAction,
 } from "@/server/actions/platform-admin"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getGlobalMasterData } from "@/server/services/masters/master-data-service"
 import { ReviewCodeForm } from "@/components/app/review-code-form"
 import { SubmitButton } from "@/components/app/submit-button"
@@ -98,6 +101,9 @@ function renderNumberingRulePreview(
 }
 
 export default async function MastersPage() {
+  const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, PERMISSIONS.mastersManage)
+
   const masters = await getGlobalMasterData()
 
   return (

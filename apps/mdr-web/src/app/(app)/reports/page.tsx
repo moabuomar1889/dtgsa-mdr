@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getReportingOverview } from "@/server/services/reports/reporting-service"
 import { Badge } from "@/components/dtg/badge"
 import {
@@ -22,6 +24,8 @@ export const dynamic = "force-dynamic"
 
 export default async function ReportsPage() {
   const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, PERMISSIONS.dashboardView)
+
   const overview = await getReportingOverview(user)
 
   return (

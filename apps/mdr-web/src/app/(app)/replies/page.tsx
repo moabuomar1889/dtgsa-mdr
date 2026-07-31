@@ -52,11 +52,15 @@ export default async function RepliesPage({
 }) {
   const user = await requireCurrentAppUser()
   const filters = await searchParams
-  const overview = await getClientRepliesOverview(user)
-  const configured = await getConfigurableClientResponseOverview(user, {
-    outcomeClass: filters.outcome || undefined,
-    action: filters.action || "ALL",
-  })
+  // These two overviews are independent reads; awaiting them in sequence
+  // doubled the page's database latency for no reason.
+  const [overview, configured] = await Promise.all([
+    getClientRepliesOverview(user),
+    getConfigurableClientResponseOverview(user, {
+      outcomeClass: filters.outcome || undefined,
+      action: filters.action || "ALL",
+    }),
+  ])
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">

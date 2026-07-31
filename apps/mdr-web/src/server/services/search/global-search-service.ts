@@ -11,17 +11,21 @@ import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
 
+// Exported so the page can raise the framework denial before this
+// framework-agnostic service throws as a backstop.
+export const SEARCH_PERMISSIONS = [
+  PERMISSIONS.dashboardView,
+  PERMISSIONS.pdiManage,
+  PERMISSIONS.mdrManage,
+  PERMISSIONS.transmittalsManage,
+  PERMISSIONS.clientRepliesManage,
+]
+
 export async function searchPlatform(
   user: CurrentAppUser,
   query: string | null | undefined
 ) {
-  assertUserHasAnyPermission(user, [
-    PERMISSIONS.dashboardView,
-    PERMISSIONS.pdiManage,
-    PERMISSIONS.mdrManage,
-    PERMISSIONS.transmittalsManage,
-    PERMISSIONS.clientRepliesManage,
-  ])
+  assertUserHasAnyPermission(user, SEARCH_PERMISSIONS)
 
   const search = normalizeSearchQuery(query)
   const accessibleProjectIds = await resolveAccessibleProjectIds(user)

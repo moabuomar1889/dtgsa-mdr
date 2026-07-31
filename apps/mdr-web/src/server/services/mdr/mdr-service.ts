@@ -1,9 +1,22 @@
 import "server-only"
 import { prisma } from "@/lib/prisma/client"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
+import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
+
+// Mirrors the MDR entry in the sidebar. Hiding the link is presentation only;
+// this is the authorization boundary for the register itself.
+export const MDR_REGISTER_PERMISSIONS = [
+  PERMISSIONS.mdrManage,
+  PERMISSIONS.workflowPrepare,
+  PERMISSIONS.workflowReview,
+  PERMISSIONS.workflowApprove,
+  PERMISSIONS.dcCheck,
+]
+
+const MDR_REGISTER_PAGE_SIZE = 200
 
 function canAct(
   user: CurrentAppUser,
@@ -20,11 +33,14 @@ function canAct(
 }
 
 export async function getMdrOverview(user: CurrentAppUser) {
+  assertUserHasAnyPermission(user, MDR_REGISTER_PERMISSIONS)
+
   const documents = await prisma.mdrDocument.findMany({
     where: {
       deletedAt: null,
     },
     orderBy: [{ createdAt: "desc" }],
+    take: MDR_REGISTER_PAGE_SIZE,
     include: {
       project: {
         select: {
@@ -85,41 +101,62 @@ export async function getMdrOverview(user: CurrentAppUser) {
     },
   })
 
-  const mappedDocuments = await Promise.all(
-    documents.map(async (document) => {
-      const signedArtifact = document.currentRevision
-        ? await prisma.generatedArtifactRecord.findFirst({
-            where: {
-              revisionId: document.currentRevision.id,
-              artifactKind: "SIGNED_INTERNALLY_PDF",
-              cleanupStatus: "Available",
-              expiresAt: { gt: new Date() },
-            },
-            orderBy: { generatedAt: "desc" },
-            select: { id: true, expiresAt: true },
-          })
-        : null
-      return {
-        ...document,
-        signedInternalArtifact: signedArtifact,
-        currentRevisionFiles: await Promise.all(
-          (document.currentRevision?.files ?? []).map(async (file) => ({
-            ...file,
-            accessUrl: file.providerKey
-              ? `/api/document-files/${file.id}`
-              : null,
-          }))
-        ),
-        permissions: {
-          canPrepare: canAct(user, document.projectId, "workflowPrepare"),
-          canReview: canAct(user, document.projectId, "workflowReview"),
-          canApprove: canAct(user, document.projectId, "workflowApprove"),
-          canDcCheck: canAct(user, document.projectId, "dcCheck"),
-          canUpload: canAct(user, document.projectId, "workflowPrepare"),
+  // One batched read for the whole page instead of a findFirst per document.
+  const currentRevisionIds = documents
+    .map((document) => document.currentRevision?.id)
+    .filter((id): id is string => Boolean(id))
+
+  const signedArtifacts = currentRevisionIds.length
+    ? await prisma.generatedArtifactRecord.findMany({
+        where: {
+          revisionId: { in: currentRevisionIds },
+          artifactKind: "SIGNED_INTERNALLY_PDF",
+          cleanupStatus: "Available",
+          expiresAt: { gt: new Date() },
         },
-      }
-    })
-  )
+        orderBy: { generatedAt: "desc" },
+        select: { id: true, expiresAt: true, revisionId: true },
+      })
+    : []
+
+  // `orderBy generatedAt desc` means the first row seen per revision is the
+  // newest, matching the previous per-document findFirst semantics.
+  const latestSignedArtifactByRevision = new Map<
+    string,
+    { id: string; expiresAt: Date | null }
+  >()
+  for (const artifact of signedArtifacts) {
+    if (
+      artifact.revisionId &&
+      !latestSignedArtifactByRevision.has(artifact.revisionId)
+    ) {
+      latestSignedArtifactByRevision.set(artifact.revisionId, {
+        id: artifact.id,
+        expiresAt: artifact.expiresAt,
+      })
+    }
+  }
+
+  const mappedDocuments = documents.map((document) => ({
+    ...document,
+    signedInternalArtifact: document.currentRevision
+      ? (latestSignedArtifactByRevision.get(document.currentRevision.id) ??
+        null)
+      : null,
+    currentRevisionFiles: (document.currentRevision?.files ?? []).map(
+      (file) => ({
+        ...file,
+        accessUrl: file.providerKey ? `/api/document-files/${file.id}` : null,
+      })
+    ),
+    permissions: {
+      canPrepare: canAct(user, document.projectId, "workflowPrepare"),
+      canReview: canAct(user, document.projectId, "workflowReview"),
+      canApprove: canAct(user, document.projectId, "workflowApprove"),
+      canDcCheck: canAct(user, document.projectId, "dcCheck"),
+      canUpload: canAct(user, document.projectId, "workflowPrepare"),
+    },
+  }))
 
   return {
     documents: mappedDocuments,

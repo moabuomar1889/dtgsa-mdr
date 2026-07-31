@@ -16,6 +16,11 @@ import {
 } from "@/lib/pdi/policy"
 import { generateDocumentNumber } from "@/server/services/numbering/document-numbering-service"
 import { seedWorkflowStepsForRevision } from "@/server/services/workflow/workflow-service"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
+import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+
+type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
 
 const GLOBAL_SCOPE_KEY = "system"
 
@@ -55,7 +60,18 @@ function normalizeTags(value?: string) {
   )
 }
 
-export async function getPdiOverview() {
+// Mirrors the PDI entry in the sidebar. Hiding the link is presentation only;
+// this is the authorization boundary for the register itself.
+export const PDI_REGISTER_PERMISSIONS = [
+  PERMISSIONS.pdiManage,
+  PERMISSIONS.pdiCollaborate,
+]
+
+const PDI_REGISTER_PAGE_SIZE = 200
+
+export async function getPdiOverview(user: CurrentAppUser) {
+  assertUserHasAnyPermission(user, PDI_REGISTER_PERMISSIONS)
+
   const [projects, disciplines, documentTypes, releasePurposes, items] =
     await Promise.all([
       prisma.project.findMany({
@@ -118,6 +134,7 @@ export async function getPdiOverview() {
           deletedAt: null,
         },
         orderBy: [{ createdAt: "desc" }],
+        take: PDI_REGISTER_PAGE_SIZE,
         include: {
           project: {
             select: {

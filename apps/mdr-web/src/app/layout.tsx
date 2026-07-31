@@ -16,6 +16,20 @@ const ibmPlexMono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
 })
 
+// Runs before the body paints, so a stored light theme or custom accent is
+// applied without the dark-to-light flash the server-rendered default causes.
+// It is mounted as the first body child rather than inside a hand-written
+// <head>, which previously produced hydration warnings on interrupt routes
+// such as forbidden.tsx.
+const themeBootstrap = `
+try {
+  var mode = localStorage.getItem("dtg.mode");
+  var accent = localStorage.getItem("dtg.accent");
+  if (mode === "light" || mode === "dark") document.documentElement.dataset.theme = mode;
+  if (/^#[0-9a-f]{6}$/i.test(accent || "")) document.documentElement.style.setProperty("--accent-seed", accent);
+} catch (error) {}
+`
+
 export const metadata: Metadata = {
   title: {
     default: "DTGSA MDR",
@@ -39,6 +53,10 @@ export default function RootLayout({
       style={{ "--accent-seed": "var(--default-accent)" } as CSSProperties}
     >
       <body>
+        <script
+          id="dtg-theme-bootstrap"
+          dangerouslySetInnerHTML={{ __html: themeBootstrap }}
+        />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

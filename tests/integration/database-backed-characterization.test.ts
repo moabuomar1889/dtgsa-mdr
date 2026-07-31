@@ -2076,7 +2076,18 @@ test("Phase 10 PostgreSQL leases recover and delivery attempts reject duplicates
     correlationId: "phase-10-correlation",
     maxAttempts: 3,
   })
-  const now = new Date("2026-07-30T00:00:00Z")
+  // `nextAttemptAt` defaults to the database clock, so the lease baseline is
+  // anchored to the row that was just enqueued. A hardcoded calendar date made
+  // this test pass only until the wall clock moved past it, at which point the
+  // job was no longer due and every lease returned null.
+  const now = new Date(
+    (
+      await prisma.backgroundJob.findUniqueOrThrow({
+        where: { id: queued.id },
+        select: { nextAttemptAt: true },
+      })
+    ).nextAttemptAt
+  )
   const firstLease = await store.lease({
     owner: "worker-a",
     now,

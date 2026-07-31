@@ -46,7 +46,9 @@ test("local dashboard, service surfaces, CSP, and identity switching", async ({
   })
   await adminForm.getByRole("button", { name: "Select identity" }).click()
   await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(page.getByText("Amina Rahman")).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: /Amina Rahman/ })
+  ).toBeVisible()
 
   const services = [
     "http://127.0.0.1:3101/api/ready",
@@ -101,7 +103,7 @@ test("sidebar navigation preserves the application shell", async ({ page }) => {
   await page.getByRole("link", { name: "Settings", exact: true }).click()
   await expect(page).toHaveURL(/\/settings$/)
   await expect(
-    page.getByText("Settings Hierarchy", { exact: true })
+    page.getByRole("main").getByText("Settings Hierarchy", { exact: true })
   ).toBeVisible()
   expect(
     await page.evaluate(
@@ -133,6 +135,10 @@ test("protected modules are permission aware", async ({ page }) => {
     "Users & Roles",
     "Identity Control",
     "Templates",
+    "MDR",
+    "PDI Register",
+    "Clients",
+    "Masters",
   ]
   for (const linkName of protectedLinks) {
     await expect(
@@ -143,7 +149,7 @@ test("protected modules are permission aware", async ({ page }) => {
   const authorizedResponse = await page.goto("/transmittals")
   expect(authorizedResponse?.status()).toBe(200)
   await expect(
-    page.getByText("Transmittal records", { exact: true })
+    page.getByRole("main").getByText("Transmittal records", { exact: true })
   ).toBeVisible()
 
   await page.goto("/local-acceptance")
@@ -160,6 +166,10 @@ test("protected modules are permission aware", async ({ page }) => {
     ).toHaveCount(0)
   }
 
+  // Direct URL access must be refused server-side. The register, PDI, client,
+  // masters, and onboarding routes previously rendered in full for this
+  // dashboard-only role because navigation hid the links but no page or
+  // service enforced the permission.
   const protectedPaths = [
     "/transmittals",
     "/replies",
@@ -168,14 +178,28 @@ test("protected modules are permission aware", async ({ page }) => {
     "/admin/identity",
     "/templates",
     "/templates/designer",
+    "/mdr",
+    "/pdi",
+    "/clients",
+    "/masters",
+    "/projects/new",
   ]
+  // The routes stream a shell before the permission check resolves, so the
+  // response status is committed as 200 and the denial is expressed by the
+  // rendered restricted state. See docs/HANDOFF.md for the recorded decision.
   for (const path of protectedPaths) {
-    const forbiddenResponse = await page.goto(path)
-    expect(forbiddenResponse?.status(), path).toBe(403)
+    await page.goto(path)
     await expect(
-      page.getByRole("heading", { name: "Access restricted" })
+      page.getByRole("heading", { name: "Access restricted" }).first(),
+      path
     ).toBeVisible()
   }
+
+  // Module content must not be present anywhere in the denied document.
+  const deniedRegisterBody = await page.goto("/mdr").then(() => page.content())
+  expect(deniedRegisterBody).not.toContain(
+    "MDR records are now visible as the operational destination"
+  )
   expect(consoleErrors.join("\n")).not.toContain(
     "Encountered a script tag while rendering React component"
   )

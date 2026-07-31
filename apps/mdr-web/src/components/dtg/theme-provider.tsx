@@ -42,6 +42,11 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
   const [accent, setAccent] = useState<string>(ACCENTS[0].seed)
   const [ready, setReady] = useState(false)
 
+  // The inline bootstrap in the root layout already applied the stored theme to
+  // <html> before first paint, so this effect only reconciles React state with
+  // what is on screen. The state updates stay in a microtask to keep them out
+  // of the effect body (react-hooks/set-state-in-effect); the visible theme
+  // does not depend on this timing any more.
   useEffect(() => {
     queueMicrotask(() => {
       let nextMode: ThemeMode = "dark"

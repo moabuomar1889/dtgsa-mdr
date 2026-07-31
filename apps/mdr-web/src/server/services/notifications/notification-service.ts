@@ -182,32 +182,47 @@ export async function notifyProjectRoles(input: NotifyProjectRolesInput) {
   return result
 }
 
-export async function getNotificationsForUser(userId: string) {
-  const notifications = await prisma.notification.findMany({
+export async function countUnreadNotificationsForUser(userId: string) {
+  return prisma.notification.count({
     where: {
       userId,
-    },
-    orderBy: [{ createdAt: "desc" }],
-    take: 50,
-    include: {
-      project: {
-        select: {
-          code: true,
-          name: true,
-        },
-      },
-      client: {
-        select: {
-          code: true,
-          name: true,
-        },
-      },
+      status: { not: NotificationStatus.Read },
     },
   })
+}
+
+export async function getNotificationsForUser(userId: string) {
+  // The unread total is counted across the whole table, not derived from the
+  // 50-row page below, which silently under-reported once a user had more
+  // than 50 unread notifications.
+  const [notifications, unreadCount] = await Promise.all([
+    prisma.notification.findMany({
+      where: {
+        userId,
+      },
+      orderBy: [{ createdAt: "desc" }],
+      take: 50,
+      include: {
+        project: {
+          select: {
+            code: true,
+            name: true,
+          },
+        },
+        client: {
+          select: {
+            code: true,
+            name: true,
+          },
+        },
+      },
+    }),
+    countUnreadNotificationsForUser(userId),
+  ])
 
   return {
     notifications,
-    unreadCount: notifications.filter((item) => item.status !== NotificationStatus.Read).length,
+    unreadCount,
   }
 }
 

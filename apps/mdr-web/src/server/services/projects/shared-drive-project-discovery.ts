@@ -1,4 +1,5 @@
 import "server-only"
+import { cache } from "react"
 import { DriveFolderType } from "@prisma/client"
 import { env, hasGoogleDriveServiceAccount } from "@/lib/config/env"
 import { createGoogleDriveClient } from "@/lib/google/drive"
@@ -89,7 +90,7 @@ function extractGoogleErrorMessage(error: unknown) {
   return "Unknown Google Drive error."
 }
 
-export async function discoverSharedDriveProjectFolders(): Promise<SharedDriveProjectDiscoveryResult> {
+async function runSharedDriveProjectDiscovery(): Promise<SharedDriveProjectDiscoveryResult> {
   const sharedDriveId = env.GOOGLE_DRIVE_SHARED_DRIVE_ID
   const projectsFolderId =
     env.GOOGLE_DRIVE_PROJECTS_FOLDER_ID ?? env.GOOGLE_DRIVE_ROOT_FOLDER_ID
@@ -285,3 +286,9 @@ export async function discoverSharedDriveProjectFolders(): Promise<SharedDrivePr
     }
   }
 }
+
+// Request-scoped so a page can render several independently streamed panels
+// from a single Drive scan instead of repeating the paginated network call.
+export const discoverSharedDriveProjectFolders = cache(
+  runSharedDriveProjectDiscovery
+)

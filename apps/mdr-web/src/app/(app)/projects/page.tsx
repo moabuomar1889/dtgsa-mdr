@@ -1,8 +1,10 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { listProjects } from "@/server/services/projects/project-management"
 import { discoverSharedDriveProjectFolders } from "@/server/services/projects/shared-drive-project-discovery"
 import { Badge } from "@/components/dtg/badge"
 import { Button } from "@/components/dtg/button"
+import { Skeleton } from "@/components/dtg/skeleton"
 import {
   Card,
   CardContent,
@@ -32,17 +34,71 @@ function formatDate(value: string | null) {
   }).format(new Date(value))
 }
 
-export default async function ProjectsPage() {
-  const [discovery, projects] = await Promise.all([
-    discoverSharedDriveProjectFolders(),
-    listProjects(),
-  ])
+function DriveDiscoveryFallback({ projectCount }: { projectCount: number }) {
+  return (
+    <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <Card className="border-line bg-panel">
+        <CardHeader className="border-line bg-head gap-2 border-b">
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
+              Shared Drive Discovery
+            </Badge>
+            <Badge variant="outline">scanning</Badge>
+          </div>
+          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
+            Project folders are discovered from the Google Workspace Shared
+            Drive and compared against initiated project records.
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
+          {["Matching folders", "Available to onboard", "Already linked"].map(
+            (label) => (
+              <div
+                key={label}
+                className="border-line bg-raise rounded-[9px] border p-4"
+              >
+                <p className="text-soft text-sm">{label}</p>
+                <Skeleton className="mt-2 h-7 w-12" />
+              </div>
+            )
+          )}
+          <div className="border-line bg-raise rounded-[9px] border p-4">
+            <p className="text-soft text-sm">Projects in system</p>
+            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
+              {projectCount}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="border-line bg-panel">
+        <CardHeader>
+          <CardTitle className="text-lg">Drive source</CardTitle>
+          <CardDescription>
+            Discovery uses the configured Shared Drive and Projects folder ID.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <Skeleton className="h-[74px] w-full" />
+          <Skeleton className="h-[74px] w-full" />
+          <Button asChild className="mt-1">
+            <Link href="/projects/new">Open onboarding queue</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </section>
+  )
+}
+
+// Drive discovery is an unbounded paginated network scan that also retries
+// across auth modes on failure. Awaiting it in the page body held the whole
+// register hostage to Google's latency, so it streams in on its own.
+async function DriveDiscoveryPanels({ projectCount }: { projectCount: number }) {
+  const discovery = await discoverSharedDriveProjectFolders()
   const isReady = discovery.status === "ready"
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-        <Card className="border-line bg-panel">
+    <section className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+      <Card className="border-line bg-panel">
           <CardHeader className="border-line bg-head gap-2 border-b">
             <div className="flex flex-wrap items-center gap-3">
               <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
@@ -85,7 +141,7 @@ export default async function ProjectsPage() {
             <div className="border-line bg-raise rounded-[9px] border p-4">
               <p className="text-soft text-sm">Projects in system</p>
               <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {projects.length}
+                {projectCount}
               </p>
             </div>
           </CardContent>
@@ -120,7 +176,20 @@ export default async function ProjectsPage() {
             </Button>
           </CardContent>
         </Card>
-      </section>
+    </section>
+  )
+}
+
+export default async function ProjectsPage() {
+  const projects = await listProjects()
+
+  return (
+    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      <Suspense
+        fallback={<DriveDiscoveryFallback projectCount={projects.length} />}
+      >
+        <DriveDiscoveryPanels projectCount={projects.length} />
+      </Suspense>
 
       <Card className="border-line bg-panel">
         <CardHeader>
@@ -187,6 +256,34 @@ export default async function ProjectsPage() {
         </CardContent>
       </Card>
 
+      <Suspense fallback={<DriveDiscoveryResultsFallback />}>
+        <DriveDiscoveryResults />
+      </Suspense>
+    </div>
+  )
+}
+
+function DriveDiscoveryResultsFallback() {
+  return (
+    <Card className="border-line bg-panel">
+      <CardHeader>
+        <CardTitle className="text-lg">Drive discovery result</CardTitle>
+        <CardDescription>Scanning the configured Shared Drive.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} className="h-9 w-full" />
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
+async function DriveDiscoveryResults() {
+  const discovery = await discoverSharedDriveProjectFolders()
+  const isReady = discovery.status === "ready"
+
+  return (
       <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">Drive discovery result</CardTitle>
@@ -253,6 +350,5 @@ export default async function ProjectsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
   )
 }

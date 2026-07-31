@@ -382,8 +382,41 @@ now occurs in the client theme provider and uses browser `localStorage`.
 
 Development mode compiles dynamic routes on first visit, so the first
 navigation can be slower than a warmed route. Do not confuse this expected
-development compilation with a production performance result. Server logs
-showed warmed report responses as low as 59 ms after the navigation fix.
+development compilation with a production performance result.
+
+### 9.1 Streaming Shell Contract
+
+`apps/mdr-web/src/app/(app)/layout.tsx` must not perform runtime data access of
+its own. Next.js 16 blocks the whole navigation on the layout render and never
+shows the `loading.tsx` fallback when a layout reads `cookies()`, `headers()`,
+or uncached data. The session is therefore read inside the Suspense-wrapped
+shell slots in `components/app/app-shell.tsx`, and the session lookup is
+memoized per request with React `cache()`.
+
+Measured on the warmed local runtime, median of five requests:
+
+| Route          | Baseline TTFB | Streaming TTFB |
+| -------------- | ------------- | -------------- |
+| `/dashboard`   | 214 ms        | 63 ms          |
+| `/mdr`         | 112 ms        | 51 ms          |
+| `/pdi`         | 105 ms        | 53 ms          |
+| `/transmittals`| 91 ms         | 51 ms          |
+| `/replies`     | 94 ms         | 48 ms          |
+| `/reports`     | 92 ms         | 51 ms          |
+| `/tasks`       | 85 ms         | 53 ms          |
+| `/projects`    | 209 ms        | 64 ms          |
+
+### 9.2 Recorded Decision: Denial Status Under Streaming
+
+Because the shell streams before a page's permission check resolves, the
+response status is committed as `200` and a denied route expresses the denial
+by rendering `app/forbidden.tsx` instead of returning `403`. No unauthorized
+data is served in either case; only the status code differs. This was an
+explicit owner decision taken in favour of instant navigation.
+
+The e2e suite therefore asserts the rendered restricted state and the absence
+of module content, not the HTTP status. Removing `(app)/loading.tsx` restores
+`403` at the cost of blocking navigation; do not change one without the other.
 
 ## 10. Recent Commits
 
@@ -407,21 +440,49 @@ The protected navigation contract is:
   framework denial behavior, not crash with an unhandled permission error;
 - authorization must never rely only on hidden links.
 
+Until this was corrected, `/mdr`, `/pdi`, `/clients`, `/masters`, and
+`/projects/new` relied only on hidden links. A `project.viewer` identity, which
+holds `dashboard.view` alone, could load each of those registers in full by
+entering the URL. Every module route now enforces its permission on the server.
+
+Layering rule for guards:
+
+- pages call `requireUserHasAnyPermission`, which raises `forbidden()`;
+- services call `assertUserHasAnyPermission`, which throws a plain error.
+
+Server services must not import `page-access-service`, because it pulls
+`next/navigation` into modules that the database characterization suite loads
+under `--conditions=react-server`, where `React.createContext` does not exist.
+
 ## 11. Verification Evidence
 
 The latest focused verification after the navigation and theme changes passed:
 
-| Gate                                | Result        |
-| ----------------------------------- | ------------- |
-| ESLint                              | Passed        |
-| MDR TypeScript                      | Passed        |
-| MDR production build                | Passed        |
-| Architecture validator              | Passed        |
-| Retired-provider gate               | Passed        |
-| Unit tests                          | 135 passed    |
-| Local Playwright                    | 4 passed      |
-| Browser console on fresh navigation | No new errors |
-| Graphify update                     | Completed     |
+| Gate                                | Result             |
+| ----------------------------------- | ------------------ |
+| ESLint                              | Passed             |
+| Repository TypeScript               | Passed             |
+| All five production builds          | Passed             |
+| Architecture validator              | Passed             |
+| Retired-provider gate               | Passed             |
+| Documentation validator             | Passed             |
+| `test:ci`                           | 204 passed, 0 failed |
+| Local Playwright                    | 4 passed           |
+| Browser console on fresh navigation | No new errors      |
+| Graphify update                     | Completed          |
+
+`test:ci` previously reported 203 passed and 1 failed. The Phase 10 lease test
+pinned a literal `2026-07-30` baseline while `BackgroundJob.nextAttemptAt`
+defaults to the database clock, so the job stopped being due once the wall
+clock passed that date. The baseline is now anchored to the enqueued row.
+
+Two environment notes for anyone reproducing these gates: the local runtime
+daemon can survive with dead children and then answer the control port, which
+makes `local:up` a no-op — stop the daemon process directly if `local:status`
+reports RUNNING while the ports are closed. Separately,
+`assertLocalProviderConfiguration` scans every environment variable ending in
+`_URL`, so an unrelated inherited variable such as `ANTHROPIC_BASE_URL` fails
+`platform-api`, `worker`, and `test:ci` startup with a loopback error.
 
 The four Playwright tests cover the local control surface and identity switch,
 non-synthetic account rejection, preservation of the application shell during

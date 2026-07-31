@@ -1,4 +1,5 @@
 import "server-only"
+import { cache } from "react"
 import { cookies } from "next/headers"
 import {
   assertSessionActive,
@@ -146,7 +147,12 @@ export async function createInternalSession(input: {
   return { session, rawToken, csrfToken, expiresAt }
 }
 
-export async function getInternalSessionByToken(rawToken: string) {
+// The session row carries a four-level include (roles, project roles, project
+// summaries, signature profile) and is read by the shell layout, the page, and
+// most services during a single render. `cache` collapses those into one query
+// per request; it is request-scoped, so a revocation in a later request is
+// still observed immediately.
+export const getInternalSessionByToken = cache(async (rawToken: string) => {
   const tokenHash = hashOpaqueToken(rawToken)
   const session = await prisma.internalAuthSession.findUnique({
     where: { tokenHash },
@@ -167,7 +173,7 @@ export async function getInternalSessionByToken(rawToken: string) {
     return null
   }
   return session
-}
+})
 
 export async function getCurrentInternalSession() {
   const cookieStore = await cookies()

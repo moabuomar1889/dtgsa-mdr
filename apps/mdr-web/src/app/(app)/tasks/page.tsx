@@ -1,4 +1,6 @@
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getTaskDashboard } from "@/server/services/tasks/task-dashboard-service"
 import { Badge } from "@/components/dtg/badge"
 import {
@@ -72,6 +74,8 @@ function QueueCard({
 
 export default async function TasksPage() {
   const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, PERMISSIONS.dashboardView)
+
   const overview = await getTaskDashboard(user)
 
   return (

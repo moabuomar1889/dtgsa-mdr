@@ -1,5 +1,8 @@
 import Link from "next/link"
 import { createClientAction } from "@/server/actions/platform-admin"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { listClients } from "@/server/services/clients/client-management"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/dtg/badge"
@@ -30,6 +33,9 @@ function formatCount(value: number) {
 }
 
 export default async function ClientsPage() {
+  const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, PERMISSIONS.clientsManage)
+
   const clients = await listClients()
   const activeClients = clients.filter((client) => client.isActive).length
   const totalProjects = clients.reduce(

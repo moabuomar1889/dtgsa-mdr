@@ -1,4 +1,6 @@
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getProjectDashboard } from "@/server/services/projects/project-dashboard-service"
 import { Badge } from "@/components/dtg/badge"
 import {
@@ -30,6 +32,8 @@ export default async function ProjectDashboardPage({
 }: ProjectDashboardPageProps) {
   const { projectId } = await params
   const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, PERMISSIONS.dashboardView, projectId)
+
   const overview = await getProjectDashboard(user, projectId)
 
   return (

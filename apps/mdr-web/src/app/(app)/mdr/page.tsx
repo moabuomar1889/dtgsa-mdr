@@ -15,7 +15,11 @@ import {
   uploadRevisionFileAction,
 } from "@/server/actions/mdr"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
-import { getMdrOverview } from "@/server/services/mdr/mdr-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
+import {
+  getMdrOverview,
+  MDR_REGISTER_PERMISSIONS,
+} from "@/server/services/mdr/mdr-service"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/dtg/badge"
 import { Button } from "@/components/dtg/button"
@@ -156,6 +160,8 @@ function WorkflowActions({
 
 export default async function MdrPage() {
   const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, MDR_REGISTER_PERMISSIONS)
+
   const overview = await getMdrOverview(user)
 
   return (

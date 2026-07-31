@@ -43,7 +43,13 @@ const titleMap: Record<string, string> = {
   "/notifications": "Notifications",
 }
 
-export function SiteHeader({ user }: { user: HeaderUser }) {
+export function SiteHeader({
+  user,
+  unreadNotificationCount,
+}: {
+  user: HeaderUser
+  unreadNotificationCount: number
+}) {
   const pathname = usePathname()
   const { mode, toggleMode } = useTheme()
   const title = titleMap[pathname] ?? "DTGSA Document Control"
@@ -105,13 +111,19 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
         <Link
           href="/notifications"
           className="relative flex size-7 items-center justify-center rounded-[7px]"
-          aria-label="Notifications"
+          aria-label={
+            unreadNotificationCount > 0
+              ? `Notifications, ${unreadNotificationCount} unread`
+              : "Notifications"
+          }
           data-h
         >
           <BellIcon className="size-3.5" />
-          <span className="text-on-accent absolute -top-0.5 -right-0.5 flex min-w-3.5 items-center justify-center rounded-full bg-[var(--accent)] px-0.5 font-mono text-[8px] font-semibold">
-            3
-          </span>
+          {unreadNotificationCount > 0 ? (
+            <span className="text-on-accent absolute -top-0.5 -right-0.5 flex min-w-3.5 items-center justify-center rounded-full bg-[var(--accent)] px-0.5 font-mono text-[8px] font-semibold">
+              {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+            </span>
+          ) : null}
         </Link>
         <div className="bg-line h-5 w-px" />
         <NavUser user={user} />

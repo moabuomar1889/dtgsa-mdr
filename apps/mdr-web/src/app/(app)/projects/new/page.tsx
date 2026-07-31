@@ -1,5 +1,8 @@
 import Link from "next/link"
 import { createProjectAction } from "@/server/actions/platform-admin"
+import { PERMISSIONS } from "@/lib/permissions/rbac"
+import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { listClientOptions } from "@/server/services/clients/client-management"
 import { discoverSharedDriveProjectFolders } from "@/server/services/projects/shared-drive-project-discovery"
 import { ProjectOnboardingForm } from "@/components/app/project-onboarding-form"
@@ -24,6 +27,9 @@ import {
 export const dynamic = "force-dynamic"
 
 export default async function NewProjectPage() {
+  const user = await requireCurrentAppUser()
+  requireUserHasAnyPermission(user, PERMISSIONS.projectsManage)
+
   const [discovery, clients] = await Promise.all([
     discoverSharedDriveProjectFolders(),
     listClientOptions(),
