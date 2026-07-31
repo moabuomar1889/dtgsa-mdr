@@ -17,9 +17,9 @@ import {
   canCloseFromResponse,
   deriveRevisionDirective,
   nextRevisionLabel,
-  responsePolicySnapshot,
   type ClientResponseEffects,
 } from "@dtg/client-response-domain"
+import { responsePolicySnapshot } from "@dtg/client-response-domain/server"
 import { createArtifactCacheKey } from "@dtg/job-engine"
 import { z } from "zod"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"

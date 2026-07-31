@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto"
 
 export const CLIENT_RESPONSE_OUTCOMES = [
   "REJECTED",
@@ -242,13 +241,16 @@ export function validateEffects(effects: ClientResponseEffects) {
   return errors
 }
 
-export function responsePolicySnapshot(input: {
+// Pure and browser-safe. The hash lives in `./server` so that importing this
+// module from a client component does not drag `node:crypto` — and with it a
+// Buffer polyfill — into the browser bundle.
+export function responsePolicyContent(input: {
   codeSetId: string
   versionId: string
   version: number
   code: ResponseCodeDefinition
 }) {
-  const content = {
+  return {
     schemaVersion: "1",
     codeSetId: input.codeSetId,
     versionId: input.versionId,
@@ -257,10 +259,6 @@ export function responsePolicySnapshot(input: {
     exactWording: input.code.exactWording,
     internalLabel: input.code.internalLabel,
     effects: sortJson(input.code.effects),
-  }
-  return {
-    content,
-    hash: createHash("sha256").update(JSON.stringify(content)).digest("hex"),
   }
 }
 

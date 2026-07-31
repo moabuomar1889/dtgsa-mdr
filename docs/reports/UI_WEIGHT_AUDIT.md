@@ -168,7 +168,45 @@ on denial status under streaming.
 - No duplicated React or Radix copies in the emitted chunks.
 - `recharts` is not shipped to the browser on any route.
 
-## 9. Verification
+## 9. Remediation applied
+
+All four ranked items were actioned on 2026-08-01.
+
+| # | Outcome |
+| --- | --- |
+| 1 | Done. `@dtg/client-response-domain` and `@dtg/cover-designer` each gained a `./server` entry holding the `node:crypto` hashing function; the package root is now browser-safe. The Buffer polyfill is gone from every chunk and total client JS fell from 1.6 MB to 1.1 MB. |
+| 2 | Done. Seven dead modules removed, and `recharts`, `@tanstack/react-table` and all four `@dnd-kit` packages uninstalled — 43 packages dropped from the lockfile. |
+| 3 | Done. Both registers paginate at 50 rows with URL-driven paging and no client JavaScript. |
+| 4 | Rejected, with evidence. See below. |
+
+### 9.1 `force-dynamic` is load-bearing, not redundant
+
+Removing `export const dynamic = "force-dynamic"` from `/dashboard` and building
+made Next.js attempt to prerender the route at build time, which executed Prisma
+queries during the build and failed it outright. Six routes reach the database
+without reading `cookies()` directly, so the declaration is what keeps them out
+of the static prerender pass. It stays on all 44 routes.
+
+### 9.2 Register counts were reported from the page, not the register
+
+Found while paginating: both registers derived their headline counts from the
+rows just fetched, so the 200-row cap silently capped the counts too. Counts now
+come from `groupBy` aggregates over the whole register and are correct
+independently of the page in hand.
+
+### 9.3 Two verification gates had blind spots
+
+- `check:no-supabase` listed `.env` among the extensions it scans, but
+  `extname(".env")` is an empty string, so a file named exactly `.env` was never
+  read. Fixed to match environment dotfiles by name. It now reports
+  `apps/mdr-web/.env`, an untracked leftover holding retired-provider
+  credentials that also overrode `DATABASE_URL` during builds.
+- `check:architecture` rejected every `@dtg/<pkg>/<subpath>` import as a deep
+  import. A subpath declared in the package's own `exports` map is public API,
+  which is how a package offers a server-only entry point at all. The validator
+  now consults the target manifest and still rejects undeclared subpaths.
+
+## 10. Verification
 
 - Evidence source: production build of `apps/mdr-web` at commit `b6dd3e5`, and
   the local runtime on `127.0.0.1:3100`.

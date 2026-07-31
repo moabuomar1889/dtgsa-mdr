@@ -8,6 +8,7 @@ import {
 } from "@/server/actions/pdi"
 import { importPdiWorkbookAction } from "@/server/actions/pdi-import"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { RegisterPagination } from "@/components/app/register-pagination"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import {
   getPdiOverview,
@@ -46,11 +47,16 @@ function pdiStatusVariant(status: PdiStatus) {
   }
 }
 
-export default async function PdiPage() {
+export default async function PdiPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>
+}) {
   const user = await requireCurrentAppUser()
   requireUserHasAnyPermission(user, PDI_REGISTER_PERMISSIONS)
 
-  const overview = await getPdiOverview(user)
+  const page = Number((await searchParams)?.page ?? "1")
+  const overview = await getPdiOverview(user, page)
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
@@ -365,6 +371,7 @@ export default async function PdiPage() {
             </div>
           )}
         </CardContent>
+        <RegisterPagination basePath="/pdi" {...overview.pagination} />
       </Card>
     </div>
   )

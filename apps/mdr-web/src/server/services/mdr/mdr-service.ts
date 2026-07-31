@@ -16,7 +16,7 @@ export const MDR_REGISTER_PERMISSIONS = [
   PERMISSIONS.dcCheck,
 ]
 
-const MDR_REGISTER_PAGE_SIZE = 200
+export const MDR_REGISTER_PAGE_SIZE = 50
 
 function canAct(
   user: CurrentAppUser,
@@ -32,14 +32,16 @@ function canAct(
   })
 }
 
-export async function getMdrOverview(user: CurrentAppUser) {
+export async function getMdrOverview(user: CurrentAppUser, page = 1) {
   assertUserHasAnyPermission(user, MDR_REGISTER_PERMISSIONS)
 
+  const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
   const documents = await prisma.mdrDocument.findMany({
     where: {
       deletedAt: null,
     },
     orderBy: [{ createdAt: "desc" }],
+    skip: (currentPage - 1) * MDR_REGISTER_PAGE_SIZE,
     take: MDR_REGISTER_PAGE_SIZE,
     include: {
       project: {
@@ -158,21 +160,41 @@ export async function getMdrOverview(user: CurrentAppUser) {
     },
   }))
 
+  // Counts describe the whole register, not the page in hand. Deriving them
+  // from `documents` under-reported as soon as the result set was bounded.
+  const [statusGroups, awaitingReply, total] = await Promise.all([
+    prisma.mdrDocument.groupBy({
+      by: ["currentWorkflowStatus"],
+      where: { deletedAt: null },
+      _count: { _all: true },
+    }),
+    prisma.mdrDocument.count({
+      where: { deletedAt: null, currentClientReplyState: "WaitingClientReply" },
+    }),
+    prisma.mdrDocument.count({ where: { deletedAt: null } }),
+  ])
+
+  const byStatus = new Map(
+    statusGroups.map((group) => [
+      group.currentWorkflowStatus,
+      group._count._all,
+    ])
+  )
+
   return {
     documents: mappedDocuments,
+    pagination: {
+      page: currentPage,
+      pageSize: MDR_REGISTER_PAGE_SIZE,
+      total,
+      pageCount: Math.max(1, Math.ceil(total / MDR_REGISTER_PAGE_SIZE)),
+    },
     counts: {
-      total: documents.length,
-      readyForWorkflow: documents.filter(
-        (document) =>
-          document.currentWorkflowStatus === "Draft" ||
-          document.currentWorkflowStatus === "Uploaded"
-      ).length,
-      submittedToClient: documents.filter(
-        (document) => document.currentWorkflowStatus === "SubmittedToClient"
-      ).length,
-      awaitingReply: documents.filter(
-        (document) => document.currentClientReplyState === "WaitingClientReply"
-      ).length,
+      total,
+      readyForWorkflow:
+        (byStatus.get("Draft") ?? 0) + (byStatus.get("Uploaded") ?? 0),
+      submittedToClient: byStatus.get("SubmittedToClient") ?? 0,
+      awaitingReply,
     },
   }
 }

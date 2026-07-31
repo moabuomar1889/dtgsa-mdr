@@ -135,11 +135,24 @@ for (const cycle of findCycles(dependencyGraph)) {
   errors.push(`Workspace dependency cycle: ${cycle.join(" -> ")}`)
 }
 
+// A subpath listed in a package's own `exports` map is public API, not a reach
+// into internals. `@dtg/x/server` is how a package offers a server-only entry
+// point so that `node:crypto` never enters a browser bundle; `@dtg/x/src/thing`
+// is still a deep import and stays rejected.
+function isDeclaredSubpath(specifier) {
+  const match = /^(@dtg\/[^/]+)\/(.+)$/.exec(specifier)
+  if (!match) return false
+  const target = manifests.get(match[1])
+  const exports = target?.manifest?.exports
+  if (!exports || typeof exports !== "object") return false
+  return Object.prototype.hasOwnProperty.call(exports, `./${match[2]}`)
+}
+
 for (const [name, unit] of manifests) {
   for (const file of await sourceFiles(join(unit.path, "src"))) {
     const source = await readFile(file, "utf8")
     for (const specifier of importSpecifiers(source)) {
-      if (/^@dtg\/[^/]+\/.+/.test(specifier)) {
+      if (/^@dtg\/[^/]+\/.+/.test(specifier) && !isDeclaredSubpath(specifier)) {
         errors.push(`Deep workspace import in ${relative(root, file)}: ${specifier}`)
       }
 

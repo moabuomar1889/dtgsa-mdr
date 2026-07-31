@@ -5,12 +5,12 @@ import {
   coverDesignerReducer,
   pageDimensions,
   resolveCoverInheritance,
-  stableCoverSnapshot,
   toAbsoluteLayout,
   validateCoverTemplate,
   validateImageInput,
   type CoverTemplateDocument,
 } from "../../packages/cover-designer/src/index"
+import { stableCoverSnapshot } from "../../packages/cover-designer/src/server"
 import { renderCoverTemplatePdf } from "../../packages/pdf-engine/src/index"
 
 test("cover inheritance resolves organization through discipline specificity", () => {

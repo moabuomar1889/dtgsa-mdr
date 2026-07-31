@@ -37,7 +37,15 @@ const textExtensions = new Set([
 
 async function collect(path) {
   const entries = await readdir(path, { withFileTypes: true }).catch(() => [])
-  const files = []
+  // `extname(".env")` is an empty string, so an extension-only test never matched
+// a file named exactly `.env` — the one place retired-provider credentials are
+// most likely to survive. Match environment dotfiles by name as well.
+function isScannableFile(name) {
+  if (name === ".env" || name.startsWith(".env.")) return true
+  return textExtensions.has(extname(name))
+}
+
+const files = []
   for (const entry of entries) {
     if (
       entry.name === "node_modules" ||
@@ -50,7 +58,7 @@ async function collect(path) {
     }
     const absolute = join(path, entry.name)
     if (entry.isDirectory()) files.push(...(await collect(absolute)))
-    else if (textExtensions.has(extname(entry.name))) files.push(absolute)
+    else if (isScannableFile(entry.name)) files.push(absolute)
   }
   return files
 }

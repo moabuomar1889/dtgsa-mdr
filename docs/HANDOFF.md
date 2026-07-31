@@ -31,6 +31,25 @@ reports. Use the precedence order in this document.
 | Node.js baseline            | Node.js 24                                          |
 | Primary web framework       | Next.js 16.2.12 / React 19                          |
 
+### 2.1 Branch Convention
+
+This convention is permanent and applies to every DTG application repository.
+
+| Branch | Role |
+| --- | --- |
+| `main` | Production deployment branch |
+| `staging` | Staging deployment branch |
+
+The DTG Platform resolves deployments from these two names, so both must exist
+in the remote before a repository is submitted to it. Initialize new DTG
+application repositories with `main` and `staging` created from the same
+verified commit; do not submit a repository that carries only feature branches.
+
+`main` and `staging` were created in this repository from
+`codex/dtg-signature-platform-merge`, the branch carrying the verified
+application. The exact source commit is recorded in
+`docs/reports/UI_WEIGHT_AUDIT.md` and in the commit that introduced this section.
+
 The working tree was clean before this handoff document was updated. Confirm
 the state again at the beginning of every session:
 

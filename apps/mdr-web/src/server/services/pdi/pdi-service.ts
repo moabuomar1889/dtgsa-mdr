@@ -67,10 +67,12 @@ export const PDI_REGISTER_PERMISSIONS = [
   PERMISSIONS.pdiCollaborate,
 ]
 
-const PDI_REGISTER_PAGE_SIZE = 200
+export const PDI_REGISTER_PAGE_SIZE = 50
 
-export async function getPdiOverview(user: CurrentAppUser) {
+export async function getPdiOverview(user: CurrentAppUser, page = 1) {
   assertUserHasAnyPermission(user, PDI_REGISTER_PERMISSIONS)
+
+  const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
 
   const [projects, disciplines, documentTypes, releasePurposes, items] =
     await Promise.all([
@@ -134,6 +136,7 @@ export async function getPdiOverview(user: CurrentAppUser) {
           deletedAt: null,
         },
         orderBy: [{ createdAt: "desc" }],
+        skip: (currentPage - 1) * PDI_REGISTER_PAGE_SIZE,
         take: PDI_REGISTER_PAGE_SIZE,
         include: {
           project: {
@@ -177,22 +180,34 @@ export async function getPdiOverview(user: CurrentAppUser) {
       }),
     ])
 
+  // Counts describe the whole register, not the page in hand.
+  const statusGroups = await prisma.pdiItem.groupBy({
+    by: ["status"],
+    where: { deletedAt: null },
+    _count: { _all: true },
+  })
+  const byStatus = new Map(
+    statusGroups.map((group) => [group.status, group._count._all])
+  )
+  const total = statusGroups.reduce((sum, group) => sum + group._count._all, 0)
+
   const counts = {
-    total: items.length,
-    pendingClientNumber: items.filter(
-      (item) =>
-        item.status === PdiStatus.ClientNumberPending ||
-        item.status === PdiStatus.SentToClient
-    ).length,
-    clientNumberReceived: items.filter(
-      (item) => item.status === PdiStatus.ClientNumberReceived
-    ).length,
-    converted: items.filter((item) => item.status === PdiStatus.ConvertedToMdr)
-      .length,
+    total,
+    pendingClientNumber:
+      (byStatus.get(PdiStatus.ClientNumberPending) ?? 0) +
+      (byStatus.get(PdiStatus.SentToClient) ?? 0),
+    clientNumberReceived: byStatus.get(PdiStatus.ClientNumberReceived) ?? 0,
+    converted: byStatus.get(PdiStatus.ConvertedToMdr) ?? 0,
   }
 
   return {
     counts,
+    pagination: {
+      page: currentPage,
+      pageSize: PDI_REGISTER_PAGE_SIZE,
+      total,
+      pageCount: Math.max(1, Math.ceil(total / PDI_REGISTER_PAGE_SIZE)),
+    },
     projects,
     disciplines,
     documentTypes,

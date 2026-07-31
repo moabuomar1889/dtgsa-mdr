@@ -7,10 +7,10 @@ import {
 import {
   DEFAULT_COVER_TEMPLATE,
   resolveCoverInheritance,
-  stableCoverSnapshot,
   validateCoverTemplate,
   type CoverTemplateDocument,
 } from "@dtg/cover-designer"
+import { stableCoverSnapshot } from "@dtg/cover-designer/server"
 import { renderCoverTemplatePdf } from "@dtg/pdf-engine"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"
 import { prisma } from "@/lib/prisma/client"

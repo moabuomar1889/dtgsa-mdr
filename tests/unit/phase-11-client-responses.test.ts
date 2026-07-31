@@ -8,11 +8,11 @@ import {
   CONDITIONAL_CODE_2_FIXTURE,
   JIGPC_RESPONSE_FIXTURE,
   nextRevisionLabel,
-  responsePolicySnapshot,
   validateEffects,
   validateResponseCodeDefinitions,
   type ResponseCodeDefinition,
 } from "@dtg/client-response-domain"
+import { responsePolicySnapshot } from "@dtg/client-response-domain/server"
 
 test("numeric response codes remain policy-specific instead of global rules", () => {
   const airProductsCode2 = AIR_PRODUCTS_RESPONSE_FIXTURE.codes.find(

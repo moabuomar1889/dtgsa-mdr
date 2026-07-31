@@ -15,6 +15,7 @@ import {
   uploadRevisionFileAction,
 } from "@/server/actions/mdr"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
+import { RegisterPagination } from "@/components/app/register-pagination"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import {
   getMdrOverview,
@@ -158,11 +159,16 @@ function WorkflowActions({
   )
 }
 
-export default async function MdrPage() {
+export default async function MdrPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>
+}) {
   const user = await requireCurrentAppUser()
   requireUserHasAnyPermission(user, MDR_REGISTER_PERMISSIONS)
 
-  const overview = await getMdrOverview(user)
+  const page = Number((await searchParams)?.page ?? "1")
+  const overview = await getMdrOverview(user, page)
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
@@ -449,6 +455,7 @@ export default async function MdrPage() {
             </div>
           )}
         </CardContent>
+        <RegisterPagination basePath="/mdr" {...overview.pagination} />
       </Card>
     </div>
   )

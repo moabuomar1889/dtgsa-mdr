@@ -95,7 +95,7 @@ import {
   saveVisualCoverDraft,
 } from "@/server/services/templates/visual-cover-template-service"
 import { createPrismaJobStore } from "../../apps/worker/src/prisma-job-store"
-import { responsePolicySnapshot } from "@dtg/client-response-domain"
+import { responsePolicySnapshot } from "@dtg/client-response-domain/server"
 import {
   resolvePublishedResponsePolicy,
   toDefinition,

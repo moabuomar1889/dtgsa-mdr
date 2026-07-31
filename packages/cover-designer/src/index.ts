@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto"
 
 export const COVER_SCHEMA_VERSION = "1"
 export const COVER_RENDERER_VERSION = "pdf-engine-1"
@@ -205,7 +204,10 @@ export function validateCoverTemplate(
   return issues
 }
 
-export function stableCoverSnapshot(template: CoverTemplateDocument) {
+// Pure and browser-safe. `stableCoverSnapshot`, which adds the content hash,
+// lives in `./server` so importing a type or reducer from this package does
+// not pull `node:crypto` and a Buffer polyfill into the browser bundle.
+export function stableCoverCanonical(template: CoverTemplateDocument) {
   const normalized = {
     ...template,
     elements: [...template.elements]
@@ -249,7 +251,6 @@ export function stableCoverSnapshot(template: CoverTemplateDocument) {
   const json = stableJson(normalized)
   return {
     snapshot: normalized,
-    contentHash: createHash("sha256").update(json).digest("hex"),
     canonicalJson: json,
   }
 }
