@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "AuthMode" ADD VALUE 'CLOUDFLARE_ACCESS';

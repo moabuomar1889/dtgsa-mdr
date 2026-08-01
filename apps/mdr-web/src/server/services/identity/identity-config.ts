@@ -16,6 +16,22 @@ export function getIdentityConfig() {
     )
   }
   const googleEnabled = authMode === "GOOGLE_WORKSPACE"
+  const cloudflareAccessEnabled = authMode === "CLOUDFLARE_ACCESS"
+
+  // Under Cloudflare Access the application never holds a Google OAuth client.
+  // Identity is proven at the edge and asserted to us as a signed token, so the
+  // only configuration this application needs is how to verify that token.
+  if (cloudflareAccessEnabled) {
+    if (
+      !env.CF_ACCESS_TEAM_DOMAIN ||
+      !env.CF_ACCESS_AUD ||
+      !env.ALLOWED_IDENTITY_DOMAIN
+    ) {
+      throw new Error(
+        "Cloudflare Access authentication requires CF_ACCESS_TEAM_DOMAIN, CF_ACCESS_AUD, and ALLOWED_IDENTITY_DOMAIN."
+      )
+    }
+  }
 
   if (googleEnabled) {
     if (
@@ -38,6 +54,11 @@ export function getIdentityConfig() {
     authMode,
     authCookieDomain: env.AUTH_COOKIE_DOMAIN,
     googleEnabled,
+    cloudflareAccessEnabled,
+    cfAccessTeamDomain: env.CF_ACCESS_TEAM_DOMAIN,
+    cfAccessAudience: env.CF_ACCESS_AUD,
+    allowedIdentityDomain: env.ALLOWED_IDENTITY_DOMAIN,
+    bootstrapAdminEmail: env.BOOTSTRAP_ADMIN_EMAIL,
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
     redirectUri: env.GOOGLE_REDIRECT_URI,

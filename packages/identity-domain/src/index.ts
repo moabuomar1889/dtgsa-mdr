@@ -7,6 +7,7 @@ import {
 } from "node:crypto"
 
 export const AUTH_MODES = {
+  cloudflareAccess: "CLOUDFLARE_ACCESS",
   googleWorkspace: "GOOGLE_WORKSPACE",
   localAcceptanceIdentity: "LOCAL_ACCEPTANCE_IDENTITY",
 } as const
@@ -118,12 +119,20 @@ export function assertAuthModeAllowed(
   mode: AuthMode,
   nodeEnvironment: string | undefined
 ) {
-  if (nodeEnvironment === "production" && mode !== AUTH_MODES.googleWorkspace) {
+  // Workforce identity is centralized on Cloudflare Access. GOOGLE_WORKSPACE
+  // remains accepted for environments that have not been migrated to the edge
+  // yet; local acceptance stays confined to non-production.
+  if (
+    nodeEnvironment === "production" &&
+    mode !== AUTH_MODES.cloudflareAccess &&
+    mode !== AUTH_MODES.googleWorkspace
+  ) {
     throw new Error(
-      "Production requires GOOGLE_WORKSPACE authentication."
+      "Production requires CLOUDFLARE_ACCESS or GOOGLE_WORKSPACE authentication."
     )
   }
   if (
+    mode !== AUTH_MODES.cloudflareAccess &&
     mode !== AUTH_MODES.googleWorkspace &&
     mode !== AUTH_MODES.localAcceptanceIdentity
   ) {
@@ -386,4 +395,32 @@ export class FakeWorkspaceDirectoryAdapter implements WorkspaceDirectoryAdapter 
         (index + 1 < this.pages.length ? String(index + 1) : undefined),
     }
   }
+}
+
+/// Normalizes a workforce email exactly as the identity contract requires:
+/// whitespace removed, ASCII lowercase, and the part after the final `@`
+/// compared for an exact domain match. Substring matching is never used.
+export function normalizeWorkforceEmail(value: unknown) {
+  if (typeof value !== "string") return null
+  const normalized = value.replace(/\s+/g, "").toLowerCase()
+  if (!normalized || normalized.indexOf("@") === -1) return null
+  return normalized
+}
+
+export function workforceEmailDomain(normalizedEmail: string) {
+  const at = normalizedEmail.lastIndexOf("@")
+  if (at === -1) return null
+  const domain = normalizedEmail.slice(at + 1)
+  return domain || null
+}
+
+export function assertWorkforceEmailDomain(
+  normalizedEmail: string,
+  allowedDomain: string
+) {
+  const domain = workforceEmailDomain(normalizedEmail)
+  if (!domain || domain !== allowedDomain.trim().toLowerCase()) {
+    throw new Error("The authenticated identity is outside the workforce domain.")
+  }
+  return normalizedEmail
 }

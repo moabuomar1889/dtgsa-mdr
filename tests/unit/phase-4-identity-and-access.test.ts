@@ -48,7 +48,14 @@ function validate(overrides: Partial<GoogleOidcClaims> = {}) {
   )
 }
 
-test("production permits only Google Workspace authentication", () => {
+test("production permits only centralized workforce authentication", () => {
+  // Workforce identity is centralized on Cloudflare Access. GOOGLE_WORKSPACE
+  // stays accepted for environments not yet moved behind the edge; synthetic
+  // local identity remains barred from production.
+  assert.equal(
+    assertAuthModeAllowed(AUTH_MODES.cloudflareAccess, "production"),
+    AUTH_MODES.cloudflareAccess
+  )
   assert.equal(
     assertAuthModeAllowed(AUTH_MODES.googleWorkspace, "production"),
     AUTH_MODES.googleWorkspace
@@ -56,7 +63,7 @@ test("production permits only Google Workspace authentication", () => {
   assert.throws(
     () =>
       assertAuthModeAllowed(AUTH_MODES.localAcceptanceIdentity, "production"),
-    /Production requires GOOGLE_WORKSPACE/
+    /Production requires/
   )
 })
 

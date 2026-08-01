@@ -249,6 +249,7 @@ enum CommentState {
 }
 
 enum AuthMode {
+  CLOUDFLARE_ACCESS
   GOOGLE_WORKSPACE
   LOCAL_ACCEPTANCE_IDENTITY
 }

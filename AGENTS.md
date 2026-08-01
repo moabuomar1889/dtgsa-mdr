@@ -40,8 +40,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - PostgreSQL is the only application database and Prisma is the only ORM and
   migration authority.
-- Production internal identity is `GOOGLE_WORKSPACE`; local acceptance identity
-  is `LOCAL_ACCEPTANCE_IDENTITY`; external identity is `MAGIC_LINK`.
+- Production internal identity is `CLOUDFLARE_ACCESS`; `GOOGLE_WORKSPACE`
+  remains accepted only for environments not yet behind the edge; local
+  acceptance identity is `LOCAL_ACCEPTANCE_IDENTITY`; external identity is
+  `MAGIC_LINK`.
+- Workforce authentication is centralized on Cloudflare Access. This application
+  must never hold an application-specific Google OAuth client, and never reads
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, or `GOOGLE_REDIRECT_URI` under
+  `CLOUDFLARE_ACCESS`. It validates the signed `Cf-Access-Jwt-Assertion` token
+  and never trusts `Cf-Access-Authenticated-User-Email` on its own.
 - Production storage is `GOOGLE_DRIVE_CONTROLLED` or `GOOGLE_DRIVE_SOURCE`.
 - Local storage is `LOCAL_CONTROLLED_FILESYSTEM`,
   `LOCAL_SOURCE_FILESYSTEM`, or `LOCAL_TEMPORARY_ARTIFACT`.

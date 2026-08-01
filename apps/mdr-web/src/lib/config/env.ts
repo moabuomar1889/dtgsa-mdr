@@ -55,10 +55,29 @@ const serverEnvSchema = z.object({
   GOOGLE_CLIENT_ID: optionalString,
   GOOGLE_CLIENT_SECRET: optionalString,
   GOOGLE_REDIRECT_URI: optionalString,
+  // Accepts the lowercase spelling used by the DTG platform runtime as well as
+  // the canonical enum value stored on sessions.
   AUTH_MODE: z
-    .enum(["GOOGLE_WORKSPACE", "LOCAL_ACCEPTANCE_IDENTITY"])
-    .default("GOOGLE_WORKSPACE"),
+    .preprocess(
+      (value) =>
+        typeof value === "string" && value.trim()
+          ? value.trim().toUpperCase()
+          : undefined,
+      z.enum([
+        "CLOUDFLARE_ACCESS",
+        "GOOGLE_WORKSPACE",
+        "LOCAL_ACCEPTANCE_IDENTITY",
+      ])
+    )
+    .default("CLOUDFLARE_ACCESS"),
   AUTH_COOKIE_DOMAIN: optionalString,
+  // Cloudflare Access is the central workforce front door. No application-level
+  // Google OAuth client exists, and no Google client secret is ever read here.
+  CF_ACCESS_TEAM_DOMAIN: optionalString,
+  CF_ACCESS_AUD: optionalString,
+  ALLOWED_IDENTITY_DOMAIN: optionalString,
+  BOOTSTRAP_ADMIN_EMAIL: optionalString,
+  APP_URL: optionalString,
   GOOGLE_WORKSPACE_ALLOWED_DOMAINS: optionalString,
   INTERNAL_SESSION_TTL_MINUTES: z.coerce.number().int().positive().default(480),
   EXTERNAL_SESSION_TTL_MINUTES: z.coerce.number().int().positive().default(60),

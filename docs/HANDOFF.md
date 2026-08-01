@@ -148,12 +148,49 @@ database names, redact passwords, and delete disposable databases in `finally`.
 
 | Audience                | Environment             | Provider                    |
 | ----------------------- | ----------------------- | --------------------------- |
-| Internal employee       | Production/staging      | `GOOGLE_WORKSPACE`          |
+| Internal employee       | Production/staging      | `CLOUDFLARE_ACCESS`         |
+| Internal employee       | Not yet behind the edge | `GOOGLE_WORKSPACE`          |
 | Internal synthetic user | Local acceptance only   | `LOCAL_ACCEPTANCE_IDENTITY` |
 | External client         | Authorized environments | `MAGIC_LINK`                |
 
 There is no password login, password bootstrap, provider-JWT compatibility
 mode, or fallback identity database.
+
+### 5.2.1 Cloudflare Access
+
+Workforce authentication is centralized at the edge. The application holds no
+Google OAuth client of its own and reads no Google client secret. Cloudflare
+proves who the person is; the application decides whether they may use it.
+
+Required runtime configuration:
+
+```dotenv
+AUTH_MODE=cloudflare_access
+CF_ACCESS_TEAM_DOMAIN=https://dtgsa.cloudflareaccess.com
+CF_ACCESS_AUD=<provided by infrastructure, unique per hostname and environment>
+ALLOWED_IDENTITY_DOMAIN=dtgsa.com
+BOOTSTRAP_ADMIN_EMAIL=mo.abuomar@dtgsa.com
+APP_URL=https://dc-app.dtgapps.cc
+```
+
+The validation sequence is implemented in
+`server/services/identity/cloudflare-access-service.ts` and fails closed at
+every step: the assertion header is required, the signature is verified against
+the team's published keys with a bounded JWKS cache, the issuer must equal the
+team domain exactly, the audience must equal this application's tag, the
+lifetime must be current, and a non-empty email claim is required. The email is
+normalized and the part after the final `@` must equal `ALLOWED_IDENTITY_DOMAIN`
+exactly — substring matching is never used.
+
+Authorization is then local, in
+`server/services/identity/cloudflare-access-sign-in.ts`. A valid workforce
+identity with no active local user record is denied with a generic message that
+does not reveal whether any other address is registered, and the denial is
+recorded as a sanitized system log that never contains the token. Only the
+explicitly configured `BOOTSTRAP_ADMIN_EMAIL` is reconciled idempotently.
+
+Production and staging must use different audience tags. A token minted for one
+must not be accepted by the other.
 
 Production Google Workspace authentication uses Authorization Code OIDC with
 state, nonce, PKCE, issuer/audience validation, verified email, hosted-domain
