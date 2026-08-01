@@ -7,6 +7,7 @@ WORKDIR /workspace
 FROM base AS dependencies
 COPY . .
 RUN pnpm install --frozen-lockfile
+RUN pnpm db:generate
 
 FROM dependencies AS builder
 ARG APP
