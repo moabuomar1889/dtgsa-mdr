@@ -1,6 +1,10 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useActionState, useMemo, useState } from "react"
+import type {
+  ProjectOnboardingActionState,
+  ProjectOnboardingField,
+} from "@/lib/forms/project-onboarding"
 import {
   Select,
   SelectContent,
@@ -29,7 +33,36 @@ type FolderOption = {
 type ProjectOnboardingFormProps = {
   clients: ClientOption[]
   folders: FolderOption[]
-  action: (formData: FormData) => void | Promise<void>
+  action: (
+    previousState: ProjectOnboardingActionState,
+    formData: FormData
+  ) => Promise<ProjectOnboardingActionState>
+}
+
+const initialProjectOnboardingActionState: ProjectOnboardingActionState = {
+  status: "idle",
+  message: "",
+  fieldErrors: {},
+}
+
+function FieldError({
+  field,
+  state,
+}: {
+  field: ProjectOnboardingField
+  state: ProjectOnboardingActionState
+}) {
+  const message = state.fieldErrors[field]?.[0]
+
+  if (!message) {
+    return null
+  }
+
+  return (
+    <p id={`${field}-error`} className="text-bad text-xs" role="alert">
+      {message}
+    </p>
+  )
 }
 
 export function ProjectOnboardingForm({
@@ -37,6 +70,10 @@ export function ProjectOnboardingForm({
   folders,
   action,
 }: ProjectOnboardingFormProps) {
+  const [state, formAction] = useActionState(
+    action,
+    initialProjectOnboardingActionState
+  )
   const firstFolder = folders[0]
   const [clientId, setClientId] = useState(clients[0]?.id ?? "")
   const [folderId, setFolderId] = useState(firstFolder?.folderId ?? "")
@@ -56,11 +93,28 @@ export function ProjectOnboardingForm({
   }
 
   return (
-    <form action={action} className="grid gap-4">
+    <form action={formAction} className="grid gap-4">
+      {state.status === "error" ? (
+        <div
+          className="border-bad/40 bg-bad/10 text-bad rounded-[8px] border px-3 py-2 text-sm"
+          role="alert"
+          aria-live="polite"
+        >
+          {state.message}
+        </div>
+      ) : null}
+
       <div className="grid gap-2">
         <Label htmlFor="project-client">Client</Label>
         <Select value={clientId} onValueChange={setClientId}>
-          <SelectTrigger id="project-client" className="w-full">
+          <SelectTrigger
+            id="project-client"
+            className="w-full"
+            aria-invalid={Boolean(state.fieldErrors.clientId)}
+            aria-describedby={
+              state.fieldErrors.clientId ? "clientId-error" : undefined
+            }
+          >
             <SelectValue placeholder="Select a client" />
           </SelectTrigger>
           <SelectContent>
@@ -75,6 +129,7 @@ export function ProjectOnboardingForm({
           </SelectContent>
         </Select>
         <input type="hidden" name="clientId" value={clientId} />
+        <FieldError field="clientId" state={state} />
       </div>
 
       {folders.length > 0 ? (
@@ -94,7 +149,16 @@ export function ProjectOnboardingForm({
               }
             }}
           >
-            <SelectTrigger id="project-folder" className="w-full">
+            <SelectTrigger
+              id="project-folder"
+              className="w-full"
+              aria-invalid={Boolean(state.fieldErrors.driveFolderId)}
+              aria-describedby={
+                state.fieldErrors.driveFolderId
+                  ? "driveFolderId-error"
+                  : undefined
+              }
+            >
               <SelectValue placeholder="Select a project folder" />
             </SelectTrigger>
             <SelectContent>
@@ -114,6 +178,7 @@ export function ProjectOnboardingForm({
             name="driveFolderName"
             value={selectedFolder?.name ?? ""}
           />
+          <FieldError field="driveFolderId" state={state} />
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -126,7 +191,14 @@ export function ProjectOnboardingForm({
               onChange={(event) => setManualFolderId(event.target.value)}
               placeholder="Paste the project folder ID"
               required
+              aria-invalid={Boolean(state.fieldErrors.driveFolderId)}
+              aria-describedby={
+                state.fieldErrors.driveFolderId
+                  ? "driveFolderId-error"
+                  : undefined
+              }
             />
+            <FieldError field="driveFolderId" state={state} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="manual-folder-name">Google Drive Folder Name</Label>
@@ -137,7 +209,16 @@ export function ProjectOnboardingForm({
               onChange={(event) => setManualFolderName(event.target.value)}
               placeholder="PRJ-001-Example Project"
               required
+              minLength={2}
+              maxLength={255}
+              aria-invalid={Boolean(state.fieldErrors.driveFolderName)}
+              aria-describedby={
+                state.fieldErrors.driveFolderName
+                  ? "driveFolderName-error"
+                  : undefined
+              }
             />
+            <FieldError field="driveFolderName" state={state} />
           </div>
         </div>
       )}
@@ -151,7 +232,13 @@ export function ProjectOnboardingForm({
             value={code}
             onChange={(event) => setCode(event.target.value)}
             placeholder="PRJ-001"
+            required
+            minLength={2}
+            maxLength={40}
+            aria-invalid={Boolean(state.fieldErrors.code)}
+            aria-describedby={state.fieldErrors.code ? "code-error" : undefined}
           />
+          <FieldError field="code" state={state} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="project-contract">Contract Number</Label>
@@ -161,7 +248,15 @@ export function ProjectOnboardingForm({
             value={contractNumber}
             onChange={(event) => setContractNumber(event.target.value)}
             placeholder="Optional contract number"
+            maxLength={100}
+            aria-invalid={Boolean(state.fieldErrors.contractNumber)}
+            aria-describedby={
+              state.fieldErrors.contractNumber
+                ? "contractNumber-error"
+                : undefined
+            }
           />
+          <FieldError field="contractNumber" state={state} />
         </div>
       </div>
 
@@ -173,7 +268,13 @@ export function ProjectOnboardingForm({
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Project name"
+          required
+          minLength={2}
+          maxLength={180}
+          aria-invalid={Boolean(state.fieldErrors.name)}
+          aria-describedby={state.fieldErrors.name ? "name-error" : undefined}
         />
+        <FieldError field="name" state={state} />
       </div>
 
       <SubmitButton label="Create Project" pendingLabel="Creating project" />

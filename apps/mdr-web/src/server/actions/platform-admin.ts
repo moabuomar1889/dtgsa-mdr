@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import type { ProjectOnboardingActionState } from "@/lib/forms/project-onboarding"
+import {
+  projectOnboardingValidationState,
+  validateProjectOnboardingInput,
+} from "@/lib/forms/project-onboarding"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
@@ -12,7 +17,11 @@ import {
   createGlobalReleasePurpose,
   createGlobalReviewCode,
 } from "@/server/services/masters/master-data-service"
-import { createProjectFromDriveFolder } from "@/server/services/projects/project-management"
+import {
+  createProjectFromDriveFolder,
+  ProjectCodeConflictError,
+  ProjectDriveFolderConflictError,
+} from "@/server/services/projects/project-management"
 
 function toBoolean(value: FormDataEntryValue | null) {
   return value === "on" || value === "true"
@@ -35,11 +44,14 @@ export async function createClientAction(formData: FormData) {
   redirect("/clients")
 }
 
-export async function createProjectAction(formData: FormData) {
+export async function createProjectAction(
+  _previousState: ProjectOnboardingActionState,
+  formData: FormData
+): Promise<ProjectOnboardingActionState> {
   const actor = await requireCurrentAppUser()
   assertUserHasAnyPermission(actor, PERMISSIONS.projectsManage)
 
-  await createProjectFromDriveFolder({
+  const validated = validateProjectOnboardingInput({
     clientId: formData.get("clientId"),
     code: formData.get("code"),
     name: formData.get("name"),
@@ -47,6 +59,36 @@ export async function createProjectAction(formData: FormData) {
     driveFolderId: formData.get("driveFolderId"),
     driveFolderName: formData.get("driveFolderName"),
   })
+
+  if (!validated.success) {
+    return projectOnboardingValidationState(validated.error)
+  }
+
+  try {
+    await createProjectFromDriveFolder(validated.data)
+  } catch (error) {
+    if (error instanceof ProjectDriveFolderConflictError) {
+      return {
+        status: "error",
+        message: error.message,
+        fieldErrors: {
+          driveFolderId: [error.message],
+        },
+      }
+    }
+
+    if (error instanceof ProjectCodeConflictError) {
+      return {
+        status: "error",
+        message: error.message,
+        fieldErrors: {
+          code: [error.message],
+        },
+      }
+    }
+
+    throw error
+  }
 
   revalidatePath("/projects")
   revalidatePath("/projects/new")

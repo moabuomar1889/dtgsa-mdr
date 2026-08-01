@@ -1,16 +1,23 @@
 import "server-only"
 import { DriveFolderType } from "@prisma/client"
-import { z } from "zod"
 import { prisma } from "@/lib/prisma/client"
+import { projectOnboardingSchema } from "@/lib/forms/project-onboarding"
 
-const createProjectSchema = z.object({
-  clientId: z.string().trim().min(1),
-  code: z.string().trim().min(2).max(40),
-  name: z.string().trim().min(2).max(180),
-  contractNumber: z.string().trim().max(100).optional(),
-  driveFolderId: z.string().trim().min(1),
-  driveFolderName: z.string().trim().min(2).max(255),
-})
+export class ProjectDriveFolderConflictError extends Error {
+  constructor(projectCode: string) {
+    super(
+      `That Google Drive folder is already linked to project ${projectCode}.`
+    )
+    this.name = "ProjectDriveFolderConflictError"
+  }
+}
+
+export class ProjectCodeConflictError extends Error {
+  constructor(projectCode: string) {
+    super(`Project code ${projectCode} is already in use for this client.`)
+    this.name = "ProjectCodeConflictError"
+  }
+}
 
 function normalizeProjectCode(value: string) {
   return value
@@ -51,28 +58,45 @@ export async function listProjects() {
 }
 
 export async function createProjectFromDriveFolder(input: unknown) {
-  const parsed = createProjectSchema.parse(input)
+  const parsed = projectOnboardingSchema.parse(input)
   const code = normalizeProjectCode(parsed.code)
 
-  const existingFolderMapping = await prisma.driveMapping.findFirst({
-    where: {
-      folderId: parsed.driveFolderId,
-      isActive: true,
-    },
-    include: {
-      project: {
-        select: {
-          code: true,
-          name: true,
+  const [existingFolderMapping, existingProject] = await Promise.all([
+    prisma.driveMapping.findFirst({
+      where: {
+        folderId: parsed.driveFolderId,
+        isActive: true,
+      },
+      include: {
+        project: {
+          select: {
+            code: true,
+            name: true,
+          },
         },
       },
-    },
-  })
+    }),
+    prisma.project.findUnique({
+      where: {
+        clientId_code: {
+          clientId: parsed.clientId,
+          code,
+        },
+      },
+      select: {
+        code: true,
+      },
+    }),
+  ])
 
   if (existingFolderMapping) {
-    throw new Error(
-      `That Google Drive folder is already linked to project ${existingFolderMapping.project.code}.`
+    throw new ProjectDriveFolderConflictError(
+      existingFolderMapping.project.code
     )
+  }
+
+  if (existingProject) {
+    throw new ProjectCodeConflictError(existingProject.code)
   }
 
   return prisma.$transaction(async (tx) => {
