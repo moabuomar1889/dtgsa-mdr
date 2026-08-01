@@ -3,6 +3,7 @@ packages:
   - "packages/*"
 disallowWorkspaceCycles: true
 allowBuilds:
+  "@embedded-postgres/linux-x64": true
   "@embedded-postgres/windows-x64": true
   "@prisma/engines": false
   esbuild: false
