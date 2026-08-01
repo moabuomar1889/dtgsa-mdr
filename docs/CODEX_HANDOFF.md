@@ -4,7 +4,9 @@ Date: 2026-08-01
 
 Repository: `moabuomar1889/dtgsa-mdr`
 
-Handoff commit: `34038e6997feb27aab26354eaddfe7c9832b8d1a`
+Application baseline commit: `34038e6997feb27aab26354eaddfe7c9832b8d1a`
+
+Original handoff document commit: `ec6d18733f791fb6a98f9e676bc58a0b43b12d41`
 
 This document is the entry brief for a Codex session. Everything in it was
 verified against the working tree on the date above, not recalled. Where a
@@ -17,20 +19,21 @@ that predates this session.
 
 ## 1. Repository state
 
-| Item | Value |
-| --- | --- |
-| Local workspace | `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr` |
-| Remote | `https://github.com/moabuomar1889/dtgsa-mdr.git` |
-| Production branch | `main` @ `34038e6` |
-| Staging branch | `staging` @ `34038e6` |
-| Legacy branch | `codex/foundation-bootstrap` @ `05eb730a` |
-| Database | PostgreSQL, Prisma only |
-| Stack | Next.js 16.2.12, React 19, pnpm 11, Node 24 |
+| Item              | Value                                               |
+| ----------------- | --------------------------------------------------- |
+| Local workspace   | `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr` |
+| Remote            | `https://github.com/moabuomar1889/dtgsa-mdr.git`    |
+| Production branch | `main`                                              |
+| Staging branch    | `staging`                                           |
+| Legacy branch     | `codex/foundation-bootstrap` @ `05eb730a`           |
+| Database          | PostgreSQL, Prisma only                             |
+| Stack             | Next.js 16.2.12, React 19, pnpm 11, Node 24         |
 
 `main` and `staging` are the deployment branches the DTG Platform resolves.
-Both currently point at the same commit. `codex/foundation-bootstrap` is a
-strict ancestor of `main` with zero unique commits; it survives only because
-GitHub refuses to delete the repository's default branch. See §7.
+They pointed at the same commit when the original handoff was recorded; verify
+their current tips before any release. `codex/foundation-bootstrap` is a strict
+ancestor of `main` with zero unique commits; it survives only because GitHub
+refuses to delete the repository's default branch. See §7.
 
 The branch `codex/dtg-signature-platform-merge` referenced by older documents no
 longer exists; it was identical to `main` and was deleted.
@@ -41,20 +44,20 @@ longer exists; it was identical to `main` and was deleted.
 
 Every gate below was run at commit `34038e6` on 2026-08-01.
 
-| Gate | Command | Result |
-| --- | --- | --- |
-| ESLint | `pnpm lint` | Pass |
-| TypeScript | `pnpm typecheck` | Pass |
-| Architecture | `pnpm check:architecture` | Pass |
-| Documentation | `pnpm docs:validate` | Pass |
-| Prisma schema | `pnpm exec prisma validate` | Pass |
-| Unit + integration | `pnpm test:ci` | **204 passed, 0 failed** |
-| Playwright | `pnpm test:e2e:local` | **5 passed** |
-| Production builds | `pnpm build` | 3 Next apps compiled |
-| Retired provider | `pnpm check:no-supabase` | **FAILS — see §7.1** |
+| Gate               | Command                     | Result                         |
+| ------------------ | --------------------------- | ------------------------------ |
+| ESLint             | `pnpm lint`                 | Pass                           |
+| TypeScript         | `pnpm typecheck`            | Pass                           |
+| Architecture       | `pnpm check:architecture`   | Pass                           |
+| Documentation      | `pnpm docs:validate`        | Pass                           |
+| Prisma schema      | `pnpm exec prisma validate` | Pass                           |
+| Unit + integration | `pnpm test:ci`              | **204 passed, 0 failed**       |
+| Playwright         | `pnpm test:e2e:local`       | **5 passed**                   |
+| Production builds  | `pnpm build`                | 3 Next apps compiled           |
+| Retired provider   | `pnpm check:no-supabase`    | **Pass after §7.1 resolution** |
 
-The retired-provider gate is the only red gate and it is red for a true reason.
-Do not "fix" it by weakening the check.
+The retired-provider gate was rerun after the ignored local environment file in
+§7.1 was removed. It passed without weakening the check.
 
 Status vocabulary is unchanged:
 
@@ -135,15 +138,15 @@ Rows are matched against the register on **the internal number and the title
 together**. This is a recorded owner decision, chosen over matching on the
 number alone.
 
-| Row condition | Outcome |
-| --- | --- |
-| Internal number matches, title matches, client number supplied, none recorded | `ClientNumberAssigned` |
-| Internal number matches, title matches, identical client number already recorded | `Unchanged` (idempotent) |
-| Internal number matches, title matches, **different** client number recorded | `Conflict` — numbers are immutable |
-| Internal number matches, **title differs** | `Conflict` — never re-created |
-| Internal number present but unknown to the project | `Conflict` |
-| **No** internal number | `Added` — a line the client introduced |
-| Coding-table value not resolvable | `Error` |
+| Row condition                                                                    | Outcome                                |
+| -------------------------------------------------------------------------------- | -------------------------------------- |
+| Internal number matches, title matches, client number supplied, none recorded    | `ClientNumberAssigned`                 |
+| Internal number matches, title matches, identical client number already recorded | `Unchanged` (idempotent)               |
+| Internal number matches, title matches, **different** client number recorded     | `Conflict` — numbers are immutable     |
+| Internal number matches, **title differs**                                       | `Conflict` — never re-created          |
+| Internal number present but unknown to the project                               | `Conflict`                             |
+| **No** internal number                                                           | `Added` — a line the client introduced |
+| Coding-table value not resolvable                                                | `Error`                                |
 
 The title-mismatch case is the one that matters. Re-creating such a row would
 mint a second internal number for the same document, which is precisely the
@@ -244,13 +247,13 @@ remains barred from production.
 These were decided by the owner after the trade-off was presented. Do not
 silently reverse them.
 
-| Decision | Consequence |
-| --- | --- |
+| Decision                                                       | Consequence                                                                                                                                                                                                                                              |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Denied pages return **200** with the restricted state, not 403 | The shell streams before the permission check resolves, so the status is committed early. No unauthorized data is served either way. Removing `(app)/loading.tsx` restores 403 at the cost of blocking navigation — do not change one without the other. |
-| PDI rows match on **number + title** | Chosen over number-only. The title-mismatch case is reported as a conflict rather than creating a duplicate. |
-| Client logo stored **inline as base64** | Against the `AGENTS.md` no-bytes-in-PostgreSQL rule. Mitigated by a 256 KB cap and a mime allowlist. |
-| PO gate blocks **cover generation only** | Project creation and transmittals remain possible without a contract number. |
-| Icons remain **Lucide** | The design specifies Phosphor but its own handoff permits keeping one set app-wide. Do not mix. |
+| PDI rows match on **number + title**                           | Chosen over number-only. The title-mismatch case is reported as a conflict rather than creating a duplicate.                                                                                                                                             |
+| Client logo stored **inline as base64**                        | Against the `AGENTS.md` no-bytes-in-PostgreSQL rule. Mitigated by a 256 KB cap and a mime allowlist.                                                                                                                                                     |
+| PO gate blocks **cover generation only**                       | Project creation and transmittals remain possible without a contract number.                                                                                                                                                                             |
+| Icons remain **Lucide**                                        | The design specifies Phosphor but its own handoff permits keeping one set app-wide. Do not mix.                                                                                                                                                          |
 
 ### 6.1 `force-dynamic` is load-bearing
 
@@ -263,21 +266,22 @@ database without reading `cookies()` directly. Do not remove it.
 
 ## 7. Outstanding items
 
-### 7.1 `apps/mdr-web/.env` must be deleted
+### 7.1 Resolved: `apps/mdr-web/.env` deleted
 
 An untracked leftover holding retired-provider credentials, including a service
 role key, and a dead `DATABASE_URL` pointing at a host that returns `ENOTFOUND`.
 Next.js auto-loads it, so it silently overrode the database URL during builds —
 this is how it was found.
 
-`pnpm check:no-supabase` fails until it is removed:
+The owner authorized removal through the 2026-08-01 Codex handoff. The file was
+deleted without reading or printing its contents. It was ignored and untracked,
+so no credential entered Git history.
+
+The gate now passes:
 
 ```bash
-rm apps/mdr-web/.env
+pnpm check:no-supabase
 ```
-
-It was left in place because it contains credentials and deleting it is the
-owner's call.
 
 ### 7.2 Default branch and legacy branch
 
