@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com${developmentScriptPolicy}`,
+  `script-src 'self' 'unsafe-inline'${developmentScriptPolicy}`,
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob:${localAcceptance ? "" : " https:"}`,
   "font-src 'self' data:",

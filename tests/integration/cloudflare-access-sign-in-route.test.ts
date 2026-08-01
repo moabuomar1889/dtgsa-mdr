@@ -116,13 +116,11 @@ test("production sign-out terminates the Cloudflare Access session", async () =>
   assert.doesNotMatch(signOutAction, /redirect\("\/sign-in"\)/)
 })
 
-test("production CSP permits only the configured Cloudflare analytics origin", async () => {
+test("production CSP is not weakened for optional Cloudflare analytics", async () => {
   const nextConfig = await readFile("apps/mdr-web/next.config.ts", "utf8")
 
-  assert.match(
-    nextConfig,
-    /script-src 'self' 'unsafe-inline' https:\/\/static\.cloudflareinsights\.com/
-  )
+  assert.match(nextConfig, /script-src 'self' 'unsafe-inline'/)
+  assert.doesNotMatch(nextConfig, /static\.cloudflareinsights\.com/)
   assert.doesNotMatch(nextConfig, /script-src[^\n]*\shttps:\s/)
 })
 
