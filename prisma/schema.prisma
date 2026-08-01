@@ -248,6 +248,48 @@ enum CommentState {
   Reopened
 }
 
+enum WorkRegisterStatus {
+  Reported
+  Investigating
+  Planned
+  InProgress
+  Blocked
+  Fixed
+  Verified
+  Closed
+}
+
+enum WorkRegisterPriority {
+  Critical
+  High
+  Medium
+  Low
+}
+
+enum WorkRegisterCategory {
+  Bug
+  Workflow
+  UserExperience
+  Performance
+  Data
+  Security
+  Feature
+  Other
+}
+
+enum WorkRegisterActivityKind {
+  Created
+  Comment
+  StatusChanged
+  EvidenceUpdated
+}
+
+enum WorkRegisterDeploymentStatus {
+  NotDeployed
+  Staging
+  Production
+}
+
 enum AuthMode {
   CLOUDFLARE_ACCESS
   GOOGLE_WORKSPACE
@@ -279,31 +321,34 @@ model SystemSetting {
 }
 
 model User {
-  id                    String                               @id @default(cuid())
-  email                 String                               @unique
-  fullName              String
-  jobTitle              String?
-  timezone              String                               @default("Asia/Riyadh")
-  isActive              Boolean                              @default(true)
-  createdAt             DateTime                             @default(now())
-  updatedAt             DateTime                             @updatedAt
-  deletedAt             DateTime?
-  signatureProfile      SignatureProfile?
-  userRoles             UserRole[]
-  projectRoles          UserProjectRole[]
-  disciplineAssignments ProjectDisciplineAssignment[]
-  signatureEvents       SignatureEvent[]
-  notifications         Notification[]
-  auditLogs             AuditLog[]                           @relation("AuditActor")
-  systemLogs            SystemLog[]                          @relation("SystemActor")
-  identities            UserIdentity[]
-  employeeProfile       EmployeeProfile?
-  signatureAppearances  EmployeeSignatureAppearanceVersion[]
-  internalSessions      InternalAuthSession[]
-  recentAuthEvidence    RecentAuthenticationEvidence[]
-  identityRoleOverrides IdentityRoleOverride[]
-  portalInvitations     ExternalPortalInvitation[]           @relation("PortalInvitationCreator")
-  directoryRoleGrants   DirectoryRoleAssignment[]
+  id                      String                               @id @default(cuid())
+  email                   String                               @unique
+  fullName                String
+  jobTitle                String?
+  timezone                String                               @default("Asia/Riyadh")
+  isActive                Boolean                              @default(true)
+  createdAt               DateTime                             @default(now())
+  updatedAt               DateTime                             @updatedAt
+  deletedAt               DateTime?
+  signatureProfile        SignatureProfile?
+  userRoles               UserRole[]
+  projectRoles            UserProjectRole[]
+  disciplineAssignments   ProjectDisciplineAssignment[]
+  signatureEvents         SignatureEvent[]
+  notifications           Notification[]
+  auditLogs               AuditLog[]                           @relation("AuditActor")
+  systemLogs              SystemLog[]                          @relation("SystemActor")
+  identities              UserIdentity[]
+  employeeProfile         EmployeeProfile?
+  signatureAppearances    EmployeeSignatureAppearanceVersion[]
+  internalSessions        InternalAuthSession[]
+  recentAuthEvidence      RecentAuthenticationEvidence[]
+  identityRoleOverrides   IdentityRoleOverride[]
+  portalInvitations       ExternalPortalInvitation[]           @relation("PortalInvitationCreator")
+  directoryRoleGrants     DirectoryRoleAssignment[]
+  workRegisterReports     WorkRegisterItem[]                   @relation("WorkRegisterReporter")
+  workRegisterAssignments WorkRegisterItem[]                   @relation("WorkRegisterAssignee")
+  workRegisterActivities  WorkRegisterActivity[]
 
   @@index([isActive])
 }
@@ -2431,6 +2476,56 @@ model CommentAttachment {
   createdAt    DateTime @default(now())
 
   @@unique([commentId, fileObjectId])
+}
+
+model WorkRegisterItem {
+  id               String                       @id @default(cuid())
+  sequence         Int                          @unique @default(autoincrement())
+  title            String
+  description      String
+  area             String?
+  category         WorkRegisterCategory
+  priority         WorkRegisterPriority         @default(Medium)
+  status           WorkRegisterStatus           @default(Reported)
+  workPack         String?
+  reporterUserId   String
+  assigneeUserId   String?
+  rootCause        String?
+  fixSummary       String?
+  fileReferences   String[]                     @default([])
+  testEvidence     String[]                     @default([])
+  commitSha        String?
+  deploymentStatus WorkRegisterDeploymentStatus @default(NotDeployed)
+  remainingRisks   String?
+  startedAt        DateTime?
+  fixedAt          DateTime?
+  verifiedAt       DateTime?
+  closedAt         DateTime?
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  reporter         User                         @relation("WorkRegisterReporter", fields: [reporterUserId], references: [id], onDelete: Restrict)
+  assignee         User?                        @relation("WorkRegisterAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+  activities       WorkRegisterActivity[]
+
+  @@index([status, updatedAt])
+  @@index([category, updatedAt])
+  @@index([priority, updatedAt])
+  @@index([workPack])
+}
+
+model WorkRegisterActivity {
+  id          String                   @id @default(cuid())
+  itemId      String
+  actorUserId String
+  kind        WorkRegisterActivityKind
+  body        String
+  metadata    Json?
+  createdAt   DateTime                 @default(now())
+  item        WorkRegisterItem         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  actor       User                     @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([itemId, createdAt])
+  @@index([actorUserId, createdAt])
 }
 
 model OutboxEvent {

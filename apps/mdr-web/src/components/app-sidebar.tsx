@@ -22,6 +22,7 @@ import {
   InboxIcon,
   LayoutDashboardIcon,
   ListTodoIcon,
+  MessagesSquareIcon,
   ReceiptTextIcon,
   SearchIcon,
   Settings2Icon,
@@ -137,6 +138,12 @@ const data: {
       title: "Reports",
       url: "/reports",
       icon: <ReceiptTextIcon />,
+    },
+    {
+      title: "Work Register",
+      url: "/work-register",
+      icon: <MessagesSquareIcon />,
+      requiredPermissions: [PERMISSIONS.dashboardView],
     },
   ],
   navOperations: [
