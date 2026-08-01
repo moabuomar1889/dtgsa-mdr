@@ -162,13 +162,21 @@ function WorkflowActions({
 export default async function MdrPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{
+    page?: string | string[]
+    revisionId?: string | string[]
+  }>
 }) {
   const user = await requireCurrentAppUser()
   requireUserHasAnyPermission(user, MDR_REGISTER_PERMISSIONS)
 
-  const page = Number((await searchParams)?.page ?? "1")
-  const overview = await getMdrOverview(user, page)
+  const filters = (await searchParams) ?? {}
+  const pageValue = Array.isArray(filters.page) ? filters.page[0] : filters.page
+  const revisionId = Array.isArray(filters.revisionId)
+    ? filters.revisionId[0]
+    : filters.revisionId
+  const page = Number(pageValue ?? "1")
+  const overview = await getMdrOverview(user, page, revisionId)
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
@@ -179,6 +187,14 @@ export default async function MdrPage({
               MDR Register
             </Badge>
             <Badge variant="outline">Operational register</Badge>
+            {overview.focusedRevisionId ? (
+              <>
+                <Badge variant="outline">Focused task</Badge>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/mdr">Clear focus</Link>
+                </Button>
+              </>
+            ) : null}
           </div>
           <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
             MDR records are now visible as the operational destination for
@@ -241,7 +257,15 @@ export default async function MdrPage({
               </TableHeader>
               <TableBody>
                 {overview.documents.map((document) => (
-                  <TableRow key={document.id}>
+                  <TableRow
+                    key={document.id}
+                    id={
+                      document.currentRevision
+                        ? `revision-${document.currentRevision.id}`
+                        : undefined
+                    }
+                    className="target:bg-accent-bg2 scroll-mt-4"
+                  >
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="font-medium">

@@ -32,16 +32,21 @@ function canAct(
   })
 }
 
-export async function getMdrOverview(user: CurrentAppUser, page = 1) {
+export async function getMdrOverview(
+  user: CurrentAppUser,
+  page = 1,
+  revisionId?: string
+) {
   assertUserHasAnyPermission(user, MDR_REGISTER_PERMISSIONS)
 
   const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
   const documents = await prisma.mdrDocument.findMany({
     where: {
       deletedAt: null,
+      ...(revisionId ? { currentRevisionId: revisionId } : {}),
     },
     orderBy: [{ createdAt: "desc" }],
-    skip: (currentPage - 1) * MDR_REGISTER_PAGE_SIZE,
+    skip: revisionId ? 0 : (currentPage - 1) * MDR_REGISTER_PAGE_SIZE,
     take: MDR_REGISTER_PAGE_SIZE,
     include: {
       project: {
@@ -184,11 +189,14 @@ export async function getMdrOverview(user: CurrentAppUser, page = 1) {
   return {
     documents: mappedDocuments,
     pagination: {
-      page: currentPage,
+      page: revisionId ? 1 : currentPage,
       pageSize: MDR_REGISTER_PAGE_SIZE,
-      total,
-      pageCount: Math.max(1, Math.ceil(total / MDR_REGISTER_PAGE_SIZE)),
+      total: revisionId ? mappedDocuments.length : total,
+      pageCount: revisionId
+        ? 1
+        : Math.max(1, Math.ceil(total / MDR_REGISTER_PAGE_SIZE)),
     },
+    focusedRevisionId: revisionId ?? null,
     counts: {
       total,
       readyForWorkflow:
