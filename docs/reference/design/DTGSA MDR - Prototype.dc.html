@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css"><link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css"><style>
+:root{
+--bg:#161826;--panel:#1b1d2b;--panel2:#191b28;--head:#1a1c2a;--raise:#1e2030;--sel:#22243a;
+--line:#2c2f3d;--line2:#212330;--edge:#3f424d;
+--text:#e9e9ed;--muted:#b2b6ca;--dim:#75798c;--soft:#9397ab;
+--accent-seed:#9184d9;
+--accent:var(--accent-seed);--accent-line:color-mix(in oklab,var(--accent-seed) 62%,var(--bg) 38%);--accent-txt:color-mix(in oklab,var(--accent-seed) 62%,#fff 38%);--accent-bg:color-mix(in oklab,var(--accent-seed) 14%,transparent);--accent-bg2:color-mix(in oklab,var(--accent-seed) 8%,transparent);
+--ok:#7fc9a1;--warn:#d9c184;--bad:#d98d84;--track:#2f3242;--on-accent:#161826;--shadow:0 16px 40px rgba(0,0,0,.6);
+}
+[data-theme="light"]{
+--bg:#f2f3f8;--panel:#ffffff;--panel2:#f7f8fc;--head:#ffffff;--raise:#fbfbfe;--sel:#f0eefb;
+--line:#e2e4ee;--line2:#edeef5;--edge:#d3d6e2;
+--text:#1b1d2b;--muted:#4d5162;--dim:#8b90a2;--soft:#6c7183;
+--accent:color-mix(in oklab,var(--accent-seed) 82%,#000 18%);--accent-line:color-mix(in oklab,var(--accent-seed) 45%,#fff 55%);--accent-txt:color-mix(in oklab,var(--accent-seed) 70%,#000 30%);--accent-bg:color-mix(in oklab,var(--accent-seed) 12%,transparent);--accent-bg2:color-mix(in oklab,var(--accent-seed) 6%,transparent);
+--ok:#3d8f6a;--warn:#96701c;--bad:#b4544a;--track:#e7e8f1;--on-accent:#ffffff;--shadow:0 16px 40px rgba(27,29,43,.14);
+}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:13px;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-txt)}
+::selection{background:var(--accent-bg)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[data-h]{cursor:pointer}[data-h]:hover{background:var(--accent-bg2)}
+[data-r]{cursor:pointer}[data-r]:hover{background:var(--accent-bg2)}
+[data-b]{cursor:pointer;user-select:none}[data-b]:hover{border-color:var(--accent);color:var(--accent-txt)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--edge);border-radius:5px}::-webkit-scrollbar-track{background:transparent}
+@keyframes tin{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+</style></helmet>
+<div data-theme="{{ theme }}" style="height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);overflow:hidden">
+
+<div style="display:flex;align-items:center;gap:14px;height:50px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--head);flex:none;position:relative;z-index:40">
+<div data-h onClick="{{ goPortfolio }}" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:7px"><div style="width:20px;height:20px;border-radius:5px;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:10px;font-weight:600">D</div><span style="font-weight:600;font-size:12.5px">DTGSA<span style="color:var(--dim);font-weight:400"> / MDR</span></span></div>
+
+<div style="position:relative;flex:none">
+<div data-b onClick="{{ togglePicker }}" style="display:flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--edge);border-radius:7px;background:var(--raise);white-space:nowrap"><span style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--accent)">{{ hdrCode }}</span><span style="font-size:11.5px;max-width:230px;overflow:hidden;text-overflow:ellipsis">{{ hdrName }}</span><i class="ph ph-caret-up-down" style="color:var(--dim);font-size:12px"></i></div>
+<sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;top:38px;left:0;width:430px;background:var(--panel);border:1px solid var(--edge);border-radius:10px;box-shadow:var(--shadow);padding:8px;z-index:50">
+<div style="display:flex;align-items:center;gap:7px;padding:6px 8px;margin-bottom:6px;border:1px solid var(--line);border-radius:7px;color:var(--dim)"><i class="ph ph-magnifying-glass" style="font-size:12px"></i><span style="font-size:11.5px">Search 44 projects…</span></div>
+<div style="max-height:300px;overflow:auto">
+<sc-for list="{{ projects }}" as="p" hint-placeholder-count="6">
+<div data-h onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:7px">
+<span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:52px">{{ p.code }}</span>
+<span style="flex:1;font-size:11.5px">{{ p.name }}</span>
+<span style="font-size:10.5px;color:var(--dim)">{{ p.role }}</span>
+<span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--accent);width:22px;text-align:right">{{ p.mineLabel }}</span>
+</div>
+</sc-for>
+</div>
+<div data-h onClick="{{ goPortfolio }}" style="display:flex;align-items:center;gap:8px;margin-top:6px;padding:7px 8px;border-top:1px solid var(--line);color:var(--accent-txt);font-size:11.5px"><i class="ph ph-squares-four" style="font-size:13px"></i>See all 44 projects</div>
+</div>
+</sc-if>
+</div>
+
+<div data-b style="flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:7px;padding:5px 9px;border:1px solid var(--line);border-radius:7px;color:var(--dim);font-size:11.5px;max-width:300px"><i class="ph ph-magnifying-glass" style="font-size:12px"></i><span style="overflow:hidden;text-overflow:ellipsis">Search documents, PDI, transmittals…</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:9.5px;border:1px solid var(--edge);border-radius:4px;padding:0 4px">⌘K</span></div>
+
+<div style="margin-left:auto;flex:none;white-space:nowrap;display:flex;align-items:center;gap:11px;color:var(--muted)">
+<div data-b onClick="{{ toggleTheme }}" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--edge);border-radius:7px;font-size:11.5px"><i class="{{ themeIcon }}" style="font-size:13px"></i>{{ themeLabel }}</div>
+<div data-b onClick="{{ openMobile }}" title="Mobile approvals" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--edge);border-radius:7px;font-size:11.5px"><i class="ph ph-device-mobile" style="font-size:13px"></i>Mobile</div>
+<span data-h onClick="{{ goDesk }}" style="position:relative;display:flex;padding:4px;border-radius:6px"><i class="ph ph-bell" style="font-size:15px"></i><span style="position:absolute;top:-2px;right:-3px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--accent);color:var(--on-accent);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ hdrMine }}</span></span>
+<div style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;padding-left:11px;border-left:1px solid var(--line)"><div style="width:23px;height:23px;flex:none;border-radius:12px;background:var(--accent-bg);color:var(--accent-txt);font-size:9.5px;font-weight:600;display:flex;align-items:center;justify-content:center">RA</div><div style="line-height:1.15;white-space:nowrap"><div style="font-size:11.5px;font-weight:500">Rana A.</div><div style="font-size:9.5px;color:var(--dim)">{{ hdrSub }}</div></div><i data-b onClick="{{ signOut }}" class="ph ph-sign-out" style="font-size:15px;margin-left:4px;color:var(--dim)" title="Sign out"></i></div>
+</div>
+</div>
+
+<div style="flex:1;min-height:0;display:flex">
+
+<sc-if value="{{ showGlobalNav }}" hint-placeholder-val="{{ false }}">
+<div style="width:208px;flex:none;border-right:1px solid var(--line);background:var(--panel2);padding:12px 10px;display:flex;flex-direction:column;gap:2px;overflow:auto">
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);padding:6px 8px 4px">All projects</div>
+<sc-for list="{{ globalNav }}" as="n" hint-placeholder-count="4">
+<div data-h onClick="{{ n.go }}" style="display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;background:{{ n.bg }};color:{{ n.color }};box-shadow:{{ n.mark }}"><i class="{{ n.icon }}" style="font-size:14px;color:{{ n.iconColor }}"></i><span style="font-weight:{{ n.weight }}">{{ n.label }}</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:10.5px;color:{{ n.countColor }}">{{ n.count }}</span></div>
+</sc-for>
+<div style="height:1px;background:var(--line);margin:10px 8px"></div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);padding:6px 8px 4px">Jump to project</div>
+<sc-for list="{{ jumpProjects }}" as="p" hint-placeholder-count="5">
+<div data-h onClick="{{ p.enter }}" style="display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;color:var(--muted)"><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--accent-txt);flex:none">{{ p.code }}</span><span style="flex:1;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.short }}</span><span style="font-family:ui-monospace,monospace;font-size:10px;color:{{ p.mineColor }}">{{ p.mineLabel }}</span></div>
+</sc-for>
+<div style="margin-top:auto;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--raise)">
+<div style="font-size:10px;color:var(--dim);margin-bottom:4px">Portfolio submitted</div>
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:19px;font-weight:600;letter-spacing:-0.02em">58</span><span style="font-size:11px;color:var(--soft)">% of 14 208 docs</span></div>
+<div style="height:4px;border-radius:2px;background:var(--track);margin-top:7px;overflow:hidden"><div style="width:58%;height:100%;background:var(--accent)"></div></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showSidebar }}" hint-placeholder-val="{{ true }}">
+<div style="width:208px;flex:none;border-right:1px solid var(--line);background:var(--panel2);padding:12px 10px;display:flex;flex-direction:column;gap:2px;overflow:auto">
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);padding:6px 8px 4px">Project</div>
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="7">
+<div data-h onClick="{{ n.go }}" style="display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;background:{{ n.bg }};color:{{ n.color }};box-shadow:{{ n.mark }}"><i class="{{ n.icon }}" style="font-size:14px;color:{{ n.iconColor }}"></i><span style="font-weight:{{ n.weight }}">{{ n.label }}</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:10.5px;color:{{ n.countColor }}">{{ n.count }}</span></div>
+</sc-for>
+<div style="height:1px;background:var(--line);margin:10px 8px"></div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);padding:6px 8px 4px">Project settings</div>
+<sc-for list="{{ settingsNav }}" as="n" hint-placeholder-count="3">
+<div data-h onClick="{{ n.go }}" style="display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;background:{{ n.bg }};color:{{ n.color }}"><i class="{{ n.icon }}" style="font-size:14px"></i><span>{{ n.label }}</span></div>
+</sc-for>
+<div data-h onClick="{{ goPortfolio }}" style="display:flex;align-items:center;gap:9px;padding:7px 9px;margin-top:6px;border-radius:7px;color:var(--muted)"><i class="ph ph-squares-four" style="font-size:14px"></i><span>All projects</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--dim)">44</span></div>
+<div style="margin-top:auto;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--raise)">
+<div style="font-size:10px;color:var(--dim);margin-bottom:4px">Submission progress</div>
+<div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:19px;font-weight:600;letter-spacing:-0.02em">{{ project.pct }}</span><span style="font-size:11px;color:var(--soft)">% of {{ project.docs }} docs</span></div>
+<div style="height:4px;border-radius:2px;background:var(--track);margin-top:7px;overflow:hidden"><div style="width:{{ project.pctW }};height:100%;background:var(--accent)"></div></div>
+</div>
+</div>
+
+</sc-if>
+
+<div style="flex:1;min-width:0;overflow:auto">
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+<div>
+<div style="padding:20px 24px 14px;display:flex;align-items:flex-end;gap:18px;border-bottom:1px solid var(--line)">
+<div><div style="font-size:22px;font-weight:500;letter-spacing:-0.02em;margin-bottom:3px">Good morning, Rana</div><div style="font-size:12.5px;color:var(--soft)">31 items are waiting on you across 9 projects · 47 documents are past their planned submission date</div></div>
+<div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+<div style="display:flex;padding:2px;border:1px solid var(--edge);border-radius:8px;background:var(--raise);font-size:12px">
+<div data-b onClick="{{ homeDesk }}" style="padding:5px 12px;border-radius:6px;background:{{ tabDeskBg }};color:{{ tabDeskColor }};font-weight:{{ tabDeskWeight }}">My Desk</div>
+<div data-b onClick="{{ homeOverview }}" style="padding:5px 12px;border-radius:6px;background:{{ tabOvBg }};color:{{ tabOvColor }};font-weight:{{ tabOvWeight }}">Overview</div>
+</div>
+<div data-b onClick="{{ goPortfolio }}" style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;border:1px solid var(--edge);color:var(--muted);font-size:12px"><i class="ph ph-squares-four" style="font-size:14px"></i>All projects</div>
+<div data-b onClick="{{ onboard }}" style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;border:1px solid var(--accent);color:var(--accent-txt);font-size:12px;font-weight:500"><i class="ph ph-plus" style="font-size:14px"></i>Onboard project</div>
+</div>
+</div>
+
+<sc-if value="{{ homeIsDesk }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:1fr 310px;min-height:0">
+<div style="padding:16px 24px 24px;display:flex;flex-direction:column;gap:14px">
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--line)"><i class="ph-fill ph-seal-check" style="font-size:14px;color:var(--accent)"></i><span style="font-weight:500;font-size:13px">Document Control check</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);background:var(--accent-bg);border-radius:4px;padding:1px 6px">14</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Across 6 projects · oldest 3 days in queue</span></div>
+<sc-for list="{{ allDc }}" as="d" hint-placeholder-count="6">
+<div data-r onClick="{{ d.enter }}" style="display:grid;grid-template-columns:62px 190px 1fr 82px 46px 96px 118px;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line2)"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent)">{{ d.proj }}</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--accent-txt)">{{ d.no }}</span><span>{{ d.title }}</span><span style="font-size:11px;color:var(--soft)">{{ d.disc }}</span><span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--soft)">{{ d.rev }}</span><span style="font-size:11px;color:{{ d.ageColor }}">{{ d.age }}</span><span data-b style="font-size:11px;font-weight:500;color:var(--accent-txt);border:1px solid var(--accent-line);border-radius:6px;padding:4px 8px;text-align:center">Run DC check</span></div>
+</sc-for>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--line)"><i class="ph-fill ph-envelope-open" style="font-size:14px;color:var(--bad)"></i><span style="font-weight:500;font-size:13px">Client replies to action</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--on-accent);background:var(--bad);border-radius:4px;padding:1px 6px">12</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Reviewed and returned by 4 clients</span></div>
+<sc-for list="{{ allReplies }}" as="r" hint-placeholder-count="4">
+<div data-r onClick="{{ r.enter }}" style="display:grid;grid-template-columns:62px 190px 1fr 196px 142px;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line2)"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent)">{{ r.proj }}</span><span style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--accent-txt)">{{ r.no }}</span><span>{{ r.title }}</span><span style="font-size:11px;color:{{ r.color }}">{{ r.codeLabel }}</span><span data-b style="font-size:11px;font-weight:500;color:var(--accent-txt);border:1px solid var(--accent-line);border-radius:6px;padding:4px 8px;text-align:center">{{ r.action }}</span></div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><i class="ph ph-signature" style="font-size:14px;color:var(--accent)"></i><span style="font-weight:500;font-size:12.5px">Awaiting my signature</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">5</span></div>
+<div style="font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:7px">
+<sc-for list="{{ allSign }}" as="d" hint-placeholder-count="3">
+<div data-r onClick="{{ d.enter }}" style="display:flex;gap:8px;border-radius:5px"><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--accent);width:44px;flex:none">{{ d.proj }}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.title }}</span><span style="color:var(--dim)">DC sign-off</span></div>
+</sc-for>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><i class="ph ph-hourglass-medium" style="font-size:14px;color:var(--warn)"></i><span style="font-weight:500;font-size:12.5px">Transmittals overdue for reply</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--warn)">9</span></div>
+<div style="font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:7px">
+<sc-for list="{{ allTr }}" as="t" hint-placeholder-count="3">
+<div data-r onClick="{{ t.enter }}" style="display:flex;gap:8px;border-radius:5px"><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--accent-txt);width:96px;flex:none">{{ t.no }}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ t.to }}</span><span style="color:{{ t.ageColor }}">{{ t.age }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+
+<div style="border-left:1px solid var(--line);background:var(--panel2);padding:16px;display:flex;flex-direction:column;gap:14px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+<sc-for list="{{ homeStats }}" as="s" hint-placeholder-count="4">
+<div style="border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--raise)"><div style="font-size:10px;color:var(--dim)">{{ s.label }}</div><div style="font-size:19px;font-weight:600;color:{{ s.color }};letter-spacing:-0.02em">{{ s.value }}</div></div>
+</sc-for>
+</div>
+<div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Waiting on you by project</div>
+<div style="display:flex;flex-direction:column;gap:7px;font-size:11.5px">
+<sc-for list="{{ byProject }}" as="p" hint-placeholder-count="6">
+<div data-h onClick="{{ p.enter }}" style="display:flex;align-items:center;gap:8px;border-radius:5px"><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--accent-txt);width:46px;flex:none">{{ p.code }}</span><div style="flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:{{ p.barW }};height:100%;background:var(--accent)"></div></div><span style="width:18px;text-align:right;font-family:ui-monospace,monospace;color:var(--muted)">{{ p.mine }}</span></div>
+</sc-for>
+</div>
+</div>
+<div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Activity · all projects</div>
+<div style="display:flex;flex-direction:column;gap:11px;font-size:11.5px;color:var(--muted)">
+<sc-for list="{{ allActivity }}" as="a" hint-placeholder-count="5">
+<div style="display:flex;gap:9px"><span style="width:34px;flex:none;font-family:ui-monospace,monospace;font-size:10px;color:var(--dim)">{{ a.time }}</span><span><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--accent)">{{ a.proj }}</span> {{ a.text }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ homeIsOverview }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px 22px 26px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;align-content:start">
+<div style="grid-column:span 4;display:grid;grid-template-columns:repeat(6,1fr);gap:12px">
+<sc-for list="{{ portfolioKpis }}" as="k" hint-placeholder-count="6">
+<div data-h onClick="{{ k.go }}" style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 13px">
+<div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)">{{ k.label }}</div>
+<div style="font-size:26px;font-weight:600;letter-spacing:-0.03em;margin-top:5px;color:{{ k.color }}">{{ k.value }}</div>
+<div style="font-size:10.5px;color:var(--soft);margin-top:2px">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="grid-column:span 3;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px;display:flex;flex-direction:column;height:250px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px"><span style="font-size:13px;font-weight:500">Portfolio submission curve</span><span style="font-size:11px;color:var(--dim)">cumulative documents submitted, all 44 projects</span><span style="margin-left:auto;display:flex;gap:12px;font-size:10.5px;color:var(--soft)"><span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:var(--edge);display:block"></span>Planned</span><span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:var(--accent);display:block"></span>Actual</span></span></div>
+<div style="flex:1;min-height:0">{{ curve }}</div>
+<div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--dim);margin-top:6px"><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span style="color:var(--accent-txt)">Jul · today</span><span>Aug</span><span>Sep</span><span>Oct</span></div>
+<div style="font-size:11px;color:var(--soft);margin-top:7px">Actual <b style="color:var(--text);font-weight:500">8 240</b> of planned <b style="color:var(--text);font-weight:500">8 610</b> — <span style="color:var(--bad)">370 behind</span>, concentrated in P-2438 and P-2427.</div>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px;height:250px">
+<div style="font-size:13px;font-weight:500;margin-bottom:11px">Approval funnel · all projects</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:11.5px">
+<sc-for list="{{ portfolioFunnel }}" as="f" hint-placeholder-count="6">
+<div style="border-radius:5px">
+<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:{{ f.text }}">{{ f.label }}</span><span style="font-family:ui-monospace,monospace;color:{{ f.text }}">{{ f.count }}</span></div>
+<div style="height:7px;border-radius:4px;background:var(--track);overflow:hidden"><div style="width:{{ f.pct }};height:100%;background:{{ f.color }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="grid-column:span 4;border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--line)"><span style="font-size:13px;font-weight:500">Projects needing attention</span><span style="font-size:11px;color:var(--dim)">sorted by items waiting on you</span><span data-b onClick="{{ goPortfolio }}" style="margin-left:auto;font-size:11px;color:var(--soft)">All 44 projects →</span></div>
+<div style="display:grid;grid-template-columns:78px 1fr 168px 84px 82px 78px 150px 112px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 12px">Code</div><div style="padding:8px">Project</div><div style="padding:8px">Client</div><div style="padding:8px">Docs</div><div style="padding:8px">On me</div><div style="padding:8px">Overdue</div><div style="padding:8px">Progress</div><div style="padding:8px">Phase</div></div>
+<sc-for list="{{ attentionRows }}" as="p" hint-placeholder-count="6">
+<div data-r onClick="{{ p.enter }}" style="display:grid;grid-template-columns:78px 1fr 168px 84px 82px 78px 150px 112px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px">
+<div style="padding:9px 12px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ p.code }}</div>
+<div style="padding:9px 8px">{{ p.name }}</div>
+<div style="padding:9px 8px;color:var(--muted)">{{ p.client }}</div>
+<div style="padding:9px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ p.docs }}</div>
+<div style="padding:9px 8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:{{ p.mineColor }};background:{{ p.mineBg }};border-radius:4px;padding:1px 6px">{{ p.mineLabel }}</span></div>
+<div style="padding:9px 8px;font-family:ui-monospace,monospace;color:{{ p.overdueColor }}">{{ p.overdue }}</div>
+<div style="padding:9px 8px"><div style="display:flex;align-items:center;gap:7px"><div style="flex:1;height:5px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:{{ p.pctW }};height:100%;background:{{ p.pctColor }}"></div></div><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--soft)">{{ p.pct }}%</span></div></div>
+<div style="padding:9px 8px;color:var(--muted)">{{ p.phase }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDesk }}" hint-placeholder-val="{{ false }}">
+<div>
+<div style="padding:20px 24px 14px;display:flex;align-items:flex-end;gap:18px;border-bottom:1px solid var(--line)">
+<div><div style="font-size:22px;font-weight:500;letter-spacing:-0.02em;margin-bottom:3px">Good morning, Rana</div><div style="font-size:12.5px;color:var(--soft)">{{ mine }} items are waiting on you · {{ project.overdue }} documents are past their planned submission date</div></div>
+<div style="margin-left:auto;display:flex;gap:8px">
+<div data-b onClick="{{ goPdi }}" style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;border:1px solid var(--edge);color:var(--muted);font-size:12px"><i class="ph ph-upload-simple" style="font-size:14px"></i>Import PDI from Excel</div>
+<div data-b onClick="{{ goTransmittals }}" style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;border:1px solid var(--accent);color:var(--accent-txt);font-size:12px;font-weight:500"><i class="ph ph-plus" style="font-size:14px"></i>New transmittal</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 310px;min-height:0">
+<div style="padding:16px 24px 24px;display:flex;flex-direction:column;gap:14px">
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--line)"><i class="ph-fill ph-seal-check" style="font-size:14px;color:var(--accent)"></i><span style="font-weight:500;font-size:13px">Document Control check</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);background:var(--accent-bg);border-radius:4px;padding:1px 6px">{{ dcCount }}</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Approved by approver · awaiting your QA + metadata check</span></div>
+<sc-for list="{{ dcQueue }}" as="d" hint-placeholder-count="4">
+<div data-r onClick="{{ d.open }}" style="display:grid;grid-template-columns:196px 1fr 78px 50px 92px 122px;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line2)"><span style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--accent-txt)">{{ d.no }}</span><span>{{ d.title }}</span><span style="font-size:11px;color:var(--soft)">{{ d.discName }}</span><span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--soft)">{{ d.rev }}</span><span style="font-size:11px;color:{{ d.ageColor }}">{{ d.age }}</span><span data-b style="font-size:11px;font-weight:500;color:var(--accent-txt);border:1px solid var(--accent-line);border-radius:6px;padding:4px 8px;text-align:center">Run DC check</span></div>
+</sc-for>
+<sc-if value="{{ dcEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;font-size:11.5px;color:var(--dim);text-align:center">Queue clear — every approved document has passed Document Control.</div></sc-if>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--line)"><i class="ph-fill ph-envelope-open" style="font-size:14px;color:var(--bad)"></i><span style="font-weight:500;font-size:13px">Client replies to action</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--on-accent);background:var(--bad);border-radius:4px;padding:1px 6px">{{ replyCount }}</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Received against TR-2451-0061 · 24 Jul</span></div>
+<sc-for list="{{ replyQueue }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:196px 1fr 190px 148px;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line2)"><span data-b onClick="{{ r.open }}" style="font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--accent-txt)">{{ r.no }}</span><span>{{ r.title }}</span><span style="font-size:11px;color:{{ r.color }}">{{ r.codeLabel }}</span><span data-b onClick="{{ r.act }}" style="font-size:11px;font-weight:500;color:var(--accent-txt);border:1px solid var(--accent-line);border-radius:6px;padding:4px 8px;text-align:center">{{ r.action }}</span></div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><i class="ph ph-signature" style="font-size:14px;color:var(--accent)"></i><span style="font-weight:500;font-size:12.5px">Awaiting my signature</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ signCount }}</span></div>
+<div style="font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:7px">
+<sc-for list="{{ signQueue }}" as="d" hint-placeholder-count="2">
+<div data-r onClick="{{ d.open }}" style="display:flex;gap:8px;border-radius:5px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);min-width:150px">{{ d.no }}</span><span style="flex:1">{{ d.title }}</span><span style="color:var(--dim)">DC sign-off</span></div>
+</sc-for>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><i class="ph ph-hourglass-medium" style="font-size:14px;color:var(--warn)"></i><span style="font-weight:500;font-size:12.5px">PDI awaiting client number</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--warn)">{{ pdiWaiting }}</span></div>
+<div style="font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:7px">
+<div style="display:flex;gap:8px"><span style="flex:1">Sent to PetroLine DC on 19 Jul</span><span style="color:var(--bad)">8 overdue &gt; 5 days</span></div>
+<div style="display:flex;gap:8px"><span style="flex:1">Client portal · Faisal K. (PetroLine)</span><span data-b onClick="{{ goPortal }}" style="color:var(--accent-txt)">Open portal</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="border-left:1px solid var(--line);background:var(--panel2);padding:16px;display:flex;flex-direction:column;gap:14px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+<sc-for list="{{ deskStats }}" as="s" hint-placeholder-count="4">
+<div style="border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--raise)"><div style="font-size:10px;color:var(--dim)">{{ s.label }}</div><div style="font-size:19px;font-weight:600;color:{{ s.color }};letter-spacing:-0.02em">{{ s.value }}</div></div>
+</sc-for>
+</div>
+<div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Approval chain</div>
+<div style="display:flex;flex-direction:column;gap:7px;font-size:11.5px">
+<sc-for list="{{ funnel }}" as="f" hint-placeholder-count="6">
+<div data-h onClick="{{ f.go }}" style="display:flex;align-items:center;gap:8px;border-radius:5px"><span style="width:106px;color:{{ f.text }}">{{ f.label }}</span><div style="flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:{{ f.pct }};height:100%;background:{{ f.color }}"></div></div><span style="width:26px;text-align:right;font-family:ui-monospace,monospace;color:{{ f.text }}">{{ f.count }}</span></div>
+</sc-for>
+</div>
+</div>
+<div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Activity</div>
+<div style="display:flex;flex-direction:column;gap:11px;font-size:11.5px;color:var(--muted)">
+<sc-for list="{{ activity }}" as="a" hint-placeholder-count="5">
+<div style="display:flex;gap:9px"><span style="width:34px;flex:none;font-family:ui-monospace,monospace;font-size:10px;color:var(--dim)">{{ a.time }}</span><span>{{ a.text }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isOverview }}" hint-placeholder-val="{{ false }}">
+<div style="padding:20px 22px 26px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;align-content:start">
+<div style="grid-column:span 4;display:flex;align-items:flex-end;gap:16px">
+<div><div style="font-size:20px;font-weight:500;letter-spacing:-0.02em">{{ project.name }}</div><div style="font-size:11.5px;color:var(--dim);margin-top:3px">{{ project.client }} · {{ project.contract }} · {{ project.docs }} documents · {{ project.phase }} · IFR cut-off {{ project.cutoff }}</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ goSettings }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Project settings</div>
+<div data-b onClick="{{ goReports }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Export report</div>
+<div data-b onClick="{{ goDesk }}" style="padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500">{{ mine }} items need you</div>
+</div>
+</div>
+
+<div style="grid-column:span 4;display:grid;grid-template-columns:repeat(6,1fr);gap:12px">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="6">
+<div data-h onClick="{{ k.go }}" style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 13px">
+<div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)">{{ k.label }}</div>
+<div style="font-size:26px;font-weight:600;letter-spacing:-0.03em;margin-top:5px;color:{{ k.color }}">{{ k.value }}</div>
+<div style="font-size:10.5px;color:var(--soft);margin-top:2px">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="grid-column:span 3;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px;display:flex;flex-direction:column;height:250px">
+<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px"><span style="font-size:13px;font-weight:500">Submission curve</span><span style="font-size:11px;color:var(--dim)">cumulative documents submitted to client</span><span style="margin-left:auto;display:flex;gap:12px;font-size:10.5px;color:var(--soft)"><span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:var(--edge);display:block"></span>Planned</span><span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:2px;background:var(--accent);display:block"></span>Actual</span></span></div>
+<div style="flex:1;min-height:0">{{ curve }}</div>
+<div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--dim);margin-top:6px"><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span style="color:var(--accent-txt)">Jul · today</span><span>Aug</span><span>Sep</span><span>Oct</span></div>
+<div style="font-size:11px;color:var(--soft);margin-top:7px">Actual <b style="color:var(--text);font-weight:500">806</b> of planned <b style="color:var(--text);font-weight:500">862</b> — <span style="color:var(--bad)">56 behind</span>, driven by Piping isometrics in Area 40.</div>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px;height:250px">
+<div style="font-size:13px;font-weight:500;margin-bottom:11px">Approval funnel</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:11.5px">
+<sc-for list="{{ funnel }}" as="f" hint-placeholder-count="6">
+<div data-h onClick="{{ f.go }}" style="border-radius:5px">
+<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:{{ f.text }}">{{ f.label }}</span><span style="font-family:ui-monospace,monospace;color:{{ f.text }}">{{ f.count }}</span></div>
+<div style="height:7px;border-radius:4px;background:var(--track);overflow:hidden"><div style="width:{{ f.pct }};height:100%;background:{{ f.color }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="grid-column:span 2;border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--line)"><span style="font-size:13px;font-weight:500">Transmittals awaiting reply</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--warn)">{{ openTr }}</span><span data-b onClick="{{ goTransmittals }}" style="margin-left:auto;font-size:11px;color:var(--soft)">All transmittals →</span></div>
+<div style="display:grid;grid-template-columns:104px 1fr 44px 78px 96px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:6px 14px">Transmittal</div><div style="padding:6px 8px">Recipient</div><div style="padding:6px 8px">Docs</div><div style="padding:6px 8px">Sent</div><div style="padding:6px 8px">Days open</div></div>
+<sc-for list="{{ openTransmittals }}" as="t" hint-placeholder-count="5">
+<div data-r onClick="{{ t.open }}" style="display:grid;grid-template-columns:104px 1fr 44px 78px 96px;border-bottom:1px solid var(--line2);font-size:11.5px"><div style="padding:8px 14px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ t.no }}</div><div style="padding:8px 8px">{{ t.to }}</div><div style="padding:8px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ t.count }}</div><div style="padding:8px 8px;color:var(--muted)">{{ t.sent }}</div><div style="padding:8px 8px;color:{{ t.ageColor }}">{{ t.age }}</div></div>
+</sc-for>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 14px">
+<div style="font-size:13px;font-weight:500;margin-bottom:10px">By discipline</div>
+<div style="display:flex;flex-direction:column;gap:8px;font-size:11.5px">
+<sc-for list="{{ disciplines }}" as="d" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:74px;color:var(--muted)">{{ d.name }}</span><div style="flex:1;height:6px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:{{ d.pct }};height:100%;background:{{ d.color }}"></div></div><span style="width:30px;text-align:right;font-family:ui-monospace,monospace;color:var(--soft)">{{ d.pct }}</span></div>
+</sc-for>
+</div>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 14px">
+<div style="font-size:13px;font-weight:500;margin-bottom:10px">Audit trail</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:11px;color:var(--muted)">
+<sc-for list="{{ activity }}" as="a" hint-placeholder-count="5">
+<div style="display:flex;gap:8px"><span style="width:32px;flex:none;font-family:ui-monospace,monospace;font-size:9.5px;color:var(--dim)">{{ a.time }}</span><span>{{ a.text }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMdr }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;height:100%">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel2);flex:none">
+<div><div style="font-size:15px;font-weight:500;letter-spacing:-0.01em">Master Document Register</div><div style="font-size:11px;color:var(--dim);margin-top:2px">{{ project.docs }} documents · {{ mdrSubtitle }}</div></div>
+<div style="display:flex;gap:2px;margin-left:8px;padding:3px;border-radius:8px;background:var(--raise);border:1px solid var(--line);font-size:11.5px">
+<sc-for list="{{ mdrTabs }}" as="v" hint-placeholder-count="3">
+<div data-h onClick="{{ v.go }}" style="padding:4px 12px;border-radius:6px;background:{{ v.bg }};color:{{ v.color }};font-weight:{{ v.weight }}">{{ v.label }}</div>
+</sc-for>
+</div>
+<div style="margin-left:auto;display:flex;align-items:center;gap:7px;font-size:11.5px">
+<div data-b style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-funnel" style="font-size:13px"></i>Discipline: All</div>
+<div data-b style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Assignee: Anyone</div>
+<div data-b onClick="{{ toggleOverdue }}" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid {{ overdueBorder }};border-radius:7px;color:{{ overdueColor }};background:{{ overdueBg }}"><i class="ph-fill ph-warning-circle" style="font-size:13px"></i>Overdue only</div>
+<div data-b onClick="{{ createTransmittal }}" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500"><i class="ph ph-paper-plane-tilt" style="font-size:13px"></i>{{ trButtonLabel }}</div>
+</div>
+</div>
+
+<sc-if value="{{ isBoard }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);overflow:auto">
+<sc-for list="{{ boardCols }}" as="c" hint-placeholder-count="6">
+<div style="background:{{ c.bg }};display:flex;flex-direction:column;min-width:0;box-shadow:{{ c.mark }}">
+<div style="padding:11px 12px 9px;border-bottom:1px solid var(--line)"><div style="display:flex;align-items:center;gap:7px"><span style="width:6px;height:6px;border-radius:3px;background:{{ c.dot }}"></span><span style="font-size:11.5px;font-weight:500;color:{{ c.titleColor }}">{{ c.label }}</span><span style="margin-left:auto;font-family:ui-monospace,monospace;font-size:11px;color:{{ c.titleColor }}">{{ c.count }}</span></div><div style="font-size:10px;color:var(--dim);margin-top:4px">{{ c.note }}</div></div>
+<div style="padding:10px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ c.cards }}" as="d" hint-placeholder-count="3">
+<div data-r onClick="{{ d.open }}" style="border:1px solid {{ d.border }};border-radius:8px;background:{{ d.bg }};padding:9px 10px">
+<div style="display:flex;gap:8px;align-items:flex-start">
+<sc-if value="{{ d.selectable }}" hint-placeholder-val="{{ false }}">
+<span onClick="{{ d.toggle }}" style="width:13px;height:13px;flex:none;border-radius:3px;border:1px solid {{ d.boxBorder }};background:{{ d.boxBg }};color:var(--on-accent);font-size:9px;display:flex;align-items:center;justify-content:center;margin-top:2px">{{ d.tick }}</span>
+</sc-if>
+<div style="min-width:0;flex:1">
+<div style="font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--accent-txt)">{{ d.no }}</div>
+<div style="font-size:11.5px;margin:4px 0 7px">{{ d.title }}</div>
+<div style="display:flex;align-items:center;gap:6px"><span style="font-size:9.5px;color:var(--muted);border:1px solid var(--edge);border-radius:4px;padding:1px 5px">{{ d.disc }}</span><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--soft)">{{ d.rev }}</span><span style="margin-left:auto;font-size:9.5px;color:{{ d.noteColor }}">{{ d.note }}</span></div>
+</div>
+</div>
+</div>
+</sc-for>
+<sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;font-size:10.5px;color:var(--dim);padding:4px">{{ c.more }}</div></sc-if>
+<sc-if value="{{ c.cta }}" hint-placeholder-val="{{ false }}"><div data-b onClick="{{ createTransmittal }}" style="border:1px dashed var(--accent-line);border-radius:8px;background:var(--accent-bg2);padding:9px 10px;font-size:11px;color:var(--accent-txt);text-align:center">{{ c.cta }}</div></sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:18px;padding:10px 18px;border-top:1px solid var(--line);background:var(--head);font-size:11px;color:var(--soft);flex:none">
+<span><b style="color:var(--text);font-weight:500">14</b> rejected / returned for correction</span>
+<span><b style="color:var(--text);font-weight:500">{{ pdiWaiting }}</b> PDI awaiting client number</span>
+<span><b style="color:var(--text);font-weight:500">{{ project.overdue }}</b> overdue against planned date</span>
+<span style="margin-left:auto;color:var(--dim)">Board reflects this project's own workflow config · {{ project.code }} requires reviewer + approver + DC check</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex">
+<div style="width:214px;flex:none;border-right:1px solid var(--line);background:var(--panel2);padding:12px 11px;overflow:auto">
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Saved views</div>
+<div style="display:flex;flex-direction:column;gap:1px;font-size:11.5px;margin-bottom:16px">
+<sc-for list="{{ savedViews }}" as="v" hint-placeholder-count="6">
+<div data-h onClick="{{ v.go }}" style="display:flex;padding:5px 8px;border-radius:6px;background:{{ v.bg }};color:{{ v.color }};box-shadow:{{ v.mark }}"><span>{{ v.label }}</span><span style="margin-left:auto;font-family:ui-monospace,monospace;color:{{ v.countColor }}">{{ v.count }}</span></div>
+</sc-for>
+</div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Discipline</div>
+<div style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--muted);margin-bottom:16px">
+<sc-for list="{{ discFacets }}" as="d" hint-placeholder-count="6">
+<div data-h onClick="{{ d.go }}" style="display:flex;gap:7px;align-items:center;border-radius:5px"><span style="width:12px;height:12px;border-radius:3px;border:1px solid {{ d.boxBorder }};background:{{ d.boxBg }};color:var(--on-accent);font-size:8px;display:flex;align-items:center;justify-content:center">{{ d.tick }}</span>{{ d.name }}<span style="margin-left:auto;font-family:ui-monospace,monospace;color:var(--dim)">{{ d.count }}</span></div>
+</sc-for>
+</div>
+<div style="font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Revision</div>
+<div style="display:flex;gap:5px;font-size:10.5px;color:var(--muted)"><span style="border:1px solid var(--accent-line);color:var(--accent-txt);border-radius:5px;padding:2px 7px">Latest only</span><span data-b style="border:1px solid var(--edge);border-radius:5px;padding:2px 7px">Incl. superseded</span></div>
+</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<div style="flex:1;min-height:0;overflow:auto">
+<div style="display:grid;grid-template-columns:28px 176px 1fr 52px 44px 122px 78px 132px 108px 74px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line);position:sticky;top:0"><div style="padding:8px"></div><div style="padding:8px">Document no.</div><div style="padding:8px">Title</div><div style="padding:8px">Disc</div><div style="padding:8px">Rev</div><div style="padding:8px">Status</div><div style="padding:8px">Planned</div><div style="padding:8px">Client no.</div><div style="padding:8px">Transmittal</div><div style="padding:8px">Reply</div></div>
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="12">
+<div style="display:grid;grid-template-columns:28px 176px 1fr 52px 44px 122px 78px 132px 108px 74px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px;background:{{ r.rowBg }}">
+<div style="padding:7px 8px"><span onClick="{{ r.toggle }}" data-b style="width:12px;height:12px;display:block;border-radius:3px;border:1px solid {{ r.boxBorder }};background:{{ r.boxBg }};color:var(--on-accent);font-size:8px;text-align:center;line-height:11px">{{ r.tick }}</span></div>
+<div data-r onClick="{{ r.open }}" style="padding:7px 8px;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--accent-txt)">{{ r.no }}</div>
+<div data-r onClick="{{ r.open }}" style="padding:7px 8px">{{ r.title }}</div>
+<div style="padding:7px 8px;color:var(--soft)">{{ r.disc }}</div>
+<div style="padding:7px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ r.rev }}</div>
+<div style="padding:7px 8px"><span style="font-size:10px;color:{{ r.statusColor }};border:1px solid {{ r.statusBorder }};background:{{ r.statusBg }};border-radius:5px;padding:1px 6px">{{ r.status }}</span></div>
+<div style="padding:7px 8px;color:{{ r.plannedColor }}">{{ r.planned }}</div>
+<div style="padding:7px 8px;font-family:ui-monospace,monospace;font-size:10px;color:var(--soft)">{{ r.client }}</div>
+<div style="padding:7px 8px;font-family:ui-monospace,monospace;font-size:10px;color:var(--accent-txt)">{{ r.tr }}</div>
+<div style="padding:7px 8px;color:{{ r.replyColor }}">{{ r.reply }}</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--line);background:var(--head);flex:none">
+<span style="font-size:11.5px;color:var(--accent-txt);font-weight:500">{{ selectedLabel }}</span>
+<div style="display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ bulkDc }}" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500"><i class="ph ph-seal-check" style="font-size:13px"></i>Run DC check</div>
+<div data-b onClick="{{ bulkCover }}" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-file-text" style="font-size:13px"></i>Generate cover sheets</div>
+<div data-b onClick="{{ createTransmittal }}" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-paper-plane-tilt" style="font-size:13px"></i>Add to transmittal</div>
+<div data-b onClick="{{ pdfTools }}" style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-scissors" style="font-size:13px"></i>PDF tools</div>
+</div>
+<span style="margin-left:auto;font-size:11px;color:var(--dim)">{{ rowCount }} · numbering rule <span style="font-family:ui-monospace,monospace">{PROJ}-{DISC}-{TYPE}-{SEQ}-{REV}</span></span>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTimeline }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;padding:18px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:grid;grid-template-columns:230px 1fr;border-bottom:1px solid var(--line);background:var(--head)">
+<div style="padding:9px 14px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)">Discipline / package</div>
+<div style="display:grid;grid-template-columns:repeat(8,1fr);font-size:10px;color:var(--dim)">
+<sc-for list="{{ months }}" as="m" hint-placeholder-count="8">
+<div style="padding:9px 8px;border-left:1px solid var(--line2)">{{ m }}</div>
+</sc-for>
+</div>
+</div>
+<sc-for list="{{ timeline }}" as="t" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:230px 1fr;border-bottom:1px solid var(--line2);align-items:center">
+<div style="padding:11px 14px"><div style="font-size:12px">{{ t.name }}</div><div style="font-size:10px;color:var(--dim);margin-top:2px">{{ t.meta }}</div></div>
+<div style="position:relative;height:44px">
+<div style="position:absolute;left:{{ t.plannedLeft }};width:{{ t.plannedWidth }};top:12px;height:7px;border-radius:4px;background:var(--track)"></div>
+<div style="position:absolute;left:{{ t.plannedLeft }};width:{{ t.actualWidth }};top:12px;height:7px;border-radius:4px;background:{{ t.color }}"></div>
+<div style="position:absolute;left:{{ t.milestoneLeft }};top:5px;font-size:9.5px;color:var(--dim)">{{ t.milestone }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:18px;margin-top:12px;font-size:11px;color:var(--dim)"><span>Bars show planned submission window; filled portion is actual submitted revisions.</span><span style="margin-left:auto">Dashed marker = IFR cut-off {{ project.cutoff }}</span></div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDoc }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div data-b onClick="{{ goMdr }}" style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);padding:4px 8px;border:1px solid var(--edge);border-radius:7px"><i class="ph ph-arrow-left" style="font-size:13px"></i>Register</div>
+<div><div style="display:flex;align-items:center;gap:9px"><span style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--accent-txt)">{{ doc.no }}</span><span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--soft)">{{ doc.rev }}</span><span style="font-size:10.5px;color:{{ doc.statusColor }};border:1px solid {{ doc.statusBorder }};background:{{ doc.statusBg }};border-radius:5px;padding:1px 7px">{{ doc.status }}</span></div><div style="font-size:13px;margin-top:4px">{{ doc.title }}</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ genCover }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Cover sheet</div>
+<div data-b onClick="{{ pdfTools }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">PDF tools</div>
+<div data-b onClick="{{ addToTr }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Add to transmittal</div>
+</div>
+</div>
+
+<div style="padding:18px 20px;display:grid;grid-template-columns:1fr 330px;gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:14px">
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:12px">Workflow</div>
+<div style="display:flex;align-items:stretch;gap:0">
+<sc-for list="{{ steps }}" as="st" hint-placeholder-count="5">
+<div style="flex:1;display:flex;flex-direction:column;gap:7px;padding-right:10px">
+<div style="height:3px;border-radius:2px;background:{{ st.bar }}"></div>
+<div style="display:flex;align-items:center;gap:6px"><i class="{{ st.icon }}" style="font-size:13px;color:{{ st.color }}"></i><span style="font-size:11.5px;color:{{ st.color }};font-weight:{{ st.weight }}">{{ st.label }}</span></div>
+<div style="font-size:10.5px;color:var(--dim)">{{ st.who }}</div>
+<div style="font-size:10.5px;color:var(--soft)">{{ st.when }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{ showDcPanel }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px solid var(--accent-line);border-radius:9px;background:var(--sel);padding:14px 16px">
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:11px"><i class="ph-fill ph-seal-check" style="font-size:15px;color:var(--accent)"></i><span style="font-size:12.5px;font-weight:500">Document Control check</span><span style="margin-left:auto;font-size:11px;color:var(--soft)">{{ checkProgress }}</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 18px">
+<sc-for list="{{ checks }}" as="c" hint-placeholder-count="6">
+<div data-h onClick="{{ c.toggle }}" style="display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;font-size:11.5px;color:{{ c.color }}"><span style="width:14px;height:14px;flex:none;border-radius:4px;border:1px solid {{ c.boxBorder }};background:{{ c.boxBg }};color:var(--on-accent);font-size:9px;display:flex;align-items:center;justify-content:center">{{ c.tick }}</span>{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:9px;margin-top:13px;padding-top:12px;border-top:1px solid var(--line)">
+<div style="flex:1;font-size:11px;color:var(--dim)">Approving signs the DC check, generates the cover sheet and moves the document to Ready to submit.</div>
+<div data-b onClick="{{ rejectDc }}" style="padding:7px 12px;border:1px solid var(--edge);border-radius:7px;color:var(--bad);font-size:11.5px">Return for correction</div>
+<div data-b onClick="{{ approveDc }}" style="padding:7px 12px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-size:11.5px;font-weight:500">Approve DC check</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showSignPanel }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px solid var(--accent-line);border-radius:9px;background:var(--sel);padding:14px 16px;display:flex;align-items:center;gap:12px">
+<i class="ph ph-signature" style="font-size:16px;color:var(--accent)"></i>
+<div style="flex:1"><div style="font-size:12.5px;font-weight:500">Electronic signature required</div><div style="font-size:11px;color:var(--soft);margin-top:2px">Signing as Rana A. (DC Admin) — stamped on the cover sheet and recorded in the audit log.</div></div>
+<div data-b onClick="{{ signDoc }}" style="padding:7px 12px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-size:11.5px;font-weight:500">Sign &amp; submit for review</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showReplyPanel }}" hint-placeholder-val="{{ false }}">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px;display:flex;align-items:center;gap:12px">
+<i class="ph-fill ph-envelope-open" style="font-size:16px;color:{{ doc.replyColor }}"></i>
+<div style="flex:1"><div style="font-size:12.5px;font-weight:500">Client reply · {{ doc.replyLabel }}</div><div style="font-size:11px;color:var(--soft);margin-top:2px">Received {{ doc.replyDate }} against {{ doc.replyTr }} — the current revision stays in history for traceability.</div></div>
+<div data-b onClick="{{ replyAct }}" style="padding:7px 12px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-size:11.5px;font-weight:500">{{ doc.replyAction }}</div>
+</div>
+</sc-if>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--line)"><span style="font-size:12.5px;font-weight:500">Revision history</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Superseded revisions remain available</span></div>
+<div style="display:grid;grid-template-columns:58px 96px 1fr 118px 118px 78px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:7px 14px">Rev</div><div style="padding:7px 8px">Date</div><div style="padding:7px 8px">Status</div><div style="padding:7px 8px">Transmittal</div><div style="padding:7px 8px">Reply</div><div style="padding:7px 8px">Files</div></div>
+<sc-for list="{{ revisions }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:58px 96px 1fr 118px 118px 78px;border-bottom:1px solid var(--line2);font-size:11.5px;color:{{ r.color }}"><div style="padding:8px 14px;font-family:ui-monospace,monospace">{{ r.rev }}</div><div style="padding:8px 8px">{{ r.date }}</div><div style="padding:8px 8px">{{ r.status }}</div><div style="padding:8px 8px;font-family:ui-monospace,monospace;font-size:10px">{{ r.tr }}</div><div style="padding:8px 8px">{{ r.reply }}</div><div style="padding:8px 8px;color:var(--accent-txt)">{{ r.files }}</div></div>
+</sc-for>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:11px"><span style="font-size:12.5px;font-weight:500">Files — {{ doc.rev }}</span><span data-b onClick="{{ uploadFile }}" style="margin-left:auto;font-size:11px;color:var(--accent-txt);border:1px solid var(--accent-line);border-radius:6px;padding:4px 9px">Upload revision files</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+<sc-for list="{{ files }}" as="f" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--raise)"><i class="{{ f.icon }}" style="font-size:15px;color:var(--accent)"></i><div style="min-width:0"><div style="font-size:11.5px">{{ f.name }}</div><div style="font-size:10px;color:var(--dim)">{{ f.meta }}</div></div><span style="margin-left:auto;font-size:10.5px;color:var(--dim)">{{ f.store }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:11px">Metadata</div>
+<div style="display:flex;flex-direction:column;gap:8px;font-size:11.5px">
+<sc-for list="{{ meta }}" as="m" hint-placeholder-count="8">
+<div style="display:flex;gap:10px"><span style="width:112px;color:var(--dim)">{{ m.k }}</span><span style="flex:1;color:{{ m.color }}">{{ m.v }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:11px">Signatures</div>
+<div style="display:flex;flex-direction:column;gap:10px;font-size:11.5px">
+<sc-for list="{{ signatures }}" as="g" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:12px;background:var(--accent-bg);color:var(--accent-txt);font-size:9.5px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ g.initials }}</div><div style="flex:1"><div>{{ g.name }}</div><div style="font-size:10px;color:var(--dim)">{{ g.role }}</div></div><span style="font-size:10.5px;color:{{ g.color }}">{{ g.when }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:11px">Audit log</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:11px;color:var(--muted)">
+<sc-for list="{{ docAudit }}" as="a" hint-placeholder-count="5">
+<div style="display:flex;gap:9px"><span style="width:52px;flex:none;font-family:ui-monospace,monospace;font-size:9.5px;color:var(--dim)">{{ a.when }}</span><span>{{ a.text }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPdi }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div><div style="font-size:15px;font-weight:500">Preliminary Document Information</div><div style="font-size:11px;color:var(--dim);margin-top:2px">{{ pdiCount }} items · {{ pdiWaiting }} awaiting client numbering · client portal open to Faisal K. (PetroLine)</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ importExcel }}" style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-upload-simple" style="font-size:13px"></i>Import from Excel</div>
+<div data-b onClick="{{ exportExcel }}" style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-download-simple" style="font-size:13px"></i>Export</div>
+<div data-b onClick="{{ goPortal }}" style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-arrow-square-out" style="font-size:13px"></i>View client portal</div>
+<div data-b onClick="{{ sendToClient }}" style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500"><i class="ph ph-paper-plane-tilt" style="font-size:13px"></i>Send drafts to client</div>
+</div>
+</div>
+<div style="padding:16px 20px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:grid;grid-template-columns:96px 1fr 56px 96px 148px 84px 158px 132px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 14px">PDI ref</div><div style="padding:8px">Preliminary title</div><div style="padding:8px">Disc</div><div style="padding:8px">Type</div><div style="padding:8px">Status</div><div style="padding:8px">Sent</div><div style="padding:8px">Client document no.</div><div style="padding:8px">Action</div></div>
+<sc-for list="{{ pdiRows }}" as="i" hint-placeholder-count="7">
+<div style="display:grid;grid-template-columns:96px 1fr 56px 96px 148px 84px 158px 132px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px">
+<div style="padding:9px 14px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ i.ref }}</div>
+<div style="padding:9px 8px">{{ i.title }}</div>
+<div style="padding:9px 8px;color:var(--soft)">{{ i.disc }}</div>
+<div style="padding:9px 8px;color:var(--soft)">{{ i.type }}</div>
+<div style="padding:9px 8px"><span style="font-size:10px;color:{{ i.statusColor }};border:1px solid var(--edge);border-radius:5px;padding:1px 6px">{{ i.status }}</span></div>
+<div style="padding:9px 8px;color:var(--muted)">{{ i.sent }}</div>
+<div style="padding:9px 8px;font-family:ui-monospace,monospace;font-size:10px;color:{{ i.numColor }}">{{ i.clientNo }}</div>
+<div style="padding:9px 8px"><span data-b onClick="{{ i.act }}" style="font-size:10.5px;color:{{ i.actColor }};border:1px solid {{ i.actBorder }};border-radius:6px;padding:4px 8px">{{ i.action }}</span></div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:14px;margin-top:14px">
+<div style="flex:1;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px"><div style="font-size:12.5px;font-weight:500;margin-bottom:7px">How PDI becomes a controlled document</div><div style="font-size:11.5px;color:var(--soft);line-height:1.6">Create or import preliminary items → send to the client → the client enters their official document number in the portal → convert the numbered item into an MDR document, which inherits the client number and this project's numbering rule.</div></div>
+<div style="width:300px;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px"><div style="font-size:12.5px;font-weight:500;margin-bottom:9px">Last import</div><div style="font-size:11.5px;color:var(--soft);display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:8px"><span style="flex:1">HGC_PDI_rev4.xlsx</span><span style="color:var(--ok)">18 rows</span></div><div style="display:flex;gap:8px"><span style="flex:1">Skipped duplicates</span><span>2</span></div><div style="display:flex;gap:8px"><span style="flex:1">Imported by</span><span>Rana A. · yesterday</span></div></div></div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPortal }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px 20px 26px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+<div data-b onClick="{{ goPdi }}" style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);padding:4px 8px;border:1px solid var(--edge);border-radius:7px"><i class="ph ph-arrow-left" style="font-size:13px"></i>Back to PDI</div>
+<span style="font-size:11.5px;color:var(--dim)">Preview of what the Client DC User sees</span>
+</div>
+<div style="border:1px solid var(--edge);border-radius:12px;background:var(--panel);overflow:hidden;box-shadow:var(--shadow)">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--head)">
+<div style="width:26px;height:26px;border-radius:7px;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:11px;font-weight:600">PL</div>
+<div><div style="font-size:13px;font-weight:500">PetroLine Energy — Document Numbering Portal</div><div style="font-size:11px;color:var(--dim);margin-top:2px">Contract EPC-2451 · Hail Gas Compression Phase 2 · signed in as Faisal K.</div></div>
+<div style="margin-left:auto;font-size:11px;color:var(--warn)">3 items awaiting your numbers</div>
+</div>
+<div style="padding:16px 18px">
+<div style="font-size:11.5px;color:var(--soft);margin-bottom:12px">Enter your official document number for each item below. Numbers are written straight back to the contractor's register; no other project data is visible to you.</div>
+<div style="display:grid;grid-template-columns:96px 1fr 200px 96px;gap:10px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:0 4px 8px;border-bottom:1px solid var(--line)"><div>PDI ref</div><div>Title</div><div>Your document number</div><div>Status</div></div>
+<sc-for list="{{ portalRows }}" as="i" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:96px 1fr 200px 96px;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line2);font-size:11.5px">
+<div style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ i.ref }}</div>
+<div>{{ i.title }}</div>
+<div><div data-b onClick="{{ i.fill }}" style="padding:6px 9px;border:1px solid {{ i.inputBorder }};border-radius:7px;font-family:ui-monospace,monospace;font-size:10.5px;color:{{ i.numColor }};background:var(--raise)">{{ i.value }}</div></div>
+<div style="font-size:10.5px;color:{{ i.statusColor }}">{{ i.status }}</div>
+</div>
+</sc-for>
+<div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+<span style="font-size:11px;color:var(--dim)">Numbers are recorded against the contractor's PDI register with your name and a timestamp.</span>
+<div data-b onClick="{{ savePortal }}" style="margin-left:auto;padding:7px 12px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-size:11.5px;font-weight:500">Submit numbers</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTransmittals }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div><div style="font-size:15px;font-weight:500">Transmittals</div><div style="font-size:11px;color:var(--dim);margin-top:2px">{{ trCount }} issued · {{ openTr }} awaiting client reply · reply window 14 days</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ goSettings }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Transmittal template</div>
+<div data-b onClick="{{ createTransmittal }}" style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500"><i class="ph ph-plus" style="font-size:13px"></i>New transmittal ({{ readyCount }} ready)</div>
+</div>
+</div>
+<div style="padding:16px 20px;display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:grid;grid-template-columns:116px 1fr 52px 86px 104px 118px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 14px">Transmittal</div><div style="padding:8px">Recipient</div><div style="padding:8px">Docs</div><div style="padding:8px">Sent</div><div style="padding:8px">Days open</div><div style="padding:8px">Status</div></div>
+<sc-for list="{{ trRows }}" as="t" hint-placeholder-count="6">
+<div data-r onClick="{{ t.open }}" style="display:grid;grid-template-columns:116px 1fr 52px 86px 104px 118px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px;background:{{ t.rowBg }}"><div style="padding:9px 14px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ t.no }}</div><div style="padding:9px 8px">{{ t.to }}</div><div style="padding:9px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ t.count }}</div><div style="padding:9px 8px;color:var(--muted)">{{ t.sent }}</div><div style="padding:9px 8px;color:{{ t.ageColor }}">{{ t.age }}</div><div style="padding:9px 8px;color:{{ t.statusColor }}">{{ t.status }}</div></div>
+</sc-for>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="padding:12px 14px;border-bottom:1px solid var(--line)"><div style="display:flex;align-items:center;gap:9px"><span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--accent-txt)">{{ trSel.no }}</span><span style="margin-left:auto;font-size:10.5px;color:{{ trSel.statusColor }}">{{ trSel.status }}</span></div><div style="font-size:11px;color:var(--dim);margin-top:4px">To {{ trSel.to }} · sent {{ trSel.sent }} · {{ trSel.count }} documents</div></div>
+<div style="padding:12px 14px;border-bottom:1px solid var(--line)">
+<div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Package</div>
+<div style="display:flex;flex-direction:column;gap:7px;font-size:11.5px">
+<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--raise)"><i class="ph ph-file-pdf" style="font-size:15px;color:var(--accent)"></i><div><div>{{ trSel.no }}.pdf</div><div style="font-size:10px;color:var(--dim)">Transmittal sheet + cover sheets · 24.6 MB</div></div></div>
+<sc-for list="{{ trSel.docs }}" as="d" hint-placeholder-count="4">
+<div style="display:flex;gap:9px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:150px">{{ d.no }}</span><span style="flex:1;color:var(--muted)">{{ d.title }}</span><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--soft)">{{ d.rev }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="padding:12px 14px">
+<div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Delivery log</div>
+<div style="display:flex;flex-direction:column;gap:8px;font-size:11px;color:var(--muted)">
+<sc-for list="{{ trSel.log }}" as="l" hint-placeholder-count="3">
+<div style="display:flex;gap:9px"><span style="width:56px;flex:none;font-family:ui-monospace,monospace;font-size:9.5px;color:var(--dim)">{{ l.when }}</span><span>{{ l.text }}</span></div>
+</sc-for>
+</div>
+<div style="display:flex;gap:7px;margin-top:12px;font-size:11.5px">
+<div data-b onClick="{{ resendTr }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Resend email</div>
+<div data-b onClick="{{ recordReply }}" style="padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500">Record client reply</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReplies }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div><div style="font-size:15px;font-weight:500">Client replies</div><div style="font-size:11px;color:var(--dim);margin-top:2px">{{ replyCount }} replies to action · review codes per this project's configuration</div></div>
+</div>
+<div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:grid;grid-template-columns:190px 1fr 118px 210px 156px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 14px">Document</div><div style="padding:8px">Title</div><div style="padding:8px">Transmittal</div><div style="padding:8px">Review code</div><div style="padding:8px">Required next action</div></div>
+<sc-for list="{{ replyQueue }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:190px 1fr 118px 210px 156px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px"><div data-r onClick="{{ r.open }}" style="padding:9px 14px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ r.no }}</div><div style="padding:9px 8px">{{ r.title }}</div><div style="padding:9px 8px;font-family:ui-monospace,monospace;font-size:10px;color:var(--soft)">{{ r.tr }}</div><div style="padding:9px 8px;color:{{ r.color }}">{{ r.codeLabel }}</div><div style="padding:9px 8px"><span data-b onClick="{{ r.act }}" style="font-size:10.5px;font-weight:500;color:var(--accent-txt);border:1px solid var(--accent-line);border-radius:6px;padding:4px 8px">{{ r.action }}</span></div></div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px"><div style="font-size:11.5px;font-weight:500;color:var(--warn);margin-bottom:6px">Code 2 · Revision required</div><div style="font-size:11px;color:var(--soft);line-height:1.55">Next revision is created under the same document ID; the previous revision becomes superseded but stays in history.</div></div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px"><div style="font-size:11.5px;font-weight:500;color:var(--bad);margin-bottom:6px">Code 3 · New number required</div><div style="font-size:11px;color:var(--soft);line-height:1.55">A replacement document is issued with a new number; the original is closed and cross-referenced.</div></div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px"><div style="font-size:11.5px;font-weight:500;color:var(--ok);margin-bottom:6px">Code 1 · No further submission</div><div style="font-size:11px;color:var(--soft);line-height:1.55">The document workflow closes; the revision is filed as the accepted issue.</div></div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px"><div style="font-size:11.5px;font-weight:500;color:var(--muted);margin-bottom:6px">Code 4 · Information only</div><div style="font-size:11px;color:var(--soft);line-height:1.55">The reply is recorded against the revision without creating a new one.</div></div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReports }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div><div style="font-size:15px;font-weight:500">Reports</div><div style="font-size:11px;color:var(--dim);margin-top:2px">Week 31 · {{ project.code }} · figures refresh from the register in real time</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ exportExcel }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Export Excel</div>
+<div data-b onClick="{{ exportPdf }}" style="padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500">Export PDF</div>
+</div>
+</div>
+<div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px;display:flex;flex-direction:column;height:250px">
+<div style="font-size:13px;font-weight:500;margin-bottom:6px">Submission curve — planned vs actual</div>
+<div style="flex:1;min-height:0">{{ curve }}</div>
+<div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--dim);margin-top:6px"><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span style="color:var(--accent-txt)">Jul</span><span>Aug</span><span>Sep</span><span>Oct</span></div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:13px 15px">
+<div style="font-size:13px;font-weight:500;margin-bottom:11px">Review code distribution — last 90 days</div>
+<div style="display:flex;flex-direction:column;gap:10px;font-size:11.5px">
+<sc-for list="{{ codeStats }}" as="c" hint-placeholder-count="4">
+<div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted)">{{ c.label }}</span><span style="font-family:ui-monospace,monospace;color:var(--soft)">{{ c.value }}</span></div><div style="height:7px;border-radius:4px;background:var(--track);overflow:hidden"><div style="width:{{ c.pct }};height:100%;background:{{ c.color }}"></div></div></div>
+</sc-for>
+</div>
+</div>
+<div style="grid-column:span 2;border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px;font-weight:500">Discipline performance</div>
+<div style="display:grid;grid-template-columns:1fr 92px 92px 92px 108px 108px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 14px">Discipline</div><div style="padding:8px">Docs</div><div style="padding:8px">Submitted</div><div style="padding:8px">Overdue</div><div style="padding:8px">First-pass</div><div style="padding:8px">Avg cycle</div></div>
+<sc-for list="{{ discReport }}" as="d" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:1fr 92px 92px 92px 108px 108px;border-bottom:1px solid var(--line2);font-size:11.5px"><div style="padding:9px 14px">{{ d.name }}</div><div style="padding:9px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ d.docs }}</div><div style="padding:9px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ d.submitted }}</div><div style="padding:9px 8px;font-family:ui-monospace,monospace;color:{{ d.overdueColor }}">{{ d.overdue }}</div><div style="padding:9px 8px;color:{{ d.fpColor }}">{{ d.firstPass }}</div><div style="padding:9px 8px;color:var(--muted)">{{ d.cycle }}</div></div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="padding:13px 20px 0;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div style="display:flex;align-items:flex-end;gap:12px">
+<div><div style="font-size:15px;font-weight:500">Project settings — {{ project.code }}</div><div style="font-size:11px;color:var(--dim);margin:2px 0 12px">These settings apply to {{ project.name }} only. Other projects keep their own numbering, disciplines, roles, templates and storage.</div></div>
+<div style="margin-left:auto;margin-bottom:12px;display:flex;gap:7px;font-size:11.5px"><div data-b onClick="{{ cloneSettings }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Clone from another project</div><div data-b onClick="{{ saveSettings }}" style="padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500">Save changes</div></div>
+</div>
+<div style="display:flex;gap:2px">
+<sc-for list="{{ settingsTabs }}" as="t" hint-placeholder-count="6">
+<div data-h onClick="{{ t.go }}" style="padding:8px 12px;font-size:11.5px;color:{{ t.color }};font-weight:{{ t.weight }};box-shadow:{{ t.mark }}">{{ t.label }}</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:16px 20px;display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:16px 18px">
+<div style="font-size:13px;font-weight:500;margin-bottom:4px">{{ settingsTitle }}</div>
+<div style="font-size:11.5px;color:var(--dim);margin-bottom:16px">{{ settingsIntro }}</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ settingsFields }}" as="f" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:196px 1fr;gap:14px;align-items:center">
+<div><div style="font-size:12px">{{ f.label }}</div><div style="font-size:10.5px;color:var(--dim);margin-top:2px">{{ f.hint }}</div></div>
+<div data-b style="padding:8px 11px;border:1px solid var(--edge);border-radius:8px;background:var(--raise);font-size:11.5px;color:{{ f.valueColor }};font-family:{{ f.font }};display:flex;align-items:center;gap:8px">{{ f.value }}<i class="{{ f.icon }}" style="margin-left:auto;font-size:13px;color:var(--dim)"></i></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:10px">{{ settingsAsideTitle }}</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:11.5px;color:var(--muted)">
+<sc-for list="{{ settingsAside }}" as="a" hint-placeholder-count="5">
+<div style="display:flex;gap:9px"><span style="flex:1">{{ a.k }}</span><span style="color:{{ a.color }}">{{ a.v }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:8px">Applies to this project only</div>
+<div style="font-size:11px;color:var(--soft);line-height:1.6">44 projects run side by side. Numbering rules, disciplines, review codes, workflow steps, members, cover-sheet and transmittal templates, storage folders and notification rules are all stored per project — changing them here never affects another project.</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPortfolio }}" hint-placeholder-val="{{ false }}">
+<div style="padding:18px 22px 26px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:flex-end;gap:16px">
+<div><div style="font-size:21px;font-weight:500;letter-spacing:-0.02em">Projects</div><div style="font-size:11.5px;color:var(--dim);margin-top:3px">44 active · 12 clients · you hold DC Admin on 9 of them</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)"><i class="ph ph-funnel" style="font-size:13px"></i>Client: All</div>
+<div data-b style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Phase: All</div>
+<div data-b style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--accent-line);border-radius:7px;color:var(--accent-txt);background:var(--accent-bg2)">My projects</div>
+<div data-b onClick="{{ onboard }}" style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500"><i class="ph ph-plus" style="font-size:13px"></i>Onboard project</div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+<sc-for list="{{ portfolioStats }}" as="s" hint-placeholder-count="4">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:11px 13px"><div style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)">{{ s.label }}</div><div style="font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:4px;color:{{ s.color }}">{{ s.value }}</div></div>
+</sc-for>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:grid;grid-template-columns:78px 1fr 168px 84px 82px 78px 150px 112px 92px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 12px">Code</div><div style="padding:8px">Project</div><div style="padding:8px">Client</div><div style="padding:8px">Docs</div><div style="padding:8px">On me</div><div style="padding:8px">Overdue</div><div style="padding:8px">Progress</div><div style="padding:8px">Phase</div><div style="padding:8px">My role</div></div>
+<sc-for list="{{ portfolioRows }}" as="p" hint-placeholder-count="9">
+<div data-r onClick="{{ p.enter }}" style="display:grid;grid-template-columns:78px 1fr 168px 84px 82px 78px 150px 112px 92px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px;background:{{ p.rowBg }}">
+<div style="padding:9px 12px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ p.code }}</div>
+<div style="padding:9px 8px;font-weight:{{ p.weight }}">{{ p.name }}</div>
+<div style="padding:9px 8px;color:var(--muted)">{{ p.client }}</div>
+<div style="padding:9px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ p.docs }}</div>
+<div style="padding:9px 8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:{{ p.mineColor }};background:{{ p.mineBg }};border-radius:4px;padding:1px 6px">{{ p.mineLabel }}</span></div>
+<div style="padding:9px 8px;font-family:ui-monospace,monospace;color:{{ p.overdueColor }}">{{ p.overdue }}</div>
+<div style="padding:9px 8px"><div style="display:flex;align-items:center;gap:7px"><div style="flex:1;height:5px;border-radius:3px;background:var(--track);overflow:hidden"><div style="width:{{ p.pctW }};height:100%;background:{{ p.pctColor }}"></div></div><span style="font-family:ui-monospace,monospace;font-size:10px;color:var(--soft)">{{ p.pct }}%</span></div></div>
+<div style="padding:9px 8px;color:var(--muted)">{{ p.phase }}</div>
+<div style="padding:9px 8px;color:{{ p.roleColor }}">{{ p.role }}</div>
+</div>
+</sc-for>
+<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:11px;color:var(--dim)">Showing 9 of 44 · sorted by items waiting on you<span style="margin-left:auto;color:var(--soft)">Each project carries its own numbering rules, disciplines, review codes, members, templates, storage and notifications.</span></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:9px">Needs attention across projects</div>
+<div style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;color:var(--muted)">
+<div style="display:flex;gap:8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:56px">P-2427</span><span style="flex:1">2 transmittals overdue for client reply</span></div>
+<div style="display:flex;gap:8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:56px">P-2438</span><span style="flex:1">11 documents past planned date</span></div>
+<div style="display:flex;gap:8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:56px">P-2451</span><span style="flex:1">8 PDI items awaiting client numbers &gt; 5 days</span></div>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:9px">Recently onboarded</div>
+<div style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;color:var(--muted)">
+<div style="display:flex;gap:8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:56px">P-2462</span><span style="flex:1">Berri Gas Sweetening</span><span style="color:var(--warn)">setup 3/6</span></div>
+<div style="display:flex;gap:8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:56px">P-2459</span><span style="flex:1">Uthmaniyah Wellhead Pads</span><span style="color:var(--ok)">ready</span></div>
+<div style="display:flex;gap:8px"><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt);width:56px">P-2455</span><span style="flex:1">Safaniya Platform Retrofit</span><span style="color:var(--ok)">ready</span></div>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:9px">Project templates</div>
+<div style="display:flex;flex-direction:column;gap:7px;font-size:11.5px;color:var(--muted)">
+<div style="display:flex;gap:8px"><span style="flex:1">EPC — full workflow (reviewer + approver + DC)</span><span style="color:var(--dim)">28 uses</span></div>
+<div style="display:flex;gap:8px"><span style="flex:1">FEED — light workflow (DC check only)</span><span style="color:var(--dim)">9 uses</span></div>
+<div style="display:flex;gap:8px"><span style="flex:1">Study — no client transmittals</span><span style="color:var(--dim)">7 uses</span></div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPermissions }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div><div style="font-size:15px;font-weight:500">Users &amp; permissions</div><div style="font-size:11px;color:var(--dim);margin-top:2px">System roles are global · project roles apply to {{ project.code }} only</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ exportExcel }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Export matrix</div>
+<div data-b onClick="{{ inviteUser }}" style="display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500"><i class="ph ph-plus" style="font-size:13px"></i>Invite user</div>
+</div>
+</div>
+<div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="padding:11px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px"><span style="font-size:12.5px;font-weight:500">Project members — {{ project.code }}</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Click a role to change it</span></div>
+<div style="display:grid;grid-template-columns:1fr 190px 168px 132px 110px 96px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 14px">User</div><div style="padding:8px">System role</div><div style="padding:8px">Project role</div><div style="padding:8px">Scope</div><div style="padding:8px">Last active</div><div style="padding:8px">Status</div></div>
+<sc-for list="{{ members }}" as="m" hint-placeholder-count="7">
+<div style="display:grid;grid-template-columns:1fr 190px 168px 132px 110px 96px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px">
+<div style="padding:9px 14px;display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:12px;background:var(--accent-bg);color:var(--accent-txt);font-size:9.5px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ m.initials }}</div><div><div>{{ m.name }}</div><div style="font-size:10px;color:var(--dim)">{{ m.email }}</div></div></div>
+<div style="padding:9px 8px;color:var(--muted)">{{ m.systemRole }}</div>
+<div style="padding:9px 8px"><span data-b onClick="{{ m.cycle }}" style="font-size:10.5px;color:{{ m.roleColor }};border:1px solid {{ m.roleBorder }};border-radius:6px;padding:3px 8px">{{ m.projectRole }}</span></div>
+<div style="padding:9px 8px;color:var(--soft)">{{ m.scope }}</div>
+<div style="padding:9px 8px;color:var(--soft)">{{ m.active }}</div>
+<div style="padding:9px 8px;color:{{ m.statusColor }}">{{ m.status }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="padding:11px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px"><span style="font-size:12.5px;font-weight:500">Permission matrix</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">✓ allowed · ○ own discipline only · — denied</span></div>
+<div style="display:grid;grid-template-columns:250px repeat(8,1fr);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)">
+<div style="padding:8px 14px">Capability</div>
+<sc-for list="{{ roleCols }}" as="r" hint-placeholder-count="8">
+<div style="padding:8px 6px;text-align:center;border-left:1px solid var(--line2)">{{ r }}</div>
+</sc-for>
+</div>
+<sc-for list="{{ permRows }}" as="p" hint-placeholder-count="14">
+<div style="display:grid;grid-template-columns:250px repeat(8,1fr);border-bottom:1px solid var(--line2);font-size:11.5px;align-items:center">
+<div style="padding:8px 14px">{{ p.label }}</div>
+<sc-for list="{{ p.cells }}" as="c" hint-placeholder-count="8">
+<div style="padding:8px 6px;text-align:center;border-left:1px solid var(--line2);color:{{ c.color }};font-size:12px">{{ c.mark }}</div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+<sc-for list="{{ roleCards }}" as="r" hint-placeholder-count="4">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px 14px"><div style="font-size:11.5px;font-weight:500;margin-bottom:6px;color:{{ r.color }}">{{ r.name }}</div><div style="font-size:11px;color:var(--soft);line-height:1.55">{{ r.desc }}</div><div style="font-size:10.5px;color:var(--dim);margin-top:8px">{{ r.count }}</div></div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSignatures }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 0 26px">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<div><div style="font-size:15px;font-weight:500">Signature platform</div><div style="font-size:11px;color:var(--dim);margin-top:2px">Specimen signatures, signing queue and the tamper-evident signature log</div></div>
+<div style="margin-left:auto;display:flex;gap:7px;font-size:11.5px">
+<div data-b onClick="{{ exportPdf }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Export signature report</div>
+</div>
+</div>
+<div style="padding:16px 20px;display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:14px">
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-bottom:1px solid var(--line)"><i class="ph-fill ph-signature" style="font-size:14px;color:var(--accent)"></i><span style="font-size:12.5px;font-weight:500">Waiting for my signature</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ signCount }}</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Signing as Rana A. · DC Admin · PIN required</span></div>
+<sc-for list="{{ signQueue }}" as="d" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:190px 1fr 62px 128px 118px;align-items:center;border-bottom:1px solid var(--line2);font-size:11.5px">
+<div data-r onClick="{{ d.open }}" style="padding:9px 14px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ d.no }}</div>
+<div style="padding:9px 8px">{{ d.title }}</div>
+<div style="padding:9px 8px;font-family:ui-monospace,monospace;color:var(--soft)">{{ d.rev }}</div>
+<div style="padding:9px 8px;color:var(--soft)">DC sign-off</div>
+<div style="padding:9px 8px"><span data-b onClick="{{ d.sign }}" style="font-size:10.5px;font-weight:500;color:var(--accent-txt);border:1px solid var(--accent-line);border-radius:6px;padding:4px 9px">Sign now</span></div>
+</div>
+</sc-for>
+<sc-if value="{{ signEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;font-size:11.5px;color:var(--dim);text-align:center">Nothing waiting for your signature.</div></sc-if>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px"><span style="font-size:12.5px;font-weight:500">My specimen signature</span><span style="margin-left:auto;font-size:11px;color:var(--dim)">Applied to cover sheets and transmittal sheets</span></div>
+<div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start">
+<div>
+<div style="display:flex;gap:2px;padding:3px;border-radius:8px;background:var(--raise);border:1px solid var(--line);width:max-content;font-size:11.5px;margin-bottom:12px">
+<sc-for list="{{ signModes }}" as="m" hint-placeholder-count="3">
+<div data-h onClick="{{ m.go }}" style="padding:4px 12px;border-radius:6px;background:{{ m.bg }};color:{{ m.color }};font-weight:{{ m.weight }}">{{ m.label }}</div>
+</sc-for>
+</div>
+<div style="height:132px;border:1px dashed var(--edge);border-radius:10px;background:var(--raise);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
+<div style="font-size:30px;font-style:italic;letter-spacing:-0.01em;color:var(--text);opacity:.92">Rana A.</div>
+<div style="font-size:10.5px;color:var(--dim)">{{ signModeHint }}</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px;font-size:11.5px">
+<div data-b onClick="{{ clearSig }}" style="padding:6px 11px;border:1px solid var(--edge);border-radius:7px;color:var(--muted)">Clear</div>
+<div data-b onClick="{{ saveSig }}" style="padding:6px 11px;border:1px solid var(--accent);border-radius:7px;color:var(--accent-txt);font-weight:500">Save specimen</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:11px;font-size:11.5px">
+<div style="display:flex;gap:10px"><span style="flex:1;color:var(--dim)">Signature ID</span><span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">SIG-RA-0042</span></div>
+<div style="display:flex;gap:10px"><span style="flex:1;color:var(--dim)">Registered</span><span>12 Mar 2026</span></div>
+<div style="display:flex;gap:10px"><span style="flex:1;color:var(--dim)">PIN on every signature</span><span data-b onClick="{{ togglePin }}" style="color:{{ pinColor }}">{{ pinLabel }}</span></div>
+<div style="display:flex;gap:10px"><span style="flex:1;color:var(--dim)">Stamp on cover sheet</span><span style="color:var(--ok)">Enabled</span></div>
+<div style="display:flex;gap:10px"><span style="flex:1;color:var(--dim)">Delegation</span><span>None active</span></div>
+<div style="font-size:10.5px;color:var(--dim);line-height:1.55;padding-top:8px;border-top:1px solid var(--line)">Every applied signature stores the signer, role, document revision, timestamp, IP and a SHA-256 hash of the signed file. Signatures are invalidated automatically when a new revision is uploaded.</div>
+</div>
+</div>
+</div>
+
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);overflow:hidden">
+<div style="padding:11px 14px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:500">Signature log</div>
+<div style="display:grid;grid-template-columns:132px 180px 1fr 132px 108px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:var(--head);border-bottom:1px solid var(--line)"><div style="padding:8px 14px">When</div><div style="padding:8px">Signer</div><div style="padding:8px">Document</div><div style="padding:8px">Role</div><div style="padding:8px">Hash</div></div>
+<sc-for list="{{ sigLog }}" as="l" hint-placeholder-count="6">
+<div style="display:grid;grid-template-columns:132px 180px 1fr 132px 108px;border-bottom:1px solid var(--line2);font-size:11.5px"><div style="padding:8px 14px;color:var(--muted)">{{ l.when }}</div><div style="padding:8px">{{ l.who }}</div><div style="padding:8px;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ l.doc }}</div><div style="padding:8px;color:var(--soft)">{{ l.role }}</div><div style="padding:8px;font-family:ui-monospace,monospace;font-size:10px;color:var(--dim)">{{ l.hash }}</div></div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:11px">Signature status — {{ project.code }}</div>
+<div style="display:flex;flex-direction:column;gap:9px;font-size:11.5px">
+<sc-for list="{{ sigStats }}" as="s" hint-placeholder-count="4">
+<div style="display:flex;gap:10px"><span style="flex:1;color:var(--muted)">{{ s.k }}</span><span style="color:{{ s.color }};font-family:ui-monospace,monospace">{{ s.v }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px 16px">
+<div style="font-size:12.5px;font-weight:500;margin-bottom:11px">Registered signatories</div>
+<div style="display:flex;flex-direction:column;gap:10px;font-size:11.5px">
+<sc-for list="{{ signatories }}" as="g" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:12px;background:var(--accent-bg);color:var(--accent-txt);font-size:9.5px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ g.initials }}</div><div style="flex:1"><div>{{ g.name }}</div><div style="font-size:10px;color:var(--dim)">{{ g.role }}</div></div><span style="font-size:10.5px;color:{{ g.color }}">{{ g.state }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ signModal }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:75;background:rgba(9,10,18,.7);display:flex;align-items:center;justify-content:center">
+<div style="width:520px;border-radius:12px;border:1px solid var(--edge);background:var(--panel);box-shadow:var(--shadow);overflow:hidden">
+<div style="padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:9px"><i class="ph-fill ph-signature" style="font-size:15px;color:var(--accent)"></i><span style="font-size:13px;font-weight:500">Apply electronic signature</span><span data-b onClick="{{ closeSign }}" style="margin-left:auto;font-size:11.5px;color:var(--dim)">Cancel</span></div>
+<div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+<div style="border:1px solid var(--line);border-radius:9px;background:var(--raise);padding:12px 14px">
+<div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--accent-txt)">{{ signTarget.no }}</div>
+<div style="font-size:12.5px;margin-top:5px">{{ signTarget.title }}</div>
+<div style="font-size:11px;color:var(--dim);margin-top:6px">Revision {{ signTarget.rev }} · role Document Control · this signature moves the document to Pending review</div>
+</div>
+<div style="height:96px;border:1px dashed var(--edge);border-radius:10px;background:var(--raise);display:flex;align-items:center;justify-content:center"><span style="font-size:26px;font-style:italic;opacity:.92">Rana A.</span></div>
+<div style="display:flex;align-items:center;gap:10px">
+<span style="font-size:11.5px;color:var(--muted);width:96px">Signing PIN</span>
+<div data-b onClick="{{ fillPin }}" style="flex:1;padding:8px 11px;border:1px solid {{ pinBorder }};border-radius:8px;background:var(--raise);font-family:ui-monospace,monospace;font-size:12px;color:{{ pinTextColor }}">{{ pinValue }}</div>
+</div>
+<div data-h onClick="{{ toggleConsent }}" style="display:flex;align-items:flex-start;gap:9px;padding:8px;border-radius:8px;font-size:11.5px;color:var(--muted)"><span style="width:14px;height:14px;flex:none;margin-top:1px;border-radius:4px;border:1px solid {{ consentBorder }};background:{{ consentBg }};color:var(--on-accent);font-size:9px;display:flex;align-items:center;justify-content:center">{{ consentTick }}</span>I confirm this revision is complete and correct, and that my electronic signature is legally equivalent to a wet signature.</div>
+<div style="display:flex;gap:9px;justify-content:flex-end">
+<div data-b onClick="{{ closeSign }}" style="padding:8px 13px;border:1px solid var(--edge);border-radius:8px;color:var(--muted);font-size:12px">Cancel</div>
+<div data-b onClick="{{ applySign }}" style="padding:8px 13px;border:1px solid {{ applyBorder }};border-radius:8px;color:{{ applyColor }};font-size:12px;font-weight:500">Apply signature</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ wizardOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:75;background:rgba(9,10,18,.7);display:flex;align-items:center;justify-content:center">
+<div style="width:900px;max-height:86vh;border-radius:12px;border:1px solid var(--edge);background:var(--panel);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden">
+<div style="padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px"><i class="ph ph-folder-plus" style="font-size:16px;color:var(--accent)"></i><div><div style="font-size:13px;font-weight:500">Onboard a new project</div><div style="font-size:11px;color:var(--dim);margin-top:2px">Step {{ wizardNo }} of 6 · {{ wizardTitle }}</div></div><span data-b onClick="{{ closeWizard }}" style="margin-left:auto;font-size:11.5px;color:var(--dim)">Cancel</span></div>
+<div style="display:flex;gap:0;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel2)">
+<sc-for list="{{ wizardSteps }}" as="w" hint-placeholder-count="6">
+<div style="flex:1;padding-right:10px;display:flex;flex-direction:column;gap:6px"><div style="height:3px;border-radius:2px;background:{{ w.bar }}"></div><div style="font-size:10.5px;color:{{ w.color }}">{{ w.label }}</div></div>
+</sc-for>
+</div>
+<div style="flex:1;overflow:auto;padding:18px">
+<div style="font-size:12px;color:var(--dim);margin-bottom:16px">{{ wizardIntro }}</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ wizardFields }}" as="f" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:210px 1fr;gap:14px;align-items:center">
+<div><div style="font-size:12px">{{ f.label }}</div><div style="font-size:10.5px;color:var(--dim);margin-top:2px">{{ f.hint }}</div></div>
+<div data-b style="padding:8px 11px;border:1px solid var(--edge);border-radius:8px;background:var(--raise);font-size:11.5px;color:{{ f.color }};font-family:{{ f.font }};display:flex;align-items:center;gap:8px">{{ f.value }}<i class="{{ f.icon }}" style="margin-left:auto;font-size:13px;color:var(--dim)"></i></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:13px 18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:9px;background:var(--panel2)">
+<span style="font-size:11px;color:var(--dim)">{{ wizardNote }}</span>
+<div style="margin-left:auto;display:flex;gap:9px;font-size:12px">
+<div data-b onClick="{{ wizardBack }}" style="padding:8px 13px;border:1px solid var(--edge);border-radius:8px;color:var(--muted)">Back</div>
+<div data-b onClick="{{ wizardNext }}" style="padding:8px 13px;border:1px solid var(--accent);border-radius:8px;color:var(--accent-txt);font-weight:500">{{ wizardCta }}</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSignin }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:90;background:var(--bg);display:grid;grid-template-columns:1fr 460px">
+<div style="padding:56px 60px;display:flex;flex-direction:column;background:var(--panel2);border-right:1px solid var(--line)">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:12px;font-weight:600">D</div><span style="font-weight:600;font-size:14px">DTGSA<span style="color:var(--dim);font-weight:400"> / MDR</span></span></div>
+<div style="margin-top:auto;max-width:520px">
+<div style="font-size:34px;font-weight:500;letter-spacing:-0.03em;line-height:1.15;text-wrap:pretty">Document control for 44 concurrent projects — each with its own rules.</div>
+<div style="font-size:13px;color:var(--soft);margin-top:16px;line-height:1.7;text-wrap:pretty">PDI and client numbering, the full prepare–review–approve–DC chain, electronic signatures, transmittals and client replies. Numbering, disciplines, roles, templates and storage are configured per project and never leak across them.</div>
+<div style="display:flex;gap:26px;margin-top:28px">
+<div><div style="font-size:22px;font-weight:600;letter-spacing:-0.02em">28 914</div><div style="font-size:11px;color:var(--dim);margin-top:2px">documents under control</div></div>
+<div><div style="font-size:22px;font-weight:600;letter-spacing:-0.02em">44</div><div style="font-size:11px;color:var(--dim);margin-top:2px">active projects</div></div>
+<div><div style="font-size:22px;font-weight:600;letter-spacing:-0.02em">12</div><div style="font-size:11px;color:var(--dim);margin-top:2px">clients</div></div>
+</div>
+</div>
+<div style="margin-top:auto;font-size:11px;color:var(--dim)">ISO 9001 document control · audit trail retained for the life of the contract</div>
+</div>
+<div style="padding:56px 44px;display:flex;flex-direction:column;justify-content:center;gap:16px;background:var(--bg)">
+<div><div style="font-size:20px;font-weight:500;letter-spacing:-0.02em">Sign in</div><div style="font-size:11.5px;color:var(--dim);margin-top:4px">Use your DTGSA account. Client users sign in to the portal instead.</div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:var(--dim)">Work email</span><div data-b style="padding:10px 12px;border:1px solid var(--edge);border-radius:8px;background:var(--panel);font-size:12.5px">rana.a@dtgsa.com</div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:var(--dim)">Password</span><div data-b style="padding:10px 12px;border:1px solid var(--edge);border-radius:8px;background:var(--panel);font-size:12.5px;font-family:ui-monospace,monospace;color:var(--soft)">••••••••••••</div></div>
+<div style="display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--muted)"><span style="width:14px;height:14px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Keep me signed in<span data-b style="margin-left:auto;color:var(--accent-txt)">Forgot password</span></div>
+<div data-b onClick="{{ signIn }}" style="margin-top:4px;padding:11px 14px;border:1px solid var(--accent);border-radius:8px;color:var(--accent-txt);font-size:13px;font-weight:500;text-align:center">Sign in</div>
+<div style="display:flex;align-items:center;gap:10px;color:var(--dim);font-size:11px"><span style="flex:1;height:1px;background:var(--line)"></span>or<span style="flex:1;height:1px;background:var(--line)"></span></div>
+<div data-b onClick="{{ signIn }}" style="padding:10px 14px;border:1px solid var(--edge);border-radius:8px;color:var(--muted);font-size:12.5px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px"><i class="ph ph-google-drive-logo" style="font-size:15px"></i>Continue with Google Workspace</div>
+<div data-b onClick="{{ signInClient }}" style="padding:10px 14px;border:1px solid var(--edge);border-radius:8px;color:var(--muted);font-size:12.5px;text-align:center">Client portal sign-in</div>
+<div style="font-size:10.5px;color:var(--dim);margin-top:6px;line-height:1.6">Access is role-based. Your projects, documents and actions are limited to what your system and project roles allow.</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ mobile }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:70;background:rgba(9,10,18,.72);display:flex;align-items:center;justify-content:center;gap:26px">
+<div style="width:352px;height:720px;border-radius:38px;border:1px solid var(--edge);background:var(--bg);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;padding:14px 22px 8px;font-size:11px;color:var(--soft)"><span style="font-weight:600">09:41</span><span style="margin-left:auto;display:flex;gap:6px"><i class="ph-fill ph-cell-signal-full"></i><i class="ph-fill ph-wifi-high"></i><i class="ph-fill ph-battery-high"></i></span></div>
+<div style="padding:8px 20px 14px;border-bottom:1px solid var(--line)">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:7px;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:10px;font-weight:600">D</div><div style="font-size:13px;font-weight:600">Approvals</div><div data-b onClick="{{ closeMobile }}" style="margin-left:auto;font-size:11.5px;color:var(--dim)">Close</div></div>
+<div style="font-size:11px;color:var(--dim);margin-top:8px">{{ project.code }} · {{ mobileQueue }} waiting on you</div>
+</div>
+<div style="flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:11px">
+<sc-for list="{{ mobileCards }}" as="m" hint-placeholder-count="3">
+<div style="border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:13px 14px">
+<div style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--accent-txt)">{{ m.no }}</div>
+<div style="font-size:13px;margin:6px 0 8px;line-height:1.35">{{ m.title }}</div>
+<div style="display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--soft);margin-bottom:12px"><span style="border:1px solid var(--edge);border-radius:4px;padding:1px 6px">{{ m.disc }}</span><span style="font-family:ui-monospace,monospace">{{ m.rev }}</span><span style="margin-left:auto;color:{{ m.stageColor }}">{{ m.stage }}</span></div>
+<div style="display:flex;gap:9px">
+<div data-b onClick="{{ m.reject }}" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--edge);border-radius:10px;color:var(--bad);font-size:12.5px">Reject</div>
+<div data-b onClick="{{ m.approve }}" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent);border-radius:10px;color:var(--accent-txt);font-size:12.5px;font-weight:500">Approve</div>
+</div>
+</div>
+</sc-for>
+<sc-if value="{{ mobileEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:26px 12px;text-align:center;font-size:12px;color:var(--dim)">Nothing waiting — the queue is clear.</div></sc-if>
+</div>
+<div style="display:flex;justify-content:space-around;padding:12px 0 20px;border-top:1px solid var(--line);color:var(--dim);font-size:9.5px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--accent)"><i class="ph-fill ph-seal-check" style="font-size:18px"></i>Approvals</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><i class="ph ph-table" style="font-size:18px"></i>Register</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><i class="ph ph-paper-plane-tilt" style="font-size:18px"></i>Transmittals</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><i class="ph ph-user" style="font-size:18px"></i>Me</div>
+</div>
+</div>
+<div style="width:250px;color:var(--muted);font-size:12px;line-height:1.6">
+<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px">Mobile approvals</div>
+Reviewers and approvers clear their queue from the phone: swipe-free 44px actions, the same signature record and audit entry as the desktop workflow. Document Control checks stay on desktop, where the metadata and file QA live.
+<div data-b onClick="{{ closeMobile }}" style="margin-top:16px;display:inline-flex;padding:7px 12px;border:1px solid var(--edge);border-radius:7px;font-size:11.5px">Back to desktop</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:9px;background:var(--sel);border:1px solid var(--accent-line);box-shadow:var(--shadow);animation:tin .18s ease-out"><i class="ph-fill ph-check-circle" style="font-size:15px;color:var(--accent)"></i><span style="font-size:12px">{{ toast }}</span></div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#9184d9&quot;,&quot;#5fb5a8&quot;,&quot;#c9a35f&quot;,&quot;#c97f8a&quot;,&quot;#7f8aa8&quot;,&quot;#6bb583&quot;],&quot;default&quot;:&quot;#9184d9&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;}}">
+const PROJECTS = [
+  {code:'P-2451',name:'Hail Gas Compression — Phase 2',client:'PetroLine Energy',contract:'EPC-2451',docs:'1 296',role:'DC Admin',mine:9,overdue:6,pct:62,phase:'Detail design',cutoff:'14 Aug'},
+  {code:'P-2438',name:'Jubail Tank Farm Expansion',client:'Gulf Refining Co.',contract:'EPC-2438',docs:'2 048',role:'DC Admin',mine:7,overdue:11,pct:41,phase:'Detail design',cutoff:'29 Aug'},
+  {code:'P-2432',name:'Rabigh Sulphur Recovery Unit',client:'PetroLine Energy',contract:'EPC-2432',docs:'1 604',role:'DC Admin',mine:5,overdue:3,pct:88,phase:'As-built',cutoff:'08 Aug'},
+  {code:'P-2427',name:'Yanbu Cooling Water Intake',client:'Marine Works Ltd.',contract:'FEED-2427',docs:'742',role:'DC Admin',mine:4,overdue:9,pct:33,phase:'FEED',cutoff:'21 Aug'},
+  {code:'P-2419',name:'Khursaniyah Flare Upgrade',client:'PetroLine Energy',contract:'EPC-2419',docs:'918',role:'DC Admin',mine:3,overdue:0,pct:74,phase:'Detail design',cutoff:'04 Sep'},
+  {code:'P-2411',name:'Dammam Utilities Tie-in',client:'Gulf Refining Co.',contract:'EPC-2411',docs:'386',role:'Viewer',mine:0,overdue:2,pct:95,phase:'Close-out',cutoff:'—'},
+  {code:'P-2404',name:'Ras Tanura Pipeline Loop 4',client:'TransGulf Pipelines',contract:'EPC-2404',docs:'1 172',role:'Reviewer',mine:0,overdue:8,pct:57,phase:'Detail design',cutoff:'12 Sep'},
+  {code:'P-2398',name:'Hawiyah NGL Debottlenecking',client:'PetroLine Energy',contract:'EPC-2398',docs:'2 466',role:'DC User',mine:2,overdue:4,pct:69,phase:'Detail design',cutoff:'30 Aug'},
+  {code:'P-2385',name:'Shedgum Compressor Overhaul',client:'Gulf Refining Co.',contract:'EPC-2385',docs:'544',role:'Viewer',mine:0,overdue:0,pct:100,phase:'Archived',cutoff:'—'}
+];
+
+const DOCS = [
+  {id:1,no:'2451-PIP-DWG-0148',title:'Gas Compression Piping GA — Unit 300',disc:'PIP',discName:'Piping',type:'Drawing',rev:'R02',status:'DC check',planned:'22 Jul',late:true,client:'PL-HGC-PIP-0148',tr:'',reply:'',owner:'A. Hamdan',age:'2 days in queue'},
+  {id:2,no:'2451-ELE-SLD-0032',title:'Single Line Diagram — MCC-04',disc:'ELE',discName:'Electrical',type:'Diagram',rev:'R01',status:'DC check',planned:'30 Jul',late:false,client:'PL-HGC-ELE-0032',tr:'',reply:'',owner:'L. Saleh',age:'6 hours'},
+  {id:3,no:'2451-INS-DTS-0009',title:'Instrument Datasheet — FT-3021',disc:'INS',discName:'Instrum.',type:'Datasheet',rev:'R00',status:'DC check',planned:'31 Jul',late:false,client:'PL-HGC-INS-0009',tr:'',reply:'',owner:'S. Karim',age:'5 hours'},
+  {id:4,no:'2451-CIV-CAL-0021',title:'Foundation Design Calculation — K-301',disc:'CIV',discName:'Civil',type:'Calculation',rev:'R03',status:'DC check',planned:'01 Aug',late:false,client:'PL-HGC-CIV-0021',tr:'',reply:'',owner:'O. Hassan',age:'2 hours'},
+  {id:5,no:'2451-PIP-ISO-0210',title:'Isometric — Line 12-P-3104',disc:'PIP',discName:'Piping',type:'Isometric',rev:'R01',status:'Submitted',planned:'14 Jul',late:false,client:'PL-HGC-PIP-0210',tr:'TR-2451-0061',reply:'Code 1',owner:'A. Hamdan',age:''},
+  {id:6,no:'2451-PRO-PFD-0004',title:'Process Flow Diagram — Train B',disc:'PRO',discName:'Process',type:'Diagram',rev:'R02',status:'Rev required',planned:'02 Aug',late:false,client:'PL-HGC-PRO-0004',tr:'TR-2451-0061',reply:'Code 2',owner:'N. Aziz',age:''},
+  {id:7,no:'2451-MEC-SPC-0017',title:'Compressor Technical Specification',disc:'MEC',discName:'Mechanical',type:'Specification',rev:'R02',status:'New number',planned:'02 Aug',late:false,client:'PL-HGC-MEC-0017',tr:'TR-2451-0061',reply:'Code 3',owner:'S. Karim',age:''},
+  {id:8,no:'2451-PIP-STR-0012',title:'Piping Material Specification — Class 300',disc:'PIP',discName:'Piping',type:'Specification',rev:'R02',status:'Pending approval',planned:'18 Jul',late:true,client:'PL-HGC-PIP-0012',tr:'',reply:'',owner:'A. Hamdan',age:'6d in queue'},
+  {id:9,no:'2451-ELE-SLD-0031',title:'Single Line Diagram — MCC-03',disc:'ELE',discName:'Electrical',type:'Diagram',rev:'R02',status:'Review rejected',planned:'29 Jul',late:false,client:'PL-HGC-ELE-0031',tr:'',reply:'',owner:'L. Saleh',age:''},
+  {id:10,no:'2451-PIP-MTO-0043',title:'Material Take-off — Area 20',disc:'PIP',discName:'Piping',type:'Take-off',rev:'R00',status:'Ready to submit',planned:'05 Aug',late:false,client:'PL-HGC-PIP-0043',tr:'',reply:'',owner:'A. Hamdan',age:''},
+  {id:11,no:'2451-PRO-PFD-0005',title:'Process Flow Diagram — Train C',disc:'PRO',discName:'Process',type:'Diagram',rev:'R00',status:'Ready to submit',planned:'05 Aug',late:false,client:'PL-HGC-PRO-0005',tr:'',reply:'',owner:'N. Aziz',age:''},
+  {id:12,no:'2451-MEC-SPC-0018',title:'Air Cooler Specification',disc:'MEC',discName:'Mechanical',type:'Specification',rev:'R00',status:'Ready to submit',planned:'07 Aug',late:false,client:'PL-HGC-MEC-0018',tr:'',reply:'',owner:'S. Karim',age:''},
+  {id:13,no:'2451-ELE-LST-0003',title:'Cable Schedule',disc:'ELE',discName:'Electrical',type:'List',rev:'R01',status:'Awaiting signature',planned:'28 Jul',late:false,client:'PL-HGC-ELE-0003',tr:'',reply:'',owner:'L. Saleh',age:''},
+  {id:14,no:'2451-PIP-MTO-0044',title:'Material Take-off — Area 30',disc:'PIP',discName:'Piping',type:'Take-off',rev:'R00',status:'Awaiting signature',planned:'29 Jul',late:false,client:'PL-HGC-PIP-0044',tr:'',reply:'',owner:'A. Hamdan',age:''},
+  {id:15,no:'2451-PRO-PID-0019',title:'P&ID — Inlet Separation',disc:'PRO',discName:'Process',type:'Diagram',rev:'R04',status:'Pending review',planned:'28 Jul',late:false,client:'PL-HGC-PRO-0019',tr:'',reply:'',owner:'N. Aziz',age:'due today'},
+  {id:16,no:'2451-PIP-ISO-0212',title:'Isometric — Line 12-P-3108',disc:'PIP',discName:'Piping',type:'Isometric',rev:'R00',status:'Draft',planned:'08 Aug',late:false,client:'pending',tr:'',reply:'',owner:'A. Hamdan',age:''},
+  {id:17,no:'2451-MEC-DTS-0058',title:'Pump Datasheet — P-3402 A/B',disc:'MEC',discName:'Mechanical',type:'Datasheet',rev:'R01',status:'Draft',planned:'11 Aug',late:false,client:'pending',tr:'',reply:'',owner:'S. Karim',age:''},
+  {id:18,no:'2451-CIV-DWG-0077',title:'Grading Plan — Area 40',disc:'CIV',discName:'Civil',type:'Drawing',rev:'R00',status:'Draft',planned:'24 Jul',late:true,client:'pending',tr:'',reply:'',owner:'O. Hassan',age:'4d late'}
+];
+
+const TRANSMITTALS = [
+  {no:'TR-2451-0064',to:'Faisal K. — PetroLine DC',count:12,sent:'27 Jul',age:'1',status:'Awaiting reply'},
+  {no:'TR-2451-0063',to:'Faisal K. — PetroLine DC',count:8,sent:'21 Jul',age:'7',status:'Awaiting reply'},
+  {no:'TR-2451-0062',to:'M. Idris — PetroLine Eng.',count:21,sent:'16 Jul',age:'12',status:'Awaiting reply'},
+  {no:'TR-2451-0059',to:'Faisal K. — PetroLine DC',count:5,sent:'09 Jul',age:'19 · overdue',status:'Awaiting reply'},
+  {no:'TR-2451-0057',to:'A. Nasser — PetroLine QA',count:3,sent:'02 Jul',age:'26 · overdue',status:'Awaiting reply'},
+  {no:'TR-2451-0061',to:'Faisal K. — PetroLine DC',count:9,sent:'24 Jun',age:'—',status:'Replied'}
+];
+
+const PDI = [
+  {id:101,ref:'PDI-0187',title:'Isometric — Line 12-P-3110',disc:'PIP',type:'Isometric',status:'Awaiting client no.',sent:'19 Jul',clientNo:''},
+  {id:102,ref:'PDI-0188',title:'Isometric — Line 12-P-3111',disc:'PIP',type:'Isometric',status:'Awaiting client no.',sent:'19 Jul',clientNo:''},
+  {id:103,ref:'PDI-0189',title:'Junction Box Schedule — Area 30',disc:'ELE',type:'List',status:'Awaiting client no.',sent:'19 Jul',clientNo:''},
+  {id:104,ref:'PDI-0190',title:'Loop Diagram — FT-3022',disc:'INS',type:'Diagram',status:'Numbered',sent:'12 Jul',clientNo:'PL-HGC-INS-0022'},
+  {id:105,ref:'PDI-0191',title:'Vessel Datasheet — V-3105',disc:'MEC',type:'Datasheet',status:'Numbered',sent:'12 Jul',clientNo:'PL-HGC-MEC-0105'},
+  {id:106,ref:'PDI-0192',title:'Cable Tray Layout — Area 40',disc:'ELE',type:'Drawing',status:'Draft',sent:'—',clientNo:''},
+  {id:107,ref:'PDI-0193',title:'Tie-in Schedule — Unit 300',disc:'PRO',type:'List',status:'Draft',sent:'—',clientNo:''}
+];
+
+const STATUS_TONE = {
+  'Draft':'var(--muted)','Pending review':'var(--muted)','Pending approval':'var(--muted)','Awaiting signature':'var(--accent-txt)',
+  'DC check':'var(--accent-txt)','Ready to submit':'var(--ok)','Submitted':'var(--muted)','Rev required':'var(--warn)',
+  'New number':'var(--bad)','Review rejected':'var(--bad)','Approval rejected':'var(--bad)','Returned for correction':'var(--bad)','Closed':'var(--dim)','Superseded':'var(--dim)'
+};
+
+const DC_CHECKS = [
+  'Title block matches register metadata',
+  'Client document number present and correct',
+  'Revision number and date consistent across sheets',
+  'Preparer, reviewer and approver signatures present',
+  'File naming follows project convention',
+  'Native + PDF files both uploaded'
+];
+
+const MEMBERS = [
+  {initials:'RA',name:'Rana A.',email:'rana.a@dtgsa.com',systemRole:'System user',projectRole:'DC Admin',scope:'All disciplines',active:'now',status:'Active'},
+  {initials:'MK',name:'Mazen K.',email:'mazen.k@dtgsa.com',systemRole:'System Admin',projectRole:'DC Admin',scope:'All disciplines',active:'2 h ago',status:'Active'},
+  {initials:'LS',name:'Layla S.',email:'layla.s@dtgsa.com',systemRole:'System user',projectRole:'Reviewer',scope:'ELE · INS',active:'25 min ago',status:'Active'},
+  {initials:'OH',name:'Omar H.',email:'omar.h@dtgsa.com',systemRole:'System user',projectRole:'Approver',scope:'All disciplines',active:'1 h ago',status:'Active'},
+  {initials:'AH',name:'A. Hamdan',email:'ahmed.h@dtgsa.com',systemRole:'System user',projectRole:'Discipline User',scope:'PIP',active:'today',status:'Active'},
+  {initials:'NA',name:'N. Aziz',email:'nour.a@dtgsa.com',systemRole:'System user',projectRole:'Discipline User',scope:'PRO',active:'yesterday',status:'Active'},
+  {initials:'FK',name:'Faisal K.',email:'faisal.k@petroline.com',systemRole:'External',projectRole:'Client DC User',scope:'Portal only',active:'08:55',status:'Active'},
+  {initials:'SB',name:'Sara B.',email:'sara.b@dtgsa.com',systemRole:'System user',projectRole:'Project Viewer',scope:'Read only',active:'—',status:'Invited'}
+];
+
+/* y = allowed · o = own discipline only · n = denied — columns: Super, Sys admin, DC admin, DC user, Discipline, Reviewer, Approver, Client DC */
+const PERMS = [
+  ['Create / import PDI items','yyyynnnn'],
+  ['Enter client document number','yyynnnny'],
+  ['Convert PDI into MDR document','yyyynnnn'],
+  ['Upload revision files','yyyyonnn'],
+  ['Prepare and sign document','yyyyonnn'],
+  ['Review (approve / reject)','yynnnonn'],
+  ['Final approval','yynnnnon'],
+  ['Document Control check','yyynnnnn'],
+  ['Generate cover sheet & package','yyyynnnn'],
+  ['Create and send transmittal','yyyynnnn'],
+  ['Record client reply','yyyynnnn'],
+  ['Create revision / replacement','yyyyonnn'],
+  ['Manage numbering & master data','yynnnnnn'],
+  ['Manage members & roles','yynnnnnn'],
+  ['View reports & audit log','yyyyyyyn'],
+  ['Delete document or revision','ynnnnnnn']
+];
+
+const WIZARD = [
+  {title:'Project details',intro:'Identify the project and the client it belongs to. The project code drives the document numbering token.',
+   note:'Project codes must be unique across all 44 projects.',
+   fields:[{label:'Project code',hint:'Used in every document number',value:'P-2463',font:'ui-monospace,monospace',icon:'ph ph-pencil-simple'},
+     {label:'Project name',hint:'Shown in the switcher',value:'Berri Gas Sweetening — Package 2',icon:'ph ph-pencil-simple'},
+     {label:'Client',hint:'From the client register',value:'PetroLine Energy',icon:'ph ph-caret-down'},
+     {label:'Contract number',hint:'Appears on transmittals',value:'EPC-2463',font:'ui-monospace,monospace',icon:'ph ph-pencil-simple'},
+     {label:'Phase',hint:'Drives the default workflow',value:'Mobilisation → Detail design',icon:'ph ph-caret-down'}]},
+  {title:'Numbering rule',intro:'Set the numbering pattern for this project. It locks once the first document is issued.',
+   note:'Preview: 2463-PIP-DWG-0001-R00 · client number entered later via the portal.',
+   fields:[{label:'Pattern',hint:'Tokens validated against master data',value:'{PROJ}-{DISC}-{TYPE}-{SEQ}-{REV}',font:'ui-monospace,monospace',icon:'ph ph-pencil-simple'},
+     {label:'Project token',hint:'Usually the numeric part of the code',value:'2463',font:'ui-monospace,monospace',icon:'ph ph-pencil-simple'},
+     {label:'Sequence length',hint:'Zero-padded',value:'4 digits',icon:'ph ph-caret-down'},
+     {label:'Revision format',hint:'Applied to every revision',value:'R00, R01, R02 …',icon:'ph ph-caret-down'},
+     {label:'Client number required',hint:'Before a PDI item can become a document',value:'Yes — via client portal',color:'var(--ok)',icon:'ph ph-toggle-right'}]},
+  {title:'Disciplines & codes',intro:'Copy master data from a template or pick the sets this project will use.',
+   note:'Master data stays scoped to this project — editing it later never affects other projects.',
+   fields:[{label:'Start from template',hint:'Copies disciplines, types, codes and workflow',value:'EPC — full workflow',icon:'ph ph-caret-down'},
+     {label:'Disciplines',hint:'6 selected',value:'PIP · ELE · INS · CIV · MEC · PRO',icon:'ph ph-pencil-simple'},
+     {label:'Document types',hint:'9 selected',value:'DWG · ISO · SLD · DTS · CAL · SPC · LST · MTO · PID',icon:'ph ph-pencil-simple'},
+     {label:'Review codes',hint:'Client convention',value:'Code 1 / 2 / 3 / 4',icon:'ph ph-caret-down'},
+     {label:'Planned dates',hint:'Source of overdue flags',value:'Import from contract schedule',icon:'ph ph-upload-simple'}]},
+  {title:'Workflow & signatures',intro:'Choose which approval steps are mandatory and who signs at each stage.',
+   note:'Signatories must have a registered specimen signature before they can sign.',
+   fields:[{label:'Preparation signature',hint:'Discipline user signs the revision',value:'Required',color:'var(--ok)',icon:'ph ph-toggle-right'},
+     {label:'Review step',hint:'SLA drives escalation',value:'Required · 2 day SLA',color:'var(--ok)',icon:'ph ph-toggle-right'},
+     {label:'Approval step',hint:'Final technical approval',value:'Required · 3 day SLA',color:'var(--ok)',icon:'ph ph-toggle-right'},
+     {label:'Document Control check',hint:'QA + metadata verification',value:'Required',color:'var(--ok)',icon:'ph ph-toggle-right'},
+     {label:'Signature PIN',hint:'Second factor at signing time',value:'Required for all signatories',icon:'ph ph-caret-down'}]},
+  {title:'Members & roles',intro:'Add the people who will work on this project and grant their project roles.',
+   note:'System roles are inherited; project roles are granted per project.',
+   fields:[{label:'Document Control',hint:'Owns PDI, MDR, transmittals',value:'Rana A. · Mazen K.',icon:'ph ph-caret-down'},
+     {label:'Reviewers',hint:'Per discipline',value:'Layla S. (ELE, INS) · +2',icon:'ph ph-caret-down'},
+     {label:'Approvers',hint:'Final approval',value:'Omar H.',icon:'ph ph-caret-down'},
+     {label:'Discipline users',hint:'Prepare and upload',value:'6 users across 6 disciplines',icon:'ph ph-caret-down'},
+     {label:'Client DC user',hint:'Portal access only',value:'Faisal K. (PetroLine)',color:'var(--warn)',icon:'ph ph-caret-down'}]},
+  {title:'Storage & templates',intro:'Provision the storage tree, client Drive folder and the paperwork templates.',
+   note:'Creating the project provisions folders, templates and notification rules immediately.',
+   fields:[{label:'Storage bucket',hint:'Created automatically',value:'mdr-p2463',font:'ui-monospace,monospace',icon:'ph ph-hard-drives'},
+     {label:'Drive mirror',hint:'Shared with the client',value:'/PetroLine/EPC-2463/Submissions',font:'ui-monospace,monospace',icon:'ph ph-google-drive-logo'},
+     {label:'Cover sheet template',hint:'Per client paperwork',value:'PetroLine EPC cover · v3',icon:'ph ph-caret-down'},
+     {label:'Transmittal template',hint:'Attached to every package',value:'PetroLine transmittal · v2',icon:'ph ph-caret-down'},
+     {label:'Notifications',hint:'Digest and alerts',value:'Daily 07:00 · overdue + reply alerts on',color:'var(--ok)',icon:'ph ph-toggle-right'}]}
+];
+
+class Component extends DCLogic {
+  state = {theme:'dark', screen:'signin', homeTab:'desk', projects:PROJECTS, wizardOpen:false, wizardStep:0,
+           signModal:false, signDocId:null, pinEntered:false, consent:false, sigMode:'draw', pinRequired:true,
+           projectIdx:0, pickerOpen:false, mdrView:'board',
+           docId:null, settingsTab:'numbering', selected:[], toast:'', mobile:false,
+           docs:DOCS, transmittals:TRANSMITTALS, pdi:PDI, trSeq:64, checks:[],
+           view:'all', overdueOnly:false, discFilter:null, trNo:'TR-2451-0064'};
+
+  STATUS_BG(st){ return st==='DC check'||st==='Awaiting signature' ? 'var(--accent-bg)' : 'transparent'; }
+  STATUS_BORDER(st){ return st==='DC check'||st==='Awaiting signature' ? 'var(--accent-line)' : 'var(--edge)'; }
+  stageIndex(st){
+    if(['Draft','Review rejected','Approval rejected','Returned for correction'].indexOf(st)>-1) return 0;
+    if(st==='Awaiting signature') return 0;
+    if(st==='Pending review') return 1;
+    if(st==='Pending approval') return 2;
+    if(st==='DC check') return 3;
+    if(st==='Ready to submit') return 4;
+    return 5;
+  }
+  toggleSel(id){ this.setState(st=>({selected: st.selected.indexOf(id)>-1 ? st.selected.filter(x=>x!==id) : st.selected.concat([id])})); }
+
+  makeTransmittal(){
+    const s=this.state;
+    let ids = s.selected.length ? s.selected : s.docs.filter(d=>d.status==='Ready to submit').map(d=>d.id);
+    if(!ids.length){ this.say('Nothing is ready to submit yet — clear a DC check first.'); return; }
+    const seq=s.trSeq+1, no='TR-2451-'+String(seq).padStart(4,'0');
+    this.setState({
+      trSeq:seq, selected:[], screen:'transmittals', trNo:no,
+      docs: s.docs.map(d=> ids.indexOf(d.id)>-1 ? {...d,status:'Submitted',tr:no} : d),
+      transmittals: [{no, to:'Faisal K. — PetroLine DC', count:ids.length, sent:'28 Jul', age:'0', status:'Awaiting reply'}].concat(s.transmittals)
+    });
+    this.say(no+' generated — '+ids.length+' documents packaged, cover sheets attached, email sent to PetroLine DC');
+  }
+
+  screenVals(s,p,docs,replyQueue){
+    const V=(k)=>s.view===k;
+    let rows = docs.slice();
+    if(s.view==='mine') rows = rows.filter(d=>['DC check','Awaiting signature'].indexOf(d.status)>-1);
+    if(s.view==='overdue') rows = rows.filter(d=>d.late);
+    if(s.view==='ready') rows = rows.filter(d=>d.status==='Ready to submit');
+    if(s.view==='client') rows = rows.filter(d=>d.status==='Submitted'||d.reply);
+    if(s.view==='rev') rows = rows.filter(d=>d.reply==='Code 2'||d.reply==='Code 3');
+    if(s.overdueOnly) rows = rows.filter(d=>d.late);
+    if(s.discFilter) rows = rows.filter(d=>d.disc===s.discFilter);
+
+    const inCol=(list)=>docs.filter(d=>list.indexOf(d.status)>-1);
+    const card=(d,opts)=>({...d,
+      open:()=>this.openDoc(d.id),
+      border: opts&&opts.hi?'var(--accent-line)':'var(--line)',
+      bg: opts&&opts.hi?'var(--sel)':'var(--raise)',
+      note: d.status==='Review rejected'?'rejected':(d.status==='Rev required'?'Create rev':(d.status==='New number'?'New number':(d.late?'overdue':d.age||''))),
+      noteColor: (d.late||d.status==='Review rejected'||d.status==='New number')?'var(--bad)':(d.status==='Rev required'?'var(--warn)':'var(--dim)'),
+      selectable: !!(opts&&opts.sel),
+      tick: s.selected.indexOf(d.id)>-1?'✓':'',
+      boxBorder: s.selected.indexOf(d.id)>-1?'var(--accent)':'var(--edge)',
+      boxBg: s.selected.indexOf(d.id)>-1?'var(--accent)':'transparent',
+      toggle:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.toggleSel(d.id); }});
+    const col=(label,note,statuses,dot,opts)=>{ const list=inCol(statuses); return {label,note,dot,count:list.length,
+      cards:list.map(d=>card(d,opts)),
+      bg: opts&&opts.hi?'var(--panel)':'var(--panel2)',
+      mark: opts&&opts.hi?'inset 0 2px 0 var(--accent)':'none',
+      titleColor: opts&&opts.hi?'var(--accent-txt)':'var(--text)',
+      more:'', cta: opts&&opts.sel&&s.selected.length? s.selected.length+' selected · Create transmittal':''}; };
+
+    const doc = docs.filter(d=>d.id===s.docId)[0] || docs[0];
+    const stage = this.stageIndex(doc.status);
+    const stepDef = [['Prepared & signed','ph-fill ph-signature',doc.owner],['Review','ph-fill ph-magnifying-glass','L. Saleh — Reviewer'],['Approval','ph-fill ph-check-circle','O. Hassan — Approver'],['DC check','ph-fill ph-seal-check','Rana A. — DC Admin'],['Submitted','ph-fill ph-paper-plane-tilt','PetroLine DC']];
+    const whenFor=(i)=> i<stage ? ['22 Jul 09:12','23 Jul 14:40','26 Jul 08:05','—','—'][i] : (i===stage?'in progress':'pending');
+    const reply = this.replyAction(doc);
+    const checkDone = s.checks.length;
+
+    const pdiRows = s.pdi.map(i=>({...i,
+      statusColor: i.status==='Numbered'?'var(--ok)':(i.status==='Awaiting client no.'?'var(--warn)':'var(--muted)'),
+      numColor: i.clientNo?'var(--accent-txt)':'var(--dim)',
+      clientNo: i.clientNo||'—',
+      action: i.status==='Numbered'?'Convert to MDR':(i.status==='Draft'?'Send to client':'Nudge client'),
+      actColor: i.status==='Numbered'?'var(--accent-txt)':'var(--muted)',
+      actBorder: i.status==='Numbered'?'var(--accent-line)':'var(--edge)',
+      act:()=>{
+        if(i.status==='Numbered'){ this.setState(st=>({pdi:st.pdi.filter(x=>x.id!==i.id)})); this.say(i.ref+' converted to MDR document '+i.clientNo+' — now in Draft, awaiting files'); }
+        else if(i.status==='Draft'){ this.setState(st=>({pdi:st.pdi.map(x=>x.id===i.id?{...x,status:'Awaiting client no.',sent:'28 Jul'}:x)})); this.say(i.ref+' sent to the client portal'); }
+        else this.say('Reminder emailed to Faisal K. (PetroLine DC)'); }}));
+
+    const trSelObj = s.transmittals.filter(t=>t.no===s.trNo)[0] || s.transmittals[0];
+    const trDocs = docs.filter(d=>d.tr===trSelObj.no).slice(0,5);
+
+    const setTab=(t)=>()=>this.setState({screen:'settings',settingsTab:t});
+    const tabDefs=[['numbering','Numbering rules'],['disciplines','Disciplines & codes'],['members','Members & roles'],['workflow','Workflow'],['templates','Templates'],['storage','Storage & notifications']];
+    const SETTINGS={
+      numbering:{title:'Document numbering',intro:'The numbering rule is generated per project and locked once the first document is issued.',
+        fields:[{label:'Number pattern',hint:'Tokens are validated against master data',value:'{PROJ}-{DISC}-{TYPE}-{SEQ}-{REV}',font:'ui-monospace,monospace',icon:'ph ph-pencil-simple'},
+          {label:'Project token',hint:'Appears in every document number',value:'2451',font:'ui-monospace,monospace',icon:'ph ph-pencil-simple'},
+          {label:'Sequence length',hint:'Zero-padded',value:'4 digits · next 0219',icon:'ph ph-caret-down'},
+          {label:'Revision format',hint:'Applied to every revision',value:'R00, R01, R02 …',icon:'ph ph-caret-down'},
+          {label:'Client number field',hint:'Entered by the client in the portal',value:'Required before MDR conversion',icon:'ph ph-caret-down'},
+          {label:'Lock rule',hint:'Prevents renumbering after first issue',value:'Locked — 1 296 documents issued',valueColor:'var(--warn)',icon:'ph ph-lock-simple'}],
+        asideTitle:'Preview',aside:[{k:'Next piping drawing',v:'2451-PIP-DWG-0219-R00'},{k:'Next electrical list',v:'2451-ELE-LST-0004-R00'},{k:'Client number',v:'PL-HGC-PIP-0219'},{k:'Cover sheet ref',v:'CS-2451-0219'}]},
+      disciplines:{title:'Disciplines, document types & review codes',intro:'Master data scoped to this project — other projects keep their own sets.',
+        fields:[{label:'Disciplines',hint:'6 active',value:'PIP · ELE · INS · CIV · MEC · PRO',icon:'ph ph-pencil-simple'},
+          {label:'Document types',hint:'9 active',value:'DWG · ISO · SLD · DTS · CAL · SPC · LST · MTO · PID',icon:'ph ph-pencil-simple'},
+          {label:'Review codes',hint:'Client convention',value:'Code 1 / 2 / 3 / 4',icon:'ph ph-pencil-simple'},
+          {label:'Code 2 behaviour',hint:'What the system does on reply',value:'Create next revision, supersede previous',icon:'ph ph-caret-down'},
+          {label:'Code 3 behaviour',hint:'What the system does on reply',value:'Issue replacement with new number',icon:'ph ph-caret-down'},
+          {label:'Planned dates',hint:'Source of overdue flags',value:'From contract schedule import',icon:'ph ph-caret-down'}],
+        asideTitle:'Usage',aside:[{k:'Piping',v:'412 docs'},{k:'Electrical',v:'238 docs'},{k:'Instrumentation',v:'195 docs'},{k:'Civil',v:'176 docs'},{k:'Mechanical',v:'158 docs'},{k:'Process',v:'117 docs'}]},
+      members:{title:'Members & project roles',intro:'System roles come from the organisation; project roles are granted here.',
+        fields:[{label:'Rana A.',hint:'rana@dtgsa.com',value:'DC Admin · all documents',valueColor:'var(--accent-txt)',icon:'ph ph-caret-down'},
+          {label:'Layla S.',hint:'layla@dtgsa.com',value:'Reviewer · Electrical, Instrumentation',icon:'ph ph-caret-down'},
+          {label:'Omar H.',hint:'omar@dtgsa.com',value:'Approver · all disciplines',icon:'ph ph-caret-down'},
+          {label:'A. Hamdan',hint:'ahmed@dtgsa.com',value:'Discipline User · Piping',icon:'ph ph-caret-down'},
+          {label:'Faisal K.',hint:'faisal@petroline.com',value:'Client DC User · portal only',valueColor:'var(--warn)',icon:'ph ph-caret-down'},
+          {label:'Invite member',hint:'Sends an email invitation',value:'Add someone to P-2451',icon:'ph ph-plus'}],
+        asideTitle:'Access summary',aside:[{k:'Internal members',v:'14'},{k:'Client users',v:'3'},{k:'Viewers',v:'6'},{k:'Pending invitations',v:'1',color:'var(--warn)'}]},
+      workflow:{title:'Approval workflow',intro:'Each project defines which steps are mandatory before a document can be transmitted.',
+        fields:[{label:'Preparation signature',hint:'Discipline user signs',value:'Required',valueColor:'var(--ok)',icon:'ph ph-toggle-right'},
+          {label:'Review step',hint:'Reviewer approves or rejects',value:'Required · 2 day SLA',valueColor:'var(--ok)',icon:'ph ph-toggle-right'},
+          {label:'Approval step',hint:'Final technical approval',value:'Required · 3 day SLA',valueColor:'var(--ok)',icon:'ph ph-toggle-right'},
+          {label:'Document Control check',hint:'QA + metadata verification',value:'Required',valueColor:'var(--ok)',icon:'ph ph-toggle-right'},
+          {label:'Rejection routing',hint:'Where a rejected document lands',value:'Back to preparer, revision retained',icon:'ph ph-caret-down'},
+          {label:'Escalation',hint:'When a step exceeds its SLA',value:'Notify approver + DC after 5 days',icon:'ph ph-caret-down'}],
+        asideTitle:'Current load',aside:[{k:'Pending review',v:'61'},{k:'Pending approval',v:'38'},{k:'DC check',v:String(docs.filter(d=>d.status==='DC check').length),color:'var(--accent-txt)'},{k:'Escalated',v:'3',color:'var(--bad)'}]},
+      templates:{title:'Cover sheet & transmittal templates',intro:'Templates are per project so each client gets their own paperwork.',
+        fields:[{label:'Cover sheet',hint:'Generated per document revision',value:'PetroLine EPC cover · v3',icon:'ph ph-file-text'},
+          {label:'Transmittal sheet',hint:'Attached to every package',value:'PetroLine transmittal · v2',icon:'ph ph-file-text'},
+          {label:'Signature block',hint:'Preparer / reviewer / approver',value:'Three-column with stamps',icon:'ph ph-caret-down'},
+          {label:'Email template',hint:'Sent with each transmittal',value:'EPC-2451 submission notice',icon:'ph ph-envelope'},
+          {label:'Package naming',hint:'File name of the generated PDF',value:'{TRANSMITTAL}_{DATE}.pdf',font:'ui-monospace,monospace',icon:'ph ph-pencil-simple'},
+          {label:'Merge order',hint:'How the package is assembled',value:'Transmittal → cover → native PDF',icon:'ph ph-caret-down'}],
+        asideTitle:'Recent packages',aside:[{k:'TR-2451-0064',v:'24.6 MB'},{k:'TR-2451-0063',v:'11.2 MB'},{k:'TR-2451-0062',v:'38.9 MB'}]},
+      storage:{title:'Storage & notifications',intro:'Files live in this project\u2019s own storage tree, mirrored to the client Drive folder.',
+        fields:[{label:'Primary storage',hint:'Supabase bucket',value:'mdr-p2451 · 41.8 GB used',icon:'ph ph-hard-drives'},
+          {label:'Drive mirror',hint:'Shared with the client',value:'/PetroLine/EPC-2451/Submissions',font:'ui-monospace,monospace',icon:'ph ph-google-drive-logo'},
+          {label:'Folder structure',hint:'Created at onboarding',value:'By discipline → type → revision',icon:'ph ph-caret-down'},
+          {label:'Daily digest',hint:'Sent to project members',value:'07:00 Riyadh · enabled',valueColor:'var(--ok)',icon:'ph ph-toggle-right'},
+          {label:'Overdue alerts',hint:'When planned date passes',value:'DC Admin + discipline lead',icon:'ph ph-caret-down'},
+          {label:'Client reply alerts',hint:'On transmittal response',value:'Immediate to DC team',icon:'ph ph-caret-down'}],
+        asideTitle:'Storage',aside:[{k:'Documents',v:'1 296'},{k:'Files',v:'4 108'},{k:'Native + PDF pairs',v:'98%',color:'var(--ok)'},{k:'Last mirror sync',v:'09:38'}]}
+    };
+    const st = SETTINGS[s.settingsTab] || SETTINGS.numbering;
+    const mobileList = docs.filter(d=>['Pending review','Pending approval'].indexOf(d.status)>-1);
+
+    return {
+      isMdr:s.screen==='mdr', isBoard:s.screen==='mdr'&&s.mdrView==='board', isRegister:s.screen==='mdr'&&s.mdrView==='register', isTimeline:s.screen==='mdr'&&s.mdrView==='timeline',
+      mdrSubtitle: s.mdrView==='board'?'the approval chain as columns':(s.mdrView==='register'?rows.length+' rows in view':'planned vs actual by package'),
+      mdrTabs:['board','register','timeline'].map(v=>({label:v.charAt(0).toUpperCase()+v.slice(1),
+        bg: s.mdrView===v?'var(--accent-bg)':'transparent', color: s.mdrView===v?'var(--accent-txt)':'var(--soft)',
+        weight: s.mdrView===v?500:400, go:()=>this.setState({screen:'mdr',mdrView:v})})),
+      toggleOverdue:()=>this.setState({overdueOnly:!s.overdueOnly}),
+      overdueBorder: s.overdueOnly?'var(--accent)':'var(--edge)', overdueColor: s.overdueOnly?'var(--accent-txt)':'var(--muted)',
+      overdueBg: s.overdueOnly?'var(--accent-bg2)':'transparent',
+      createTransmittal:()=>this.makeTransmittal(),
+      trButtonLabel:'Build transmittal ('+docs.filter(d=>d.status==='Ready to submit').length+' ready)',
+      boardCols:[
+        col('Draft / uploaded','Discipline user prepares',['Draft','Awaiting signature','Review rejected','Approval rejected','Returned for correction'],'var(--edge)'),
+        col('Pending review','Reviewer · avg 1.8 days',['Pending review'],'#796cbf'),
+        col('Pending approval','Approver · 3 escalated',['Pending approval'],'var(--accent)'),
+        col('DC check — yours','QA, metadata, cover sheet',['DC check'],'var(--accent-line)',{hi:true}),
+        col('Ready to submit','Select → transmittal',['Ready to submit'],'var(--ok)',{sel:true}),
+        col('With client','Submitted · awaiting reply',['Submitted','Rev required','New number','Closed'],'var(--warn)')
+      ],
+      savedViews:[
+        ['mine','My DC queue',docs.filter(d=>['DC check','Awaiting signature'].indexOf(d.status)>-1).length,'var(--accent-txt)'],
+        ['overdue','Overdue',docs.filter(d=>d.late).length,'var(--bad)'],
+        ['ready','Ready to submit',docs.filter(d=>d.status==='Ready to submit').length,'var(--dim)'],
+        ['client','With client',docs.filter(d=>d.status==='Submitted'||d.reply).length,'var(--dim)'],
+        ['rev','Rev required (Code 2/3)',docs.filter(d=>d.reply==='Code 2'||d.reply==='Code 3').length,'var(--dim)'],
+        ['all','Full register',docs.length,'var(--dim)']
+      ].map(([k,label,count,countColor])=>({label,count,countColor,
+        bg:V(k)?'var(--accent-bg)':'transparent', color:V(k)?'var(--text)':'var(--muted)',
+        mark:V(k)?'inset 2px 0 0 var(--accent)':'none', go:()=>this.setState({view:k})})),
+      discFacets:['PIP','ELE','INS','CIV','MEC','PRO'].map(code=>{ const on=s.discFilter===code; const list=docs.filter(d=>d.disc===code);
+        return {name:(list[0]||{}).discName||code, count:list.length, tick:on?'✓':'',
+          boxBorder:on?'var(--accent)':'var(--edge)', boxBg:on?'var(--accent)':'transparent',
+          go:()=>this.setState({discFilter:on?null:code})}; }),
+      rows: rows.map(d=>({...d,
+        statusColor: STATUS_TONE[d.status]||'var(--muted)', statusBorder:this.STATUS_BORDER(d.status), statusBg:this.STATUS_BG(d.status),
+        plannedColor: d.late?'var(--bad)':'var(--muted)',
+        client: d.client||'—', tr: d.tr||'—', reply: d.reply||'—',
+        replyColor: d.reply==='Code 1'?'var(--ok)':(d.reply==='Code 2'?'var(--warn)':(d.reply==='Code 3'?'var(--bad)':'var(--dim)')),
+        rowBg: s.selected.indexOf(d.id)>-1?'var(--accent-bg2)':'transparent',
+        tick: s.selected.indexOf(d.id)>-1?'✓':'', boxBorder: s.selected.indexOf(d.id)>-1?'var(--accent)':'var(--edge)',
+        boxBg: s.selected.indexOf(d.id)>-1?'var(--accent)':'transparent',
+        toggle:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.toggleSel(d.id); },
+        open:()=>this.openDoc(d.id)})),
+      rowCount: rows.length+' of '+docs.length+' rows',
+      selectedLabel: s.selected.length? s.selected.length+' rows selected' : 'Select rows for bulk actions',
+      bulkDc:()=>{ if(!s.selected.length){ this.say('Select rows first'); return; } this.setState(st2=>({docs:st2.docs.map(d=>st2.selected.indexOf(d.id)>-1?{...d,status:'Ready to submit'}:d),selected:[]})); this.say(s.selected.length+' documents passed the DC check — cover sheets generated'); },
+      bulkCover:()=>this.say('Cover sheets generated for '+(s.selected.length||1)+' document(s)'),
+      pdfTools:()=>this.say('PDF tools — merge, split, reorder, rotate and stamp opened in a side panel'),
+      months:['Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'],
+      timeline:[
+        {name:'Piping — Area 20/30',meta:'412 documents · A. Hamdan',plannedLeft:'2%',plannedWidth:'74%',actualWidth:'43%',color:'var(--accent)',milestoneLeft:'52%',milestone:'IFR'},
+        {name:'Electrical — MCC & cabling',meta:'238 documents · L. Saleh',plannedLeft:'8%',plannedWidth:'66%',actualWidth:'47%',color:'var(--accent)',milestoneLeft:'56%',milestone:'IFR'},
+        {name:'Instrumentation',meta:'195 documents · S. Karim',plannedLeft:'12%',plannedWidth:'62%',actualWidth:'40%',color:'var(--accent)',milestoneLeft:'60%',milestone:'IFA'},
+        {name:'Civil — foundations & grading',meta:'176 documents · O. Hassan',plannedLeft:'0%',plannedWidth:'58%',actualWidth:'28%',color:'var(--bad)',milestoneLeft:'40%',milestone:'late'},
+        {name:'Mechanical — rotating',meta:'158 documents · S. Karim',plannedLeft:'16%',plannedWidth:'60%',actualWidth:'40%',color:'var(--accent)',milestoneLeft:'62%',milestone:'IFA'},
+        {name:'Process — PFD/P&ID',meta:'117 documents · N. Aziz',plannedLeft:'0%',plannedWidth:'52%',actualWidth:'42%',color:'var(--ok)',milestoneLeft:'46%',milestone:'IFC'}
+      ],
+
+      isDoc:s.screen==='doc',
+      doc:{...doc, statusColor:STATUS_TONE[doc.status]||'var(--muted)', statusBorder:this.STATUS_BORDER(doc.status), statusBg:this.STATUS_BG(doc.status),
+        replyLabel: doc.reply==='Code 1'?'Code 1 · No further submission':(doc.reply==='Code 2'?'Code 2 · Revision required':'Code 3 · New number required'),
+        replyColor: doc.reply==='Code 1'?'var(--ok)':(doc.reply==='Code 2'?'var(--warn)':'var(--bad)'),
+        replyDate:'24 Jul', replyTr: doc.tr||'TR-2451-0061', replyAction:reply.label},
+      steps: stepDef.map(([label,icon,who],i)=>({label,icon,who,when:whenFor(i),
+        bar: i<stage?'var(--accent)':(i===stage?'var(--accent-line)':'var(--track)'),
+        color: i<=stage?'var(--text)':'var(--dim)', weight: i===stage?500:400})),
+      showDcPanel: doc.status==='DC check',
+      showSignPanel: doc.status==='Awaiting signature',
+      showReplyPanel: !!doc.reply,
+      replyAct:()=>reply.run(),
+      checks: DC_CHECKS.map((label,i)=>({label, tick: s.checks.indexOf(i)>-1?'✓':'',
+        color: s.checks.indexOf(i)>-1?'var(--text)':'var(--muted)',
+        boxBorder: s.checks.indexOf(i)>-1?'var(--accent)':'var(--edge)',
+        boxBg: s.checks.indexOf(i)>-1?'var(--accent)':'transparent',
+        toggle:()=>this.setState(st2=>({checks: st2.checks.indexOf(i)>-1?st2.checks.filter(x=>x!==i):st2.checks.concat([i])}))})),
+      checkProgress: checkDone+' of '+DC_CHECKS.length+' checks ticked',
+      approveDc:()=>{ this.patch(doc.id,{status:'Ready to submit'}); this.setState({checks:[]}); this.say(doc.no+' passed Document Control — cover sheet generated, ready to submit'); },
+      rejectDc:()=>{ this.patch(doc.id,{status:'Returned for correction'}); this.say(doc.no+' returned to '+doc.owner+' for correction'); },
+      signDoc:()=>this.setState({signModal:true,signDocId:doc.id,pinEntered:false,consent:false}),
+      genCover:()=>this.say('Cover sheet generated for '+doc.no+' '+doc.rev),
+      addToTr:()=>{ this.toggleSel(doc.id); this.say(doc.no+' added to the next transmittal'); },
+      uploadFile:()=>this.say('Revision files uploaded — native + PDF stored and mirrored to Drive'),
+      revisions:[{rev:doc.rev,date:'26 Jul 2026',status:doc.status,tr:doc.tr||'—',reply:doc.reply||'—',files:'2 files',color:'var(--text)'},
+        {rev:'R01',date:'30 Jun 2026',status:'Superseded',tr:'TR-2451-0054',reply:'Code 2',files:'2 files',color:'var(--dim)'},
+        {rev:'R00',date:'12 May 2026',status:'Superseded',tr:'TR-2451-0041',reply:'Code 2',files:'2 files',color:'var(--dim)'}],
+      files:[{name:doc.no+'-'+doc.rev+'.pdf',meta:'PDF · 8.4 MB · 6 pages',icon:'ph ph-file-pdf',store:'Supabase'},
+        {name:doc.no+'-'+doc.rev+'.dwg',meta:'Native · 22.1 MB',icon:'ph ph-file-cad',store:'Drive'},
+        {name:'CS-'+doc.no+'.pdf',meta:'Cover sheet · 210 KB',icon:'ph ph-file-text',store:'Generated'},
+        {name:'Markup-'+doc.no+'-R01.pdf',meta:'Client markup · 3.2 MB',icon:'ph ph-pencil-line',store:'Supabase'}],
+      meta:[{k:'Client number',v:doc.client,color:'var(--accent-txt)'},{k:'Discipline',v:doc.discName,color:'var(--text)'},
+        {k:'Document type',v:doc.type,color:'var(--text)'},{k:'Planned date',v:doc.planned,color:doc.late?'var(--bad)':'var(--text)'},
+        {k:'Owner',v:doc.owner,color:'var(--text)'},{k:'Project',v:p.code+' · '+p.name,color:'var(--text)'},
+        {k:'Transmittal',v:doc.tr||'—',color:'var(--text)'},{k:'Storage',v:'/PIP/'+doc.type+'/'+doc.rev,color:'var(--soft)'}],
+      signatures:[{initials:'AH',name:'A. Hamdan',role:'Preparer · Piping',when:'22 Jul',color:'var(--ok)'},
+        {initials:'LS',name:'Layla S.',role:'Reviewer',when: stage>1?'23 Jul':'pending',color: stage>1?'var(--ok)':'var(--dim)'},
+        {initials:'OH',name:'Omar H.',role:'Approver',when: stage>2?'26 Jul':'pending',color: stage>2?'var(--ok)':'var(--dim)'},
+        {initials:'RA',name:'Rana A.',role:'Document Control',when: stage>3?'28 Jul':'pending',color: stage>3?'var(--ok)':'var(--dim)'}],
+      docAudit:[{when:'28 Jul',text:'Opened for DC check by Rana A.'},{when:'26 Jul',text:'Approved by Omar H.'},
+        {when:'23 Jul',text:'Review approved by Layla S.'},{when:'22 Jul',text:'Prepared and signed by '+doc.owner},
+        {when:'30 Jun',text:'R01 superseded after Code 2 reply'}],
+
+      isPdi:s.screen==='pdi', pdiCount:s.pdi.length, pdiRows,
+      importExcel:()=>this.say('18 PDI rows imported from HGC_PDI_rev5.xlsx · 2 duplicates skipped'),
+      exportExcel:()=>this.say('Export queued — Excel file will download when ready'),
+      exportPdf:()=>this.say('PDF report generated for '+p.code),
+      sendToClient:()=>{ this.setState(st2=>({pdi:st2.pdi.map(i=>i.status==='Draft'?{...i,status:'Awaiting client no.',sent:'28 Jul'}:i)})); this.say('Draft PDI items sent to the PetroLine client portal'); },
+
+      isPortal:s.screen==='portal',
+      portalRows: s.pdi.filter(i=>i.status==='Awaiting client no.').map(i=>({...i,
+        value: i.clientNo||'Enter number…', numColor: i.clientNo?'var(--accent-txt)':'var(--dim)',
+        inputBorder: i.clientNo?'var(--accent-line)':'var(--edge)',
+        status: i.clientNo?'Ready':'Pending', statusColor: i.clientNo?'var(--ok)':'var(--warn)',
+        fill:()=>{ this.setState(st2=>({pdi:st2.pdi.map(x=>x.id===i.id?{...x,clientNo:'PL-HGC-'+x.disc+'-0'+x.id}:x)})); }})),
+      savePortal:()=>{ this.setState(st2=>({pdi:st2.pdi.map(x=>x.clientNo?{...x,status:'Numbered'}:x),screen:'pdi'})); this.say('Client numbers received — items ready to convert into MDR documents'); },
+
+      isTransmittals:s.screen==='transmittals', trCount:s.transmittals.length,
+      readyCount: docs.filter(d=>d.status==='Ready to submit').length,
+      trRows: s.transmittals.map(t=>({...t,
+        ageColor: t.age.indexOf('overdue')>-1?'var(--bad)':(parseInt(t.age)>10?'var(--warn)':'var(--soft)'),
+        statusColor: t.status==='Replied'?'var(--ok)':'var(--warn)',
+        rowBg: t.no===trSelObj.no?'var(--accent-bg2)':'transparent',
+        open:()=>this.setState({trNo:t.no})})),
+      trSel:{...trSelObj, statusColor: trSelObj.status==='Replied'?'var(--ok)':'var(--warn)',
+        docs: trDocs.length?trDocs:docs.slice(4,8),
+        log:[{when:'09:12',text:'Package generated · cover sheets merged'},{when:'09:13',text:'Emailed to faisal.k@petroline.com, cc DC team'},{when:'09:14',text:'Delivery confirmed by mail server'},{when:'—',text:'Awaiting client reply · window closes 10 Aug'}]},
+      resendTr:()=>this.say(trSelObj.no+' re-sent to '+trSelObj.to),
+      recordReply:()=>this.say('Reply recording opened — pick a review code per document'),
+
+      isReplies:s.screen==='replies',
+      isReports:s.screen==='reports',
+      codeStats:[{label:'Code 1 · No further submission',value:'412',pct:'62%',color:'var(--ok)'},
+        {label:'Code 2 · Revision required',value:'168',pct:'26%',color:'var(--warn)'},
+        {label:'Code 3 · New number required',value:'44',pct:'7%',color:'var(--bad)'},
+        {label:'Code 4 · Information only',value:'32',pct:'5%',color:'var(--edge)'}],
+      discReport:[{name:'Piping',docs:'412',submitted:'239',overdue:'3',firstPass:'74%',cycle:'6.2 days',overdueColor:'var(--warn)',fpColor:'var(--muted)'},
+        {name:'Electrical',docs:'238',submitted:'169',overdue:'0',firstPass:'81%',cycle:'5.1 days',overdueColor:'var(--soft)',fpColor:'var(--ok)'},
+        {name:'Instrumentation',docs:'195',submitted:'125',overdue:'1',firstPass:'78%',cycle:'5.6 days',overdueColor:'var(--soft)',fpColor:'var(--muted)'},
+        {name:'Civil',docs:'176',submitted:'86',overdue:'2',firstPass:'63%',cycle:'8.9 days',overdueColor:'var(--warn)',fpColor:'var(--bad)'},
+        {name:'Mechanical',docs:'158',submitted:'104',overdue:'0',firstPass:'80%',cycle:'5.4 days',overdueColor:'var(--soft)',fpColor:'var(--ok)'},
+        {name:'Process',docs:'117',submitted:'94',overdue:'0',firstPass:'86%',cycle:'4.3 days',overdueColor:'var(--soft)',fpColor:'var(--ok)'}],
+
+      isSettings:s.screen==='settings',
+      settingsTabs: tabDefs.map(([k,label])=>({label, go:setTab(k),
+        color: s.settingsTab===k?'var(--text)':'var(--soft)', weight: s.settingsTab===k?500:400,
+        mark: s.settingsTab===k?'inset 0 -2px 0 var(--accent)':'none'})),
+      settingsTitle:st.title, settingsIntro:st.intro,
+      settingsFields: st.fields.map(f=>({...f, valueColor:f.valueColor||'var(--text)', font:f.font||'Inter,system-ui,sans-serif'})),
+      settingsAsideTitle:st.asideTitle,
+      settingsAside: st.aside.map(a=>({...a, color:a.color||'var(--text)'})),
+      cloneSettings:()=>this.say('Settings cloned from P-2438 — numbering rule left untouched'),
+      saveSettings:()=>this.say('Project settings saved for '+p.code),
+
+      isPortfolio:s.screen==='portfolio',
+      portfolioStats:[{label:'Waiting on you — all projects',value:'31',color:'var(--accent-txt)'},
+        {label:'Overdue documents',value:'47',color:'var(--bad)'},
+        {label:'Documents under control',value:'28 914',color:'var(--text)'},
+        {label:'Transmittals this month',value:'213',color:'var(--text)'}],
+      portfolioRows: s.projects.map((pr,i)=>({...pr, pctW:pr.pct+'%',
+        pctColor: pr.pct>85?'var(--ok)':(pr.pct<40?'var(--bad)':'var(--accent)'),
+        mineLabel: pr.mine||'—', mineColor: pr.mine?'var(--on-accent)':'var(--dim)',
+        mineBg: pr.mine?'var(--accent)':'transparent',
+        overdueColor: pr.overdue>5?'var(--bad)':(pr.overdue>0?'var(--warn)':'var(--soft)'),
+        roleColor: pr.role==='DC Admin'?'var(--accent-txt)':'var(--soft)',
+        rowBg: i===s.projectIdx?'var(--accent-bg2)':'transparent', weight: i===s.projectIdx?500:400,
+        enter:()=>this.setState({projectIdx:i,screen:'overview',docId:null})})),
+      onboard:()=>this.setState({wizardOpen:true,wizardStep:0}),
+
+      isSignin: s.screen==='signin',
+      showSidebar: ['portfolio','signin','home'].indexOf(s.screen)===-1,
+      showGlobalNav: ['portfolio','home'].indexOf(s.screen)>-1,
+      signIn:()=>{ this.setState({screen:'home',homeTab:'desk'}); this.say('Signed in as Rana A. — DC Admin on 9 projects'); },
+      signInClient:()=>{ this.setState({screen:'portal'}); this.say('Signed in to the PetroLine client portal as Faisal K.'); },
+      signOut:()=>{ this.setState({screen:'signin',pickerOpen:false,docId:null}); },
+
+      isPermissions: s.screen==='permissions',
+      inviteUser:()=>this.say('Invitation sent — the user joins '+p.code+' as Project Viewer until a role is assigned'),
+      members: MEMBERS.map(m=>{ const role=(s.memberRoles||{})[m.email]||m.projectRole;
+        return {...m, projectRole:role,
+          roleColor: role==='DC Admin'?'var(--accent-txt)':(role==='No access'?'var(--dim)':'var(--muted)'),
+          roleBorder: role==='DC Admin'?'var(--accent-line)':'var(--edge)',
+          statusColor: m.status==='Active'?'var(--ok)':(m.status==='Invited'?'var(--warn)':'var(--dim)'),
+          cycle:()=>{ const opts=['DC Admin','DC User','Discipline User','Reviewer','Approver','Project Viewer','Client DC User','No access'];
+            const next=opts[(opts.indexOf(role)+1)%opts.length];
+            this.setState(st2=>({memberRoles:{...(st2.memberRoles||{}), [m.email]:next}}));
+            this.say(m.name+' is now '+next+' on '+p.code); }}; }),
+      roleCols:['Super','Sys admin','DC admin','DC user','Discipline','Reviewer','Approver','Client DC'],
+      permRows: PERMS.map(([label,cells])=>({label, cells: cells.split('').map(ch=>({
+        mark: ch==='y'?'✓':(ch==='o'?'○':'—'),
+        color: ch==='y'?'var(--ok)':(ch==='o'?'var(--warn)':'var(--dim)')}))})),
+      roleCards:[
+        {name:'Super Admin',desc:'Unrestricted platform access including tenant settings and data deletion.',count:'2 users',color:'var(--accent-txt)'},
+        {name:'DC Admin / DC User',desc:'Owns PDI, the MDR, DC checks, transmittals and client replies for assigned projects.',count:'11 users',color:'var(--text)'},
+        {name:'Reviewer / Approver',desc:'Approve or reject documents in their discipline; sign electronically.',count:'19 users',color:'var(--text)'},
+        {name:'Client DC User',desc:'Portal only — enters official client document numbers and reads their own replies.',count:'3 users',color:'var(--warn)'}
+      ],
+
+      isSignatures: s.screen==='signatures',
+      signEmpty: docs.filter(d=>d.status==='Awaiting signature').length===0,
+      signModes:['draw','type','upload'].map(m=>({label:m.charAt(0).toUpperCase()+m.slice(1),
+        bg: s.sigMode===m?'var(--accent-bg)':'transparent', color: s.sigMode===m?'var(--accent-txt)':'var(--soft)',
+        weight: s.sigMode===m?500:400, go:()=>this.setState({sigMode:m})})),
+      signModeHint: s.sigMode==='draw'?'Draw with a mouse, pen or touch':(s.sigMode==='type'?'Typed name rendered in the signature face':'Upload a PNG of your wet signature'),
+      clearSig:()=>this.say('Specimen cleared'),
+      saveSig:()=>this.say('Specimen signature saved — SIG-RA-0042 updated'),
+      pinLabel: s.pinRequired?'Required':'Not required', pinColor: s.pinRequired?'var(--ok)':'var(--warn)',
+      togglePin:()=>this.setState({pinRequired:!s.pinRequired}),
+      sigLog:[
+        {when:'28 Jul 09:41',who:'Omar H. · Approver',doc:'2451-CIV-CAL-0021 R03',role:'Approval',hash:'a91f…4c02'},
+        {when:'26 Jul 08:05',who:'Omar H. · Approver',doc:'2451-PIP-DWG-0148 R02',role:'Approval',hash:'7b23…9de1'},
+        {when:'23 Jul 14:40',who:'Layla S. · Reviewer',doc:'2451-PIP-DWG-0148 R02',role:'Review',hash:'1c88…07aa'},
+        {when:'22 Jul 09:12',who:'A. Hamdan · Preparer',doc:'2451-PIP-DWG-0148 R02',role:'Preparation',hash:'55e0…b3f7'},
+        {when:'21 Jul 16:22',who:'Rana A. · DC Admin',doc:'2451-ELE-SLD-0030 R01',role:'DC check',hash:'d40a…1e65'},
+        {when:'19 Jul 11:03',who:'Rana A. · DC Admin',doc:'TR-2451-0063 package',role:'Transmittal',hash:'ff12…8a90'}
+      ],
+      sigStats:[{k:'Signatures this month',v:'184',color:'var(--text)'},{k:'Awaiting my signature',v:String(docs.filter(d=>d.status==='Awaiting signature').length),color:'var(--accent-txt)'},
+        {k:'Invalidated by new revision',v:'12',color:'var(--warn)'},{k:'Specimen coverage',v:'17 of 17',color:'var(--ok)'}],
+      signatories:[{initials:'RA',name:'Rana A.',role:'DC Admin · DC check + transmittals',state:'Registered',color:'var(--ok)'},
+        {initials:'OH',name:'Omar H.',role:'Approver · all disciplines',state:'Registered',color:'var(--ok)'},
+        {initials:'LS',name:'Layla S.',role:'Reviewer · ELE, INS',state:'Registered',color:'var(--ok)'},
+        {initials:'AH',name:'A. Hamdan',role:'Discipline User · Piping',state:'Specimen expired',color:'var(--warn)'}],
+
+      signModal: s.signModal,
+      signTarget: docs.filter(d=>d.id===s.signDocId)[0] || docs.filter(d=>d.status==='Awaiting signature')[0] || docs[0],
+      closeSign:()=>this.setState({signModal:false,pinEntered:false,consent:false}),
+      fillPin:()=>this.setState({pinEntered:true}),
+      pinValue: s.pinEntered?'••••••':'Enter 6-digit PIN',
+      pinBorder: s.pinEntered?'var(--accent-line)':'var(--edge)',
+      pinTextColor: s.pinEntered?'var(--text)':'var(--dim)',
+      toggleConsent:()=>this.setState({consent:!s.consent}),
+      consentTick: s.consent?'✓':'', consentBorder: s.consent?'var(--accent)':'var(--edge)', consentBg: s.consent?'var(--accent)':'transparent',
+      applyBorder: (s.consent&&(s.pinEntered||!s.pinRequired))?'var(--accent)':'var(--edge)',
+      applyColor: (s.consent&&(s.pinEntered||!s.pinRequired))?'var(--accent-txt)':'var(--dim)',
+      applySign:()=>{ if(!s.consent||(s.pinRequired&&!s.pinEntered)){ this.say('Enter your PIN and confirm the declaration to sign'); return; }
+        const t = docs.filter(d=>d.id===s.signDocId)[0];
+        if(t) this.patch(t.id,{status:'Pending review'});
+        this.setState({signModal:false,pinEntered:false,consent:false});
+        this.say((t?t.no:'Document')+' signed by Rana A. — hash recorded, sent for review'); },
+
+      wizardOpen: s.wizardOpen, wizardNo: s.wizardStep+1,
+      wizardTitle: WIZARD[s.wizardStep].title, wizardIntro: WIZARD[s.wizardStep].intro,
+      wizardNote: WIZARD[s.wizardStep].note,
+      wizardSteps: WIZARD.map((w,i)=>({label:w.title,
+        bar: i<s.wizardStep?'var(--accent)':(i===s.wizardStep?'var(--accent-line)':'var(--track)'),
+        color: i<=s.wizardStep?'var(--text)':'var(--dim)'})),
+      wizardFields: WIZARD[s.wizardStep].fields.map(f=>({...f, color:f.color||'var(--text)', font:f.font||'Inter,system-ui,sans-serif'})),
+      wizardCta: s.wizardStep===WIZARD.length-1?'Create project':'Continue',
+      closeWizard:()=>this.setState({wizardOpen:false,wizardStep:0}),
+      wizardBack:()=>this.setState({wizardStep:Math.max(0,s.wizardStep-1)}),
+      wizardNext:()=>{
+        if(s.wizardStep<WIZARD.length-1){ this.setState({wizardStep:s.wizardStep+1}); return; }
+        const np={code:'P-2463',name:'Berri Gas Sweetening — Package 2',client:'PetroLine Energy',contract:'EPC-2463',docs:'0',role:'DC Admin',mine:0,overdue:0,pct:0,phase:'Mobilisation',cutoff:'12 Oct'};
+        this.setState(st2=>({projects:[np].concat(st2.projects), projectIdx:0, wizardOpen:false, wizardStep:0, screen:'overview'}));
+        this.say('P-2463 created — numbering rule, disciplines, roles, templates and Drive folders provisioned');
+      },
+
+      mobile:s.mobile, closeMobile:()=>this.setState({mobile:false}),
+      mobileQueue: mobileList.length, mobileEmpty: mobileList.length===0,
+      mobileCards: mobileList.map(d=>({...d,
+        stage: d.status==='Pending review'?'Review':'Approval',
+        stageColor: d.status==='Pending review'?'var(--accent-txt)':'var(--warn)',
+        approve:()=>{ this.patch(d.id,{status: d.status==='Pending review'?'Pending approval':'DC check'}); this.say(d.no+' approved — moved to '+(d.status==='Pending review'?'approval':'Document Control check')); },
+        reject:()=>{ this.patch(d.id,{status: d.status==='Pending review'?'Review rejected':'Approval rejected'}); this.say(d.no+' rejected and returned to '+d.owner); }}))
+    };
+  }
+
+  say(t){ clearTimeout(this._t); this.setState({toast:t}); this._t=setTimeout(()=>this.setState({toast:''}),2800); }
+  go(screen){ this.setState({screen, pickerOpen:false}); }
+  openDoc(id){ this.setState({screen:'doc', docId:id, pickerOpen:false, checks:[]}); }
+  patch(id, fields){ this.setState(s=>({docs:s.docs.map(d=>d.id===id?{...d,...fields}:d)})); }
+  count(fn){ return this.state.docs.filter(fn).length; }
+  nextRev(rev){ const n=parseInt(rev.slice(1),10)+1; return 'R'+String(n).padStart(2,'0'); }
+
+  curveSvg(){
+    const g=(y,c)=>React.createElement('line',{key:'g'+y,x1:0,y1:y,x2:720,y2:y,stroke:c,strokeWidth:1});
+    return React.createElement('svg',{viewBox:'0 0 720 150',preserveAspectRatio:'none',style:{width:'100%',height:'100%',display:'block'}},
+      g(10,'var(--line2)'),g(45,'var(--line2)'),g(80,'var(--line2)'),g(115,'var(--line2)'),g(146,'var(--edge)'),
+      React.createElement('polyline',{points:'0,146 60,140 120,128 180,112 240,92 300,74 360,58 420,44 480,32 540,24 600,17 660,12 720,10',fill:'none',stroke:'var(--edge)',strokeWidth:1.5,strokeDasharray:'4 4'}),
+      React.createElement('polyline',{points:'0,146 60,141 120,131 180,118 240,101 300,86 360,72 420,62',fill:'none',stroke:'var(--accent)',strokeWidth:2}),
+      React.createElement('circle',{cx:420,cy:62,r:3.5,fill:'var(--accent)'}),
+      React.createElement('line',{x1:420,y1:10,x2:420,y2:146,stroke:'var(--accent-line)',strokeWidth:1,strokeDasharray:'3 3'}));
+  }
+
+  mineDocs(){ return this.state.docs.filter(d=>['DC check','Awaiting signature','Rev required','New number'].indexOf(d.status)>-1); }
+
+  replyAction(d){
+    if(d.reply==='Code 2'){ return {label:'Create '+this.nextRev(d.rev), run:()=>{ this.patch(d.id,{rev:this.nextRev(d.rev),status:'Draft',reply:'',tr:''}); this.say(d.no+' — '+this.nextRev(d.rev)+' created, superseded revision kept in history'); }}; }
+    if(d.reply==='Code 3'){ return {label:'Replace document', run:()=>{ this.patch(d.id,{status:'Draft',rev:'R00',reply:'',tr:'',no:d.no.replace(/(\d{4})$/,m=>String(Number(m)+100).padStart(4,'0'))}); this.say('Replacement document created with a new number'); }}; }
+    return {label:'Close & file', run:()=>{ this.patch(d.id,{status:'Closed',reply:''}); this.say(d.no+' closed — no further submission required'); }};
+  }
+
+  applyAccent(){
+    const seed=this.props.accent||'#9184d9';
+    document.documentElement.style.setProperty('--accent-seed',seed);
+    const el=document.querySelector('[data-theme]');
+    if(el) el.style.setProperty('--accent-seed',seed);
+  }
+  componentDidMount(){ this.applyAccent(); }
+  componentDidUpdate(){ this.applyAccent(); }
+
+  enterCode(code){
+    const i=this.state.projects.findIndex(p=>p.code===code);
+    this.setState({projectIdx: i>-1?i:0, screen:'overview', docId:null, pickerOpen:false});
+  }
+
+  homeVals(){
+    const s=this.state, hd=s.homeTab==='desk';
+    const E=code=>()=>this.enterCode(code);
+    const dc=[
+      {proj:'P-2451',no:'2451-PIP-DWG-0148',title:'Gas Compression Piping GA — Unit 300',disc:'Piping',rev:'R02',age:'2 days in queue',late:true},
+      {proj:'P-2438',no:'2438-TNK-DWG-0421',title:'Tank T-104 shell plate layout',disc:'Mechanical',rev:'R01',age:'3 days in queue',late:true},
+      {proj:'P-2451',no:'2451-ELE-SLD-0032',title:'Single Line Diagram — MCC-04',disc:'Electrical',rev:'R01',age:'6 hours',late:false},
+      {proj:'P-2432',no:'2432-PRO-PID-0088',title:'P&ID — sulphur condenser area',disc:'Process',rev:'R04',age:'1 day',late:false},
+      {proj:'P-2427',no:'2427-CIV-DWG-0035',title:'Intake channel section — sheet 3',disc:'Civil',rev:'R00',age:'5 hours',late:false},
+      {proj:'P-2419',no:'2419-MEC-DTS-0012',title:'Flare tip datasheet — FL-101',disc:'Mechanical',rev:'R02',age:'4 hours',late:false}
+    ];
+    const rep=[
+      {proj:'P-2451',no:'2451-PRO-PFD-0004',title:'Process Flow Diagram — Train B',code:'Code 2',action:'Create R03'},
+      {proj:'P-2438',no:'2438-PIP-ISO-0733',title:'Isometric — Line 24-P-1102',code:'Code 2',action:'Create R02'},
+      {proj:'P-2432',no:'2432-INS-IDX-0002',title:'Instrument index — Unit 800',code:'Code 3',action:'Replace document'},
+      {proj:'P-2427',no:'2427-PRO-PFD-0001',title:'Process Flow Diagram — intake',code:'Code 1',action:'Close & file'}
+    ];
+    const codeLabel=c=>c==='Code 1'?'Code 1 · No further submission':(c==='Code 2'?'Code 2 · Revision required':'Code 3 · New number required');
+    const codeColor=c=>c==='Code 1'?'var(--ok)':(c==='Code 2'?'var(--warn)':'var(--bad)');
+    const mineMax=Math.max.apply(null,s.projects.map(p=>p.mine))||1;
+    return {
+      isHome: s.screen==='home', homeIsDesk: hd, homeIsOverview: !hd,
+      homeDesk:()=>this.setState({homeTab:'desk'}), homeOverview:()=>this.setState({homeTab:'overview'}),
+      tabDeskBg: hd?'var(--accent-bg)':'transparent', tabDeskColor: hd?'var(--accent-txt)':'var(--muted)', tabDeskWeight: hd?500:400,
+      tabOvBg: hd?'transparent':'var(--accent-bg)', tabOvColor: hd?'var(--muted)':'var(--accent-txt)', tabOvWeight: hd?400:500,
+      globalNav:[
+        {label:'My Desk',icon:'ph-fill ph-squares-four',count:31,countColor:'var(--accent-txt)',go:()=>this.setState({screen:'home',homeTab:'desk'}),
+         bg: s.screen==='home'&&hd?'var(--accent-bg)':'transparent', color: s.screen==='home'&&hd?'var(--text)':'var(--muted)',
+         iconColor: s.screen==='home'&&hd?'var(--accent)':'inherit', weight: s.screen==='home'&&hd?500:400, mark: s.screen==='home'&&hd?'inset 2px 0 0 var(--accent)':'none'},
+        {label:'Overview',icon:'ph ph-chart-donut',count:'',countColor:'var(--dim)',go:()=>this.setState({screen:'home',homeTab:'overview'}),
+         bg: s.screen==='home'&&!hd?'var(--accent-bg)':'transparent', color: s.screen==='home'&&!hd?'var(--text)':'var(--muted)',
+         iconColor: s.screen==='home'&&!hd?'var(--accent)':'inherit', weight: s.screen==='home'&&!hd?500:400, mark: s.screen==='home'&&!hd?'inset 2px 0 0 var(--accent)':'none'},
+        {label:'Projects',icon:'ph ph-folders',count:44,countColor:'var(--dim)',go:()=>this.go('portfolio'),
+         bg: s.screen==='portfolio'?'var(--accent-bg)':'transparent', color: s.screen==='portfolio'?'var(--text)':'var(--muted)',
+         iconColor: s.screen==='portfolio'?'var(--accent)':'inherit', weight: s.screen==='portfolio'?500:400, mark: s.screen==='portfolio'?'inset 2px 0 0 var(--accent)':'none'},
+        {label:'Client replies',icon:'ph ph-envelope-open',count:12,countColor:'var(--bad)',go:()=>this.setState({screen:'home',homeTab:'desk'}),
+         bg:'transparent',color:'var(--muted)',iconColor:'inherit',weight:400,mark:'none'}
+      ],
+      jumpProjects: s.projects.slice(0,5).map(pr=>({code:pr.code, short:pr.name.split(' — ')[0],
+        mineLabel: pr.mine||'—', mineColor: pr.mine?'var(--accent-txt)':'var(--dim)', enter:E(pr.code)})),
+      allDc: dc.map(d=>({...d, ageColor: d.late?'var(--bad)':'var(--soft)', enter:E(d.proj)})),
+      allReplies: rep.map(r=>({...r, codeLabel:codeLabel(r.code), color:codeColor(r.code), enter:E(r.proj)})),
+      allSign:[
+        {proj:'P-2451',title:'Cable schedule Rev 01 — 2451-ELE-LST-0003',enter:E('P-2451')},
+        {proj:'P-2451',title:'Material take-off — Area 30',enter:E('P-2451')},
+        {proj:'P-2438',title:'Tank foundation settlement calculation',enter:E('P-2438')}
+      ],
+      allTr:[
+        {no:'TR-2427-0018',to:'Marine Works Ltd.',age:'27 days',ageColor:'var(--bad)',enter:E('P-2427')},
+        {no:'TR-2438-0142',to:'Gulf Refining Co.',age:'19 days',ageColor:'var(--bad)',enter:E('P-2438')},
+        {no:'TR-2451-0061',to:'PetroLine Energy',age:'12 days',ageColor:'var(--warn)',enter:E('P-2451')}
+      ],
+      homeStats:[
+        {label:'Waiting on you',value:'31',color:'var(--accent-txt)'},
+        {label:'Overdue',value:'47',color:'var(--bad)'},
+        {label:'In client hands',value:'402',color:'var(--text)'},
+        {label:'Awaiting reply',value:'34',color:'var(--warn)'}
+      ],
+      byProject: s.projects.filter(pr=>pr.mine>0).map(pr=>({code:pr.code, mine:pr.mine, barW:Math.round(pr.mine/mineMax*100)+'%', enter:E(pr.code)})),
+      allActivity:[
+        {time:'09:41',proj:'P-2451',text:'Omar H. approved 2451-CIV-CAL-0021 R03'},
+        {time:'09:20',proj:'P-2438',text:'TR-2438-0146 emailed to Gulf Refining · 14 docs'},
+        {time:'08:58',proj:'P-2427',text:'Marine Works returned 6 documents · 2 Code 2'},
+        {time:'08:30',proj:'P-2432',text:'Layla S. rejected review on 2432-PRO-PID-0088'},
+        {time:'Yest.',proj:'P-2462',text:'Project setup reached step 3 of 6'}
+      ],
+      portfolioKpis:[
+        {label:'Waiting on me',value:'31',color:'var(--accent-txt)',note:'across 9 projects',go:()=>this.setState({homeTab:'desk'})},
+        {label:'Overdue',value:'47',color:'var(--bad)',note:'vs planned submission date',go:()=>this.go('portfolio')},
+        {label:'In workflow',value:'1 842',color:'var(--text)',note:'draft → ready to submit',go:()=>this.go('portfolio')},
+        {label:'With client',value:'402',color:'var(--text)',note:'avg reply 13.2 days',go:()=>this.go('portfolio')},
+        {label:'Transmittals',value:'318',color:'var(--text)',note:'34 awaiting reply',go:()=>this.go('portfolio')},
+        {label:'Approved first pass',value:'74%',color:'var(--ok)',note:'Code 1 on R00/R01',go:()=>this.go('portfolio')}
+      ],
+      portfolioFunnel:[
+        {label:'Draft / uploaded',count:'1 104',pct:'42%',color:'var(--edge)',text:'var(--muted)'},
+        {label:'Pending review',count:'508',pct:'24%',color:'#796cbf',text:'var(--muted)'},
+        {label:'Pending approval',count:'318',pct:'17%',color:'var(--accent)',text:'var(--muted)'},
+        {label:'DC check',count:'14',pct:'6%',color:'var(--accent-line)',text:'var(--accent-txt)'},
+        {label:'Ready to submit',count:'196',pct:'11%',color:'var(--ok)',text:'var(--muted)'},
+        {label:'Rejected / returned',count:'121',pct:'7%',color:'var(--bad)',text:'var(--muted)'}
+      ],
+      attentionRows: s.projects.slice(0,6).map(pr=>({...pr, mineLabel: pr.mine||'—',
+        mineColor: pr.mine?'var(--accent-txt)':'var(--dim)', mineBg: pr.mine?'var(--accent-bg)':'transparent',
+        overdueColor: pr.overdue>5?'var(--bad)':(pr.overdue>0?'var(--warn)':'var(--soft)'),
+        pctW: pr.pct+'%', pctColor: pr.pct<50?'var(--bad)':(pr.pct<80?'var(--accent)':'var(--ok)'),
+        enter:E(pr.code)}))
+    };
+  }
+
+  renderVals(){
+    const s=this.state, p=s.projects[s.projectIdx], docs=s.docs;
+    const mineList=this.mineDocs(), mine=mineList.length;
+    const dcQueue=docs.filter(d=>d.status==='DC check');
+    const signQueue=docs.filter(d=>d.status==='Awaiting signature');
+    const replyQueue=docs.filter(d=>d.reply && d.status!=='Closed' && d.status!=='Submitted' || (d.reply==='Code 1'&&d.status==='Submitted'));
+    const active=({doc:'mdr',portal:'pdi'})[s.screen]||s.screen;
+    const navItem=(id,label,icon,count,countColor)=>({id,label,icon,count,go:()=>this.go(id),
+      bg: active===id?'var(--accent-bg)':'transparent', color: active===id?'var(--text)':'var(--muted)',
+      iconColor: active===id?'var(--accent)':'inherit', weight: active===id?500:400,
+      mark: active===id?'inset 2px 0 0 var(--accent)':'none', countColor: countColor||'var(--dim)'});
+    return {
+      theme:s.theme, toast:s.toast, mine, project:{...p, pctW:p.pct+'%'},
+      ...this.homeVals(),
+      hdrMine: ['home','portfolio'].indexOf(s.screen)>-1?31:mine,
+      hdrCode: ['home','portfolio'].indexOf(s.screen)>-1?'ALL':p.code,
+      hdrName: ['home','portfolio'].indexOf(s.screen)>-1?'All projects · portfolio view':p.name,
+      hdrSub: ['home','portfolio'].indexOf(s.screen)>-1?'DC Admin · 9 projects':p.role+' · '+p.code,
+      themeIcon: s.theme==='dark'?'ph ph-sun':'ph ph-moon',
+      themeLabel: s.theme==='dark'?'Light':'Dark',
+      toggleTheme:()=>this.setState({theme:s.theme==='dark'?'light':'dark'}),
+      pickerOpen:s.pickerOpen, togglePicker:()=>this.setState({pickerOpen:!s.pickerOpen}),
+      openMobile:()=>this.setState({mobile:true}),
+      isDesk:s.screen==='desk', isOverview:s.screen==='overview',
+      goPortfolio:()=>this.go('portfolio'), goDesk:()=>this.go('desk'), goSettings:()=>this.go('settings'),
+      goPdi:()=>this.go('pdi'), goPortal:()=>this.go('portal'), goTransmittals:()=>this.go('transmittals'),
+      goReports:()=>this.go('reports'), goMdr:()=>this.go('mdr'),
+      projects: s.projects.map((pr,i)=>({...pr, mineLabel: pr.mine||'—', pick:()=>this.setState({projectIdx:i,pickerOpen:false,screen:'overview',docId:null})})),
+      nav:[
+        navItem('desk','My Desk','ph-fill ph-squares-four', mine, 'var(--accent-txt)'),
+        navItem('overview','Overview','ph ph-chart-donut',''),
+        navItem('pdi','PDI Register','ph ph-list-checks', s.pdi.length),
+        navItem('mdr','MDR Register','ph ph-table', docs.length),
+        navItem('transmittals','Transmittals','ph ph-paper-plane-tilt', s.transmittals.length),
+        navItem('replies','Client Replies','ph ph-envelope-open', replyQueue.length, 'var(--bad)'),
+        navItem('signatures','Signatures','ph ph-signature', signQueue.length, 'var(--accent-txt)'),
+        navItem('reports','Reports','ph ph-chart-line','')
+      ],
+      settingsNav:[
+        {label:'Users & permissions',icon:'ph ph-shield-check',go:()=>this.go('permissions'),bg: s.screen==='permissions'?'var(--accent-bg)':'transparent',color: s.screen==='permissions'?'var(--text)':'var(--muted)'},
+        {label:'Numbering rules',icon:'ph ph-hash',go:()=>this.setState({screen:'settings',settingsTab:'numbering'}),bg: s.screen==='settings'&&s.settingsTab==='numbering'?'var(--accent-bg)':'transparent',color: s.screen==='settings'&&s.settingsTab==='numbering'?'var(--text)':'var(--muted)'},
+        {label:'Members & roles',icon:'ph ph-users-three',go:()=>this.setState({screen:'settings',settingsTab:'members'}),bg: s.screen==='settings'&&s.settingsTab==='members'?'var(--accent-bg)':'transparent',color: s.screen==='settings'&&s.settingsTab==='members'?'var(--text)':'var(--muted)'},
+        {label:'All settings',icon:'ph ph-sliders-horizontal',go:()=>this.go('settings'),bg:'transparent',color:'var(--muted)'}
+      ],
+      dcCount:dcQueue.length, dcEmpty:dcQueue.length===0,
+      dcQueue:dcQueue.map(d=>({...d, ageColor: d.late?'var(--bad)':'var(--soft)', open:()=>this.openDoc(d.id)})),
+      signCount:signQueue.length,
+      signQueue:signQueue.map(d=>({...d, open:()=>this.openDoc(d.id),
+        sign:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.setState({signModal:true,signDocId:d.id,pinEntered:false,consent:false}); }})),
+      replyCount:replyQueue.length,
+      replyQueue:replyQueue.map(d=>{ const a=this.replyAction(d); return {...d,
+        codeLabel: d.reply==='Code 1'?'Code 1 · No further submission':(d.reply==='Code 2'?'Code 2 · Revision required':'Code 3 · New number required'),
+        color: d.reply==='Code 1'?'var(--ok)':(d.reply==='Code 2'?'var(--warn)':'var(--bad)'),
+        action:a.label, act:a.run, open:()=>this.openDoc(d.id)}; }),
+      pdiWaiting: s.pdi.filter(i=>i.status==='Awaiting client no.').length,
+      deskStats:[
+        {label:'Overdue',value:String(p.overdue),color:'var(--bad)'},
+        {label:'Due this week',value:'23',color:'var(--text)'},
+        {label:'In client hands',value:'118',color:'var(--text)'},
+        {label:'Awaiting reply',value:String(s.transmittals.filter(t=>t.status==='Awaiting reply').length),color:'var(--warn)'}
+      ],
+      kpis:[
+        {label:'Waiting on me',value:String(mine),color:'var(--accent-txt)',note:'DC checks, signatures, replies',go:()=>this.go('desk')},
+        {label:'Overdue',value:String(p.overdue),color:'var(--bad)',note:'vs planned submission date',go:()=>this.go('mdr')},
+        {label:'In workflow',value:'242',color:'var(--text)',note:'draft → ready to submit',go:()=>this.go('mdr')},
+        {label:'With client',value:'118',color:'var(--text)',note:'avg reply 11.4 days',go:()=>this.go('transmittals')},
+        {label:'Transmittals',value:String(s.transmittals.length),color:'var(--text)',note:s.transmittals.filter(t=>t.status==='Awaiting reply').length+' awaiting reply',go:()=>this.go('transmittals')},
+        {label:'Approved first pass',value:'78%',color:'var(--ok)',note:'Code 1 on R00/R01',go:()=>this.go('reports')}
+      ],
+      curve:this.curveSvg(),
+      ...this.screenVals(s,p,docs,replyQueue),
+      funnel:[
+        {label:'Draft / uploaded',count:96,pct:'40%',color:'var(--edge)',text:'var(--muted)',go:()=>this.go('mdr')},
+        {label:'Pending review',count:61,pct:'25%',color:'#796cbf',text:'var(--muted)',go:()=>this.go('mdr')},
+        {label:'Pending approval',count:38,pct:'16%',color:'var(--accent)',text:'var(--muted)',go:()=>this.go('mdr')},
+        {label:'DC check',count:dcQueue.length,pct:'7%',color:'var(--accent-line)',text:'var(--accent-txt)',go:()=>this.go('mdr')},
+        {label:'Ready to submit',count:this.count(d=>d.status==='Ready to submit'),pct:'13%',color:'var(--ok)',text:'var(--muted)',go:()=>this.go('mdr')},
+        {label:'Rejected / returned',count:14,pct:'6%',color:'var(--bad)',text:'var(--muted)',go:()=>this.go('mdr')}
+      ],
+      openTr: s.transmittals.filter(t=>t.status==='Awaiting reply').length,
+      openTransmittals: s.transmittals.filter(t=>t.status==='Awaiting reply').map(t=>({...t,
+        ageColor: t.age.indexOf('overdue')>-1?'var(--bad)':(parseInt(t.age)>10?'var(--warn)':'var(--ok)'),
+        open:()=>this.go('transmittals')})),
+      disciplines:[
+        {name:'Piping',pct:'58%',color:'var(--accent)'},{name:'Electrical',pct:'71%',color:'var(--accent)'},
+        {name:'Instrum.',pct:'64%',color:'var(--accent)'},{name:'Civil',pct:'49%',color:'var(--bad)'},
+        {name:'Mechanical',pct:'66%',color:'var(--accent)'},{name:'Process',pct:'80%',color:'var(--ok)'}
+      ],
+      activity:[
+        {time:'09:41',text:'Omar H. approved 2451-CIV-CAL-0021 R03'},
+        {time:'09:12',text:'TR-2451-0064 emailed to PetroLine · 12 docs'},
+        {time:'08:55',text:'Faisal K. entered client number PL-HGC-PIP-0148'},
+        {time:'08:30',text:'Layla S. rejected review on 2451-ELE-SLD-0031'},
+        {time:'Yest.',text:'18 PDI items imported from HGC_PDI_rev4.xlsx'}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

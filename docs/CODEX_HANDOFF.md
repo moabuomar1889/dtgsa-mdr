@@ -15,6 +15,12 @@ statement is unverified it says so explicitly.
 Read `AGENTS.md` first, then this file, then `docs/HANDOFF.md` for the material
 that predates this session.
 
+Before deleting or retiring the former Claude workspace, also read
+`docs/reports/CLAUDE_FINAL_EXPORT.md` and
+`docs/reports/CLAUDE_RETIREMENT_READINESS_REPORT.md`. They preserve the final
+evidence export, previously unrecorded implementation gaps, design alternatives,
+and the independent Codex verification performed after the export.
+
 ---
 
 ## 1. Repository state
@@ -306,6 +312,11 @@ From `DTGSA MDR - Prototype.dc.html` in the Claude Design project:
   reshapes routing for every page and is the largest remaining piece.
 - registers as CSS **grid** rather than `<table>`, per §4 of the design handoff;
 - the document-detail, transmittal, PDI, portal and settings screens.
+
+The original prototype, its handoff prompt, runtime support file, and the five
+main-page design directions are now preserved under `docs/reference/design/`.
+The eight Design-project PNG uploads remain a separate manual export item; see
+the reference README and retirement-readiness report.
 
 ### 7.5 Unverified boundaries
 
