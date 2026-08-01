@@ -13,5 +13,8 @@ export async function signOutAction() {
   const cookieStore = await cookies()
   cookieStore.delete(INTERNAL_SESSION_COOKIE)
   cookieStore.delete(INTERNAL_CSRF_COOKIE)
-  redirect("/sign-in")
+  // The internal session is only one half of production authentication.
+  // End the Cloudflare Access session too; otherwise /sign-in immediately
+  // receives the still-valid Access assertion and signs the user back in.
+  redirect("/cdn-cgi/access/logout")
 }

@@ -97,7 +97,33 @@ test("Cloudflare Access denial never renders or links to local acceptance", asyn
   assert.match(routeAdapter, /INTERNAL_SESSION_COOKIE/)
   assert.match(routeAdapter, /INTERNAL_CSRF_COOKIE/)
   assert.match(routeAdapter, /headers: \{ location: result\.redirectTo \}/)
-  assert.doesNotMatch(routeAdapter, /new URL\(result\.redirectTo, request\.url\)/)
+  assert.doesNotMatch(
+    routeAdapter,
+    /new URL\(result\.redirectTo, request\.url\)/
+  )
+})
+
+test("production sign-out terminates the Cloudflare Access session", async () => {
+  const signOutAction = await readFile(
+    "apps/mdr-web/src/server/actions/auth.ts",
+    "utf8"
+  )
+
+  assert.match(signOutAction, /signOutCurrentUser\(\)/)
+  assert.match(signOutAction, /cookieStore\.delete\(INTERNAL_SESSION_COOKIE\)/)
+  assert.match(signOutAction, /cookieStore\.delete\(INTERNAL_CSRF_COOKIE\)/)
+  assert.match(signOutAction, /redirect\("\/cdn-cgi\/access\/logout"\)/)
+  assert.doesNotMatch(signOutAction, /redirect\("\/sign-in"\)/)
+})
+
+test("production CSP permits only the configured Cloudflare analytics origin", async () => {
+  const nextConfig = await readFile("apps/mdr-web/next.config.ts", "utf8")
+
+  assert.match(
+    nextConfig,
+    /script-src 'self' 'unsafe-inline' https:\/\/static\.cloudflareinsights\.com/
+  )
+  assert.doesNotMatch(nextConfig, /script-src[^\n]*\shttps:\s/)
 })
 
 test("local acceptance is reachable only in an explicit non-production runtime", () => {
