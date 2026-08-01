@@ -18,6 +18,7 @@ import { generateDocumentNumber } from "@/server/services/numbering/document-num
 import { seedWorkflowStepsForRevision } from "@/server/services/workflow/workflow-service"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { assertUserHasAnyPermission } from "@/server/services/auth/permission-service"
+import { resolveAccessibleProjectIds } from "@/server/services/auth/access-scope"
 import type { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 
 type CurrentAppUser = Awaited<ReturnType<typeof requireCurrentAppUser>>
@@ -73,17 +74,19 @@ export const PDI_REGISTER_PERMISSIONS = [
   PERMISSIONS.pdiCollaborate,
 ]
 
-export const PDI_REGISTER_PAGE_SIZE = 50
+export const PDI_REGISTER_PAGE_SIZE = 20
 
 export async function getPdiOverview(user: CurrentAppUser, page = 1) {
   assertUserHasAnyPermission(user, PDI_REGISTER_PERMISSIONS)
 
   const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
+  const accessibleProjectIds = await resolveAccessibleProjectIds(user)
 
   const [projects, disciplines, documentTypes, releasePurposes, items] =
     await Promise.all([
       prisma.project.findMany({
         where: {
+          id: { in: accessibleProjectIds },
           deletedAt: null,
         },
         orderBy: [{ code: "asc" }],
@@ -139,6 +142,7 @@ export async function getPdiOverview(user: CurrentAppUser, page = 1) {
       }),
       prisma.pdiItem.findMany({
         where: {
+          projectId: { in: accessibleProjectIds },
           deletedAt: null,
         },
         orderBy: [{ createdAt: "desc" }],
@@ -147,6 +151,7 @@ export async function getPdiOverview(user: CurrentAppUser, page = 1) {
         include: {
           project: {
             select: {
+              id: true,
               code: true,
               name: true,
               client: {
@@ -178,6 +183,7 @@ export async function getPdiOverview(user: CurrentAppUser, page = 1) {
           mdrDocument: {
             select: {
               id: true,
+              currentRevisionId: true,
               currentWorkflowStatus: true,
               currentClientReplyState: true,
             },
@@ -189,7 +195,10 @@ export async function getPdiOverview(user: CurrentAppUser, page = 1) {
   // Counts describe the whole register, not the page in hand.
   const statusGroups = await prisma.pdiItem.groupBy({
     by: ["status"],
-    where: { deletedAt: null },
+    where: {
+      deletedAt: null,
+      projectId: { in: accessibleProjectIds },
+    },
     _count: { _all: true },
   })
   const byStatus = new Map(

@@ -1,49 +1,62 @@
-# Dashboard Command Workspace Design QA
+# PDI Register Simplification Design QA
 
 ## Evidence
 
-- Source visual truth: `C:\Users\moabu\.codex\generated_images\019d38df-0c32-7051-935e-c971b635b405\exec-2fbffb0c-e0d2-49d5-9fa5-3cb14ada2639.png`
-- Initial implementation: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\integrated-command-workspace-final.png`
-- Final implementation: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\integrated-command-workspace-revised.png`
-- Source pixels: 1487 x 1058.
-- Implementation pixels and CSS viewport: 1280 x 720 at device density 1.
-- State: authenticated Document Control administrator, `LOCAL-ALPHA` selected, one actionable preparation task selected, dark Nocturne theme.
-- Normalization: the available application browser viewport is shorter and narrower than the source board. Comparison therefore used responsive region proportions and the same selected-task state rather than claiming pixel-level equivalence.
+- Source screen: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-before-refactor.png`
+- Final register: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-after-refactor.png`
+- Final creation panel: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-create-panel-final.png`
+- Final transfer panel: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-transfer-panel.png`
+- Viewport and implementation pixels: 1280 x 720 at device density 1.
+- State: authenticated Document Control administrator, dark Nocturne theme, three real PDI lines.
+- Normalization: source and final register were captured from the same browser, route, viewport, data, theme, and identity.
 
 ## Full-View Comparison
 
-The final screen preserves the existing DTGSA shell while matching the selected visual hierarchy: project switcher, project workflow rail, urgency summary, next-best action, guided workflow, priority queue, and a persistent task-detail surface. Real database values replace the mock quantities and dates. Typography, restrained purple accent, semantic state colors, border treatment, and compact density remain consistent with the existing Nocturne tokens.
+The source placed the introduction, metrics, creation form, spreadsheet controls, and register into one competing layout. The register was below the fold and unavailable in the captured viewport. The final screen makes the operational register primary: all three documents, their stage, and one valid next action fit above the fold. Creation and spreadsheet exchange are available through two focused controls rather than persistent forms.
+
+## Fidelity Review
+
+- Typography: existing project heading, body, label, and monospace number styles are preserved with a clearer hierarchy and less long-form copy.
+- Spacing and layout: the final screen uses one compact header, one metric strip, and one register surface. Row rhythm is consistent and the main content has no horizontal overflow.
+- Colors and tokens: the implementation uses existing Nocturne panel, border, text, accent, and semantic badge tokens.
+- Assets: all visible icons come from the project's Lucide library. No placeholder or handcrafted image asset was introduced.
+- Copy and content: counts, projects, documents, client numbers, statuses, MDR links, and permissions come from current application data. Only stable workflow labels are presentation configuration.
 
 ## Focused Comparisons
 
-- Project context: project tabs, identity, stage counts, and module actions are aligned in one top region and remain horizontally usable at the tested width.
-- Action workspace: the next action keeps document identity, reason, readiness, effort, and a direct CTA together.
-- Task context: the right panel now begins beside the whole workspace, keeps workflow/readiness/history/context together, and leaves both primary actions visible at 720 px height.
-- Copy and content: app-specific values are loaded from project, revision, workflow, file, client-reply, PDI, and audit records. Only stable workflow labels and effort guidance are presentation configuration.
-- Assets: all visible controls use the project's Lucide icon library; no placeholder imagery, handcrafted SVG, or CSS-drawn substitute asset was introduced.
+- Register: six table columns and several simultaneous forms were replaced with a responsive three-zone row containing document context, project context, and one next action.
+- Creation: required fields remain immediately available; tags and remarks are collapsed under Optional details.
+- Import and export: four separate project export buttons were replaced by one project selector and one export action. Import remains a separate focused operation.
+- Permissions: project rows, totals, available projects, creation actions, collaboration actions, and MDR promotion actions are scoped to accessible projects and role capabilities.
 
 ## Comparison History
 
 ### Iteration 1
 
-- Finding: P2 - the detail panel began below the project header, reducing useful panel height and hiding its persistent actions at the tested viewport.
-- Fix: moved the project header and attention summary into the main grid track, anchored the detail panel beside the complete workspace, and constrained its viewport height.
-- Post-fix evidence: `integrated-command-workspace-revised.png` shows the panel starting at the project context and both task actions visible.
+- Finding: P1 - the operational register was hidden below a large introduction, creation form, and spreadsheet administration area.
+- Fix: promoted the register to the primary workspace and moved secondary workflows into side panels.
+- Post-fix evidence: `pdi-after-refactor.png` shows the complete register above the fold with one next action per row.
 
 ### Iteration 2
 
-- No actionable P0, P1, or P2 differences remain. Differences in counts, dates, roles, and project tabs are expected because the implementation uses current repository data rather than the source mock's sample content.
+- Finding: P2 - the initial creation drawer inherited the narrow default sheet width, compressing the project selector and creating horizontal overflow.
+- Fix: applied a dedicated 560 px desktop maximum width to the creation panel while retaining full-width mobile behavior.
+- Post-fix evidence: `pdi-create-panel-final.png` shows two aligned field columns, a collapsed optional section, and no horizontal overflow.
+
+### Iteration 3
+
+- No actionable P0, P1, or P2 differences remain.
 
 ## Interaction Evidence
 
-- Switching from `LOCAL-ALPHA` to `LOCAL-BETA` updated the project query and cockpit heading.
-- Expanding the Formal Approval workflow step updated `aria-expanded` to `true`.
-- Continue Prepare navigated to the exact revision query and anchor.
-- The MDR page displayed the focused-task state for that revision.
-- The browser render contained no visible runtime error or failed module state.
+- New PDI item opens the focused creation panel.
+- Optional details are collapsed by default and can be expanded.
+- Import / export opens a separate focused transfer panel.
+- Converted documents link to their exact MDR revision.
+- The browser render contains no visible runtime or module error.
 
 ## Follow-Up Polish
 
-- P3: a future larger-viewport capture could be used for a closer pixel-density comparison with the 1487 x 1058 source board.
+- P3: add server-side text and status filtering when real project registers consistently exceed one 20-line page.
 
 final result: passed

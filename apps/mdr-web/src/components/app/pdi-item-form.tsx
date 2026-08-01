@@ -61,7 +61,7 @@ export function PdiItemForm({
 
   return (
     <form action={action} className="grid gap-4">
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="pdi-project">Project</Label>
           <Select value={projectId} onValueChange={setProjectId}>
@@ -146,11 +146,15 @@ export function PdiItemForm({
               </SelectGroup>
             </SelectContent>
           </Select>
-          <input type="hidden" name="releasePurposeId" value={releasePurposeId} />
+          <input
+            type="hidden"
+            name="releasePurposeId"
+            value={releasePurposeId}
+          />
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_0.2fr]">
+      <div className="grid gap-4 sm:grid-cols-[1fr_84px]">
         <div className="grid gap-2">
           <Label htmlFor="pdi-title">Document title</Label>
           <Input
@@ -166,23 +170,30 @@ export function PdiItemForm({
         </div>
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="pdi-tags">Tags</Label>
-        <Input
-          id="pdi-tags"
-          name="tags"
-          placeholder="comma, separated, tags"
-        />
-      </div>
+      <details className="border-line bg-raise rounded-[9px] border">
+        <summary className="text-soft cursor-pointer px-3 py-2.5 text-[10.5px] font-medium">
+          Optional details
+        </summary>
+        <div className="border-line grid gap-4 border-t p-3">
+          <div className="grid gap-2">
+            <Label htmlFor="pdi-tags">Tags</Label>
+            <Input
+              id="pdi-tags"
+              name="tags"
+              placeholder="comma, separated, tags"
+            />
+          </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="pdi-remarks">Remarks</Label>
-        <Textarea
-          id="pdi-remarks"
-          name="remarks"
-          placeholder="Optional notes for client numbering or document-control handling."
-        />
-      </div>
+          <div className="grid gap-2">
+            <Label htmlFor="pdi-remarks">Remarks</Label>
+            <Textarea
+              id="pdi-remarks"
+              name="remarks"
+              placeholder="Optional notes for client numbering or document-control handling."
+            />
+          </div>
+        </div>
+      </details>
 
       <SubmitButton label="Create PDI item" pendingLabel="Creating PDI item" />
     </form>
