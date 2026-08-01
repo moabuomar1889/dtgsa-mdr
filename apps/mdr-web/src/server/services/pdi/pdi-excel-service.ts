@@ -8,10 +8,12 @@ import {
 } from "@/lib/permissions/rbac"
 import {
   normalizePdiImportRow,
+  normalizePdiTitleKey,
   readPdiWorkbookRows,
   writePdiWorkbook,
 } from "@/lib/pdi/excel"
 import { prisma } from "@/lib/prisma/client"
+import { createHash } from "node:crypto"
 import {
   createPdiItem,
   updatePdiClientDocumentNumber,
@@ -209,18 +211,153 @@ export async function importPdiWorkbook(
     }),
   ])
 
-  const rows = await readPdiWorkbookRows(await file.arrayBuffer())
+  const fileBytes = Buffer.from(await file.arrayBuffer())
+  const rows = await readPdiWorkbookRows(fileBytes)
 
-  let importedCount = 0
+  // The register is reconciled against the workbook. A row matches on the
+  // internal number AND the title, per the recorded owner decision. A row whose
+  // internal number already exists but whose title differs is never re-created,
+  // because that would mint a second internal number for the same document; it
+  // is reported as a conflict for a person to resolve.
+  const register = await prisma.pdiRegister.upsert({
+    where: { projectId: project.id },
+    create: { projectId: project.id },
+    update: {},
+    select: { id: true },
+  })
 
-  for (const row of rows) {
+  const existingItems = await prisma.pdiItem.findMany({
+    where: { projectId: project.id, deletedAt: null },
+    select: {
+      id: true,
+      dtgsaDocumentNumber: true,
+      clientDocumentNumber: true,
+      title: true,
+    },
+  })
+  const byNumber = new Map(
+    existingItems.map((item) => [item.dtgsaDocumentNumber, item])
+  )
+
+  type RowOutcome =
+    | "Added"
+    | "ClientNumberAssigned"
+    | "Unchanged"
+    | "Conflict"
+    | "Error"
+  type RowResult = {
+    rowNumber: number
+    outcome: RowOutcome
+    dtgsaDocumentNumber?: string | null
+    clientDocumentNumber?: string | null
+    title?: string | null
+    detail?: string | null
+    pdiItemId?: string | null
+  }
+  const results: RowResult[] = []
+
+  for (const [index, row] of rows.entries()) {
+    // Row 1 is the header in the exported workbook.
+    const rowNumber = index + 2
     const normalizedRow = normalizePdiImportRow(row)
     const title = normalizedRow.title
+    const internalNumber = normalizedRow.dtgsaDocumentNumber
+    const clientNumber = normalizedRow.clientDocumentNumber ?? null
 
     if (!title) {
       continue
     }
 
+    const existing = internalNumber ? byNumber.get(internalNumber) : undefined
+
+    if (internalNumber && !existing) {
+      results.push({
+        rowNumber,
+        outcome: "Conflict",
+        dtgsaDocumentNumber: internalNumber,
+        title,
+        detail:
+          "The internal number in this row does not exist in the register for this project.",
+      })
+      continue
+    }
+
+    if (existing) {
+      if (normalizePdiTitleKey(existing.title) !== normalizePdiTitleKey(title)) {
+        results.push({
+          rowNumber,
+          outcome: "Conflict",
+          dtgsaDocumentNumber: internalNumber,
+          clientDocumentNumber: clientNumber,
+          title,
+          pdiItemId: existing.id,
+          detail:
+            'The title does not match the register, which holds "' +
+            existing.title +
+            '". Change the title from the register if the client agreed to it.',
+        })
+        continue
+      }
+
+      if (!clientNumber) {
+        results.push({
+          rowNumber,
+          outcome: "Unchanged",
+          dtgsaDocumentNumber: internalNumber,
+          title,
+          pdiItemId: existing.id,
+          detail: "No client number supplied in this row.",
+        })
+        continue
+      }
+
+      if (existing.clientDocumentNumber) {
+        const same = existing.clientDocumentNumber === clientNumber
+        results.push({
+          rowNumber,
+          outcome: same ? "Unchanged" : "Conflict",
+          dtgsaDocumentNumber: internalNumber,
+          clientDocumentNumber: clientNumber,
+          title,
+          pdiItemId: existing.id,
+          detail: same
+            ? "Client number already recorded and identical."
+            : "A different client number is already recorded (" +
+              existing.clientDocumentNumber +
+              "). Client numbers are immutable once set.",
+        })
+        continue
+      }
+
+      try {
+        await updatePdiClientDocumentNumber({
+          pdiItemId: existing.id,
+          clientDocumentNumber: clientNumber,
+        })
+        results.push({
+          rowNumber,
+          outcome: "ClientNumberAssigned",
+          dtgsaDocumentNumber: internalNumber,
+          clientDocumentNumber: clientNumber,
+          title,
+          pdiItemId: existing.id,
+        })
+      } catch (error) {
+        results.push({
+          rowNumber,
+          outcome: "Error",
+          dtgsaDocumentNumber: internalNumber,
+          clientDocumentNumber: clientNumber,
+          title,
+          pdiItemId: existing.id,
+          detail:
+            error instanceof Error ? error.message : "Unknown import failure.",
+        })
+      }
+      continue
+    }
+
+    // No internal number in the row: a genuinely new line the client added.
     const discipline = disciplines.find(
       (item) => item.code === normalizedRow.disciplineCode
     )
@@ -232,37 +369,101 @@ export async function importPdiWorkbook(
     )
 
     if (!discipline || !documentType || !releasePurpose) {
-      throw new Error(
-        `Import failed for "${title}" because one or more coding-table values were not found.`
-      )
+      results.push({
+        rowNumber,
+        outcome: "Error",
+        title,
+        detail:
+          "One or more coding-table values in this row were not found for this project.",
+      })
+      continue
     }
 
-    const created = await createPdiItem({
-      projectId: project.id,
-      disciplineId: discipline.id,
-      documentTypeCategoryId: documentType.id,
-      releasePurposeId: releasePurpose.id,
-      title,
-      revision: normalizedRow.revision,
-      remarks: normalizedRow.remarks,
-      tags: normalizedRow.tags,
-      createdByUserId: user.id,
-    })
+    try {
+      const created = await createPdiItem({
+        projectId: project.id,
+        disciplineId: discipline.id,
+        documentTypeCategoryId: documentType.id,
+        releasePurposeId: releasePurpose.id,
+        title,
+        revision: normalizedRow.revision,
+        remarks: normalizedRow.remarks,
+        tags: normalizedRow.tags,
+        createdByUserId: user.id,
+      })
+      byNumber.set(created.dtgsaDocumentNumber, {
+        id: created.id,
+        dtgsaDocumentNumber: created.dtgsaDocumentNumber,
+        clientDocumentNumber: created.clientDocumentNumber,
+        title: created.title,
+      })
 
-    const clientDocumentNumber = normalizedRow.clientDocumentNumber
+      if (clientNumber) {
+        await updatePdiClientDocumentNumber({
+          pdiItemId: created.id,
+          clientDocumentNumber: clientNumber,
+        })
+      }
 
-    if (clientDocumentNumber) {
-      await updatePdiClientDocumentNumber({
+      results.push({
+        rowNumber,
+        outcome: "Added",
+        dtgsaDocumentNumber: created.dtgsaDocumentNumber,
+        clientDocumentNumber: clientNumber,
+        title,
         pdiItemId: created.id,
-        clientDocumentNumber,
+      })
+    } catch (error) {
+      results.push({
+        rowNumber,
+        outcome: "Error",
+        title,
+        detail:
+          error instanceof Error ? error.message : "Unknown import failure.",
       })
     }
-
-    importedCount += 1
   }
 
+  const tally = (outcome: RowOutcome) =>
+    results.filter((result) => result.outcome === outcome).length
+
+  const run = await prisma.pdiImportRun.create({
+    data: {
+      registerId: register.id,
+      projectId: project.id,
+      importedByUserId: user.id,
+      fileName: file.name || "pdi-import.xlsx",
+      fileSha256: createHash("sha256").update(fileBytes).digest("hex"),
+      rowCount: rows.length,
+      addedCount: tally("Added"),
+      numberedCount: tally("ClientNumberAssigned"),
+      unchangedCount: tally("Unchanged"),
+      conflictCount: tally("Conflict"),
+      errorCount: tally("Error"),
+      results: {
+        create: results.map((result) => ({
+          rowNumber: result.rowNumber,
+          outcome: result.outcome,
+          dtgsaDocumentNumber: result.dtgsaDocumentNumber ?? null,
+          clientDocumentNumber: result.clientDocumentNumber ?? null,
+          title: result.title ?? null,
+          detail: result.detail ?? null,
+          pdiItemId: result.pdiItemId ?? null,
+        })),
+      },
+    },
+    select: { id: true },
+  })
+
   return {
-    importedCount,
+    runId: run.id,
+    rowCount: rows.length,
+    addedCount: tally("Added"),
+    numberedCount: tally("ClientNumberAssigned"),
+    unchangedCount: tally("Unchanged"),
+    conflictCount: tally("Conflict"),
+    errorCount: tally("Error"),
+    results,
   }
 }
 

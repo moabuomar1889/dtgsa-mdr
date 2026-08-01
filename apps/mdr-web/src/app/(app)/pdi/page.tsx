@@ -9,6 +9,8 @@ import {
 import { importPdiWorkbookAction } from "@/server/actions/pdi-import"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { RegisterPagination } from "@/components/app/register-pagination"
+import { PdiImportReport } from "@/components/app/pdi-import-report"
+import { getPdiImportReport } from "@/server/services/pdi/pdi-import-report"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import {
   getPdiOverview,
@@ -50,16 +52,23 @@ function pdiStatusVariant(status: PdiStatus) {
 export default async function PdiPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{ page?: string; import?: string }>
 }) {
   const user = await requireCurrentAppUser()
   requireUserHasAnyPermission(user, PDI_REGISTER_PERMISSIONS)
 
-  const page = Number((await searchParams)?.page ?? "1")
-  const overview = await getPdiOverview(user, page)
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const page = Number(resolvedSearchParams.page ?? "1")
+  const [overview, importReport] = await Promise.all([
+    getPdiOverview(user, page),
+    resolvedSearchParams.import
+      ? getPdiImportReport(user, resolvedSearchParams.import)
+      : Promise.resolve(null),
+  ])
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
+      {importReport ? <PdiImportReport report={importReport} /> : null}
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="border-line bg-panel">
           <CardHeader className="border-line bg-head gap-2 border-b">

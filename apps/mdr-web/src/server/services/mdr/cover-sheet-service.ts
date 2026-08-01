@@ -139,6 +139,9 @@ function buildCoverTemplateData(input: {
     project_code: revision.document.project.code,
     client_name: revision.document.project.client.name,
     client_code: revision.document.project.client.code,
+    client_logo: revision.document.project.client.logoBase64
+      ? `data:${revision.document.project.client.logoMimeType ?? "image/png"};base64,${revision.document.project.client.logoBase64}`
+      : "",
     contract_number: revision.document.project.contractNumber ?? "",
     dtgsa_document_number: revision.document.dtgsaDocumentNumber,
     client_document_number: revision.document.clientDocumentNumber ?? "",
@@ -301,12 +304,26 @@ async function renderCoverFromTemplate(input: {
   }
 }
 
+// The PO / contract number is printed on every cover sheet, so a project
+// without one cannot issue covers. Project creation deliberately stays possible
+// without it; only issuance is gated.
+function assertCoverIssuanceAllowed(revision: {
+  document: { project: { code: string; contractNumber: string | null } }
+}) {
+  if (!revision.document.project.contractNumber?.trim()) {
+    throw new Error(
+      `Project ${revision.document.project.code} has no PO or contract number. Add it to the project before issuing cover sheets, because it is printed on every cover.`
+    )
+  }
+}
+
 export async function generateRevisionCoverSheets(
   actor: CurrentAppUser,
   revisionId: string
 ) {
   const revision = await getRevisionPackageContext(revisionId)
   assertMdrPermission(actor, revision.document.projectId)
+  assertCoverIssuanceAllowed(revision)
 
   const prepared = revision.workflowSteps.find(
     (step) => step.stepType === WorkflowStepType.Prepared

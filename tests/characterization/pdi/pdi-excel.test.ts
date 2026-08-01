@@ -22,6 +22,9 @@ test("PDI import normalization trims text, uppercases codes, and defaults revisi
   const [row] = await readPdiWorkbookRows(await createSamplePdiWorkbook())
 
   assert.deepEqual(normalizePdiImportRow(row), {
+    // The internal number is read back so the import reconciles against the
+    // register instead of minting a duplicate line for every row.
+    dtgsaDocumentNumber: "DTG-PRJ-ARC-0001",
     title: "General Arrangement",
     disciplineCode: "ARC",
     documentTypeCode: "DWG",
@@ -46,6 +49,7 @@ test("PDI import normalization preserves explicit revisions and omits blank opti
       ClientDocumentNumber: null,
     }),
     {
+      dtgsaDocumentNumber: "",
       title: "Drawing",
       disciplineCode: "MEC",
       documentTypeCode: "DWG",

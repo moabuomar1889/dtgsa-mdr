@@ -23,8 +23,17 @@ export function normalizePdiCell(value: unknown) {
   return typeof value === "string" ? value.trim() : String(value ?? "").trim()
 }
 
+// Titles are compared after collapsing whitespace and case so that a client
+// re-typing "  Single-Line  Diagram " still matches the row we issued.
+export function normalizePdiTitleKey(value: string) {
+  return value.replace(/\s+/g, " ").trim().toLowerCase()
+}
+
 export function normalizePdiImportRow(row: PdiWorkbookRow) {
   return {
+    // The internal number is the anchor of the whole reconciliation; without
+    // reading it back an import can only ever create duplicates.
+    dtgsaDocumentNumber: normalizePdiCell(row.DtgsaDocumentNumber),
     title: normalizePdiCell(row.Title),
     disciplineCode: normalizePdiCell(row.DisciplineCode).toUpperCase(),
     documentTypeCode: normalizePdiCell(row.DocumentTypeCode).toUpperCase(),

@@ -418,6 +418,13 @@ model Client {
   name                 String
   description          String?
   defaultTimezone      String?
+  // Cover-page logo. Held inline by owner decision; `AGENTS.md` otherwise keeps
+  // file bytes out of PostgreSQL, so the service enforces a hard size cap and a
+  // mime allowlist to keep this to a small brand asset rather than a document.
+  logoBase64           String?
+  logoMimeType         String?
+  logoFileName         String?
+  logoByteSize         Int?
   isActive             Boolean                @default(true)
   createdByUserId      String?
   createdAt            DateTime               @default(now())
@@ -757,6 +764,7 @@ model PdiRegister {
   updatedAt   DateTime  @updatedAt
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   items       PdiItem[]
+  importRuns  PdiImportRun[]
 }
 
 model PdiItem {
@@ -788,6 +796,53 @@ model PdiItem {
 
   @@unique([projectId, dtgsaDocumentNumber])
   @@index([projectId, status])
+}
+
+/// One upload of a client-returned PDI workbook. The register is reconciled
+/// dozens of times over a project, so every round keeps its own evidence.
+model PdiImportRun {
+  id             String              @id @default(cuid())
+  registerId     String
+  projectId      String
+  importedByUserId String?
+  fileName       String
+  fileSha256     String
+  rowCount       Int                 @default(0)
+  addedCount     Int                 @default(0)
+  numberedCount  Int                 @default(0)
+  unchangedCount Int                 @default(0)
+  conflictCount  Int                 @default(0)
+  errorCount     Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  register       PdiRegister         @relation(fields: [registerId], references: [id], onDelete: Cascade)
+  results        PdiImportRunResult[]
+
+  @@index([registerId, createdAt])
+}
+
+enum PdiImportOutcome {
+  Added
+  ClientNumberAssigned
+  Unchanged
+  Conflict
+  Error
+}
+
+/// Per-row outcome for one import run. This is what the reconciliation report
+/// is rendered from, so it is retained rather than recomputed.
+model PdiImportRunResult {
+  id                  String           @id @default(cuid())
+  runId               String
+  rowNumber           Int
+  outcome             PdiImportOutcome
+  dtgsaDocumentNumber String?
+  clientDocumentNumber String?
+  title               String?
+  detail              String?
+  pdiItemId           String?
+  run                 PdiImportRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId, outcome])
 }
 
 model MdrDocument {

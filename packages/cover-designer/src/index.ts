@@ -26,6 +26,7 @@ export type CoverElementType = (typeof COVER_ELEMENT_TYPES)[number]
 
 export const COVER_BINDINGS = [
   "client.name",
+  "client.logo",
   "project.name",
   "project.code",
   "document.number",

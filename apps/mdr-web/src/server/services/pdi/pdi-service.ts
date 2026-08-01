@@ -45,6 +45,12 @@ const updateClientNumberSchema = z.object({
   clientDocumentNumber: z.string().trim().min(1).max(120),
 })
 
+const updateTitleSchema = z.object({
+  pdiItemId: z.string().trim().min(1),
+  title: z.string().trim().min(2).max(200),
+  reason: z.string().trim().min(3).max(500),
+})
+
 function normalizeTags(value?: string) {
   if (!value) {
     return []
@@ -421,11 +427,20 @@ export async function updatePdiClientDocumentNumber(input: unknown) {
       throw new Error("The selected PDI item could not be found.")
     }
 
-    if (
-      item.status === PdiStatus.ClientNumberReceived &&
-      item.clientDocumentNumber === parsed.clientDocumentNumber.trim()
-    ) {
+    const nextClientNumber = parsed.clientDocumentNumber.trim()
+
+    // Re-applying the identical number is idempotent, which the workbook
+    // reconciliation relies on when the same file is uploaded twice.
+    if (item.clientDocumentNumber === nextClientNumber) {
       return item
+    }
+
+    // The client document number is permanent evidence of what the client
+    // issued. Once recorded it can never be replaced, only read.
+    if (item.clientDocumentNumber) {
+      throw new Error(
+        `This PDI item already carries client number ${item.clientDocumentNumber}. Client numbers cannot be changed once recorded.`
+      )
     }
 
     assertPdiTransition(item.status, PdiStatus.ClientNumberReceived)
@@ -569,5 +584,61 @@ export async function promotePdiItemToMdr(input: unknown) {
     })
 
     return updatedDocument
+  })
+}
+
+/// The title is the only field on a numbered PDI line that may change, and only
+/// when the client has agreed to it. Both document numbers stay immutable, so
+/// the change is recorded with a reason and the previous title for audit.
+export async function updatePdiItemTitle(input: unknown, actorUserId?: string) {
+  const parsed = updateTitleSchema.parse(input)
+
+  return prisma.$transaction(async (tx) => {
+    const item = await tx.pdiItem.findUnique({
+      where: { id: parsed.pdiItemId },
+      include: { project: { select: { clientId: true } } },
+    })
+
+    if (!item || item.deletedAt) {
+      throw new Error("The selected PDI item could not be found.")
+    }
+
+    if (item.status === PdiStatus.ConvertedToMdr) {
+      throw new Error(
+        "This PDI item has been promoted to the MDR. Change the document title from the MDR record instead."
+      )
+    }
+
+    const previousTitle = item.title
+
+    if (previousTitle === parsed.title) {
+      return item
+    }
+
+    const updated = await tx.pdiItem.update({
+      where: { id: item.id },
+      data: { title: parsed.title },
+    })
+
+    await tx.auditLog.create({
+      data: {
+        actorUserId: actorUserId ?? null,
+        action: "pdi.item.title.update",
+        entityType: "PdiItem",
+        entityId: item.id,
+        projectId: item.projectId,
+        clientId: item.project.clientId,
+        severity: AuditSeverity.Info,
+        beforeSnapshot: { title: previousTitle },
+        afterSnapshot: {
+          title: updated.title,
+          reason: parsed.reason,
+          dtgsaDocumentNumber: updated.dtgsaDocumentNumber,
+          clientDocumentNumber: updated.clientDocumentNumber,
+        },
+      },
+    })
+
+    return updated
   })
 }
