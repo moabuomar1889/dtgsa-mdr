@@ -35,10 +35,12 @@ export async function GET(request: NextRequest) {
     },
     dependencies
   )
-  const response = NextResponse.redirect(
-    new URL(result.redirectTo, request.url),
-    303
-  )
+  // Keep the redirect relative so reverse proxies cannot leak their internal
+  // origin (for example localhost:3000) into the user's browser.
+  const response = new NextResponse(null, {
+    status: 303,
+    headers: { location: result.redirectTo },
+  })
 
   if (result.completed) {
     response.cookies.set(

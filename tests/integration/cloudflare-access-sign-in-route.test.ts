@@ -96,6 +96,8 @@ test("Cloudflare Access denial never renders or links to local acceptance", asyn
   assert.match(routeAdapter, /response\.cookies\.set/)
   assert.match(routeAdapter, /INTERNAL_SESSION_COOKIE/)
   assert.match(routeAdapter, /INTERNAL_CSRF_COOKIE/)
+  assert.match(routeAdapter, /headers: \{ location: result\.redirectTo \}/)
+  assert.doesNotMatch(routeAdapter, /new URL\(result\.redirectTo, request\.url\)/)
 })
 
 test("local acceptance is reachable only in an explicit non-production runtime", () => {

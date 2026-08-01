@@ -50,6 +50,18 @@ test("local guard rejects external destinations and production-like databases", 
       EMAIL_PROVIDER: "smtp",
     })
   )
+  assert.throws(() =>
+    assertLocalProviderConfiguration({
+      ...localEnv,
+      NEXT_PUBLIC_APP_URL: "https://production.example.com",
+    })
+  )
+  assert.doesNotThrow(() =>
+    assertLocalProviderConfiguration({
+      ...localEnv,
+      GITHUB_GRAPHQL_URL: "https://api.github.com/graphql",
+    })
+  )
 })
 
 test("local providers are impossible to initialise outside explicit local mode", () => {

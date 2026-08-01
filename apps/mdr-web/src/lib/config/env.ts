@@ -106,7 +106,24 @@ const serverEnvSchema = z.object({
   LIBREOFFICE_PATH: optionalString,
 })
 
-const parsedServerEnv = serverEnvSchema.parse(process.env)
+const buildPhaseEnv =
+  process.env.NEXT_PHASE === "phase-production-build"
+    ? {
+        ...process.env,
+        NEXT_PUBLIC_APP_URL:
+          process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000",
+        DATABASE_URL:
+          process.env.DATABASE_URL ??
+          "postgresql://build:build@127.0.0.1:5432/dtgsa_build",
+        APP_ENCRYPTION_KEY:
+          process.env.APP_ENCRYPTION_KEY ??
+          "build-phase-placeholder-not-used-at-runtime",
+        CRON_SECRET:
+          process.env.CRON_SECRET ?? "build-phase-placeholder",
+      }
+    : process.env
+
+const parsedServerEnv = serverEnvSchema.parse(buildPhaseEnv)
 
 if (process.env.LOCAL_ACCEPTANCE_MODE === "true") {
   const localProviderEnv = Object.fromEntries(

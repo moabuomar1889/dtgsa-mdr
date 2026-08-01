@@ -130,12 +130,16 @@ export function assertLocalProviderConfiguration(
 ) {
   assertLocalAcceptanceMode(env)
   if (env.DATABASE_URL) assertLocalDatabaseUrl(env.DATABASE_URL)
-  for (const [name, value] of Object.entries(env)) {
+  const applicationEndpointNames = [
+    "APP_URL",
+    "CF_ACCESS_TEAM_DOMAIN",
+    "DIRECT_DATABASE_URL",
+    "NEXT_PUBLIC_APP_URL",
+  ] as const
+  for (const name of applicationEndpointNames) {
+    const value = env[name]
     if (!value) continue
-    if (
-      /(_URL|_ENDPOINT|SMTP_HOST)$/i.test(name) &&
-      /^(https?|postgres(?:ql)?):\/\//i.test(value)
-    ) {
+    if (/^(https?|postgres(?:ql)?):\/\//i.test(value)) {
       assertLoopbackUrl(value, name)
     }
   }
