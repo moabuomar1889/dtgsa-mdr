@@ -215,6 +215,7 @@ async function runWithDatabase(mode) {
         ? [
             "tests/integration/database-backed-characterization.test.ts",
             "tests/integration/phase-13-integrations.test.ts",
+            "tests/integration/cloudflare-access-sign-in-route.test.ts",
           ]
         : [
             "tests/unit/database-safety.test.ts",
@@ -236,6 +237,7 @@ async function runWithDatabase(mode) {
             "tests/characterization/index.test.ts",
             "tests/integration/database-backed-characterization.test.ts",
             "tests/integration/phase-13-integrations.test.ts",
+            "tests/integration/cloudflare-access-sign-in-route.test.ts",
           ]
 
     await run(

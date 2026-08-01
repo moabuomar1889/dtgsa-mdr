@@ -1,5 +1,6 @@
 [
   "/",
+  "/access-denied",
   "/admin/users",
   "/admin/identity",
   "/api/auth/google/callback",

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { hashOpaqueToken } from "@dtg/identity-domain"
 import { assertLoopbackUrl } from "@dtg/local-acceptance"
 import { prisma } from "@/lib/prisma/client"
+import { isLocalAcceptanceEnabled } from "@/server/services/local/local-acceptance-access"
 import {
   createInternalSession,
   INTERNAL_CSRF_COOKIE,
@@ -13,10 +14,7 @@ import {
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
-  if (
-    process.env.LOCAL_ACCEPTANCE_MODE !== "true" ||
-    process.env.NODE_ENV === "production"
-  ) {
+  if (!isLocalAcceptanceEnabled(process.env)) {
     return new NextResponse("Not found", { status: 404 })
   }
   const form = await request.formData()

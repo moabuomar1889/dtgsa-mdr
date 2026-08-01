@@ -41,10 +41,10 @@ let jwksTeamDomain: string | null = null
 
 function getJwks(teamDomain: string) {
   if (!jwks || jwksTeamDomain !== teamDomain) {
-    jwks = createRemoteJWKSet(
-      new URL(`${teamDomain}/cdn-cgi/access/certs`),
-      { cacheMaxAge: 10 * 60 * 1000, cooldownDuration: 30 * 1000 }
-    )
+    jwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`), {
+      cacheMaxAge: 10 * 60 * 1000,
+      cooldownDuration: 30 * 1000,
+    })
     jwksTeamDomain = teamDomain
   }
   return jwks
@@ -106,10 +106,23 @@ export async function readCloudflareAccessIdentity(
   headers: Headers
 ): Promise<CloudflareAccessIdentity | null> {
   try {
-    return await verifyCloudflareAccessAssertion(
-      headers.get(CF_ACCESS_JWT_HEADER)
-    )
+    return await verifyCloudflareAccessRequest(headers)
   } catch {
     return null
   }
+}
+
+export async function verifyCloudflareAccessRequest(headers: Headers) {
+  const identity = await verifyCloudflareAccessAssertion(
+    headers.get(CF_ACCESS_JWT_HEADER)
+  )
+  const assertedEmail = normalizeWorkforceEmail(
+    headers.get(CF_ACCESS_EMAIL_HEADER)
+  )
+
+  if (assertedEmail && assertedEmail !== identity.email) {
+    throw new Error("Cloudflare Access identity headers do not match.")
+  }
+
+  return identity
 }

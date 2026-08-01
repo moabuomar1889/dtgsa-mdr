@@ -26,7 +26,7 @@ test("local dashboard, service surfaces, CSP, and identity switching", async ({
   const response = await page.goto("/local-acceptance")
   expect(response?.status()).toBe(200)
   await expect(
-    page.getByRole("heading", { name: "Local acceptance control room" })
+    page.getByRole("heading", { name: "Choose a test role" })
   ).toBeVisible()
   await expect(
     page.getByText("LOCAL DEVELOPMENT APPLICATION SEAL")
@@ -44,11 +44,9 @@ test("local dashboard, service surfaces, CSP, and identity switching", async ({
   const adminForm = page.locator("form", {
     has: page.getByText("dc.admin@local.test"),
   })
-  await adminForm.getByRole("button", { name: "Select identity" }).click()
+  await adminForm.getByRole("button").click()
   await expect(page).toHaveURL(/\/dashboard$/)
-  await expect(
-    page.getByRole("button", { name: /Amina Rahman/ })
-  ).toBeVisible()
+  await expect(page.getByRole("button", { name: /Amina Rahman/ })).toBeVisible()
 
   const services = [
     "http://127.0.0.1:3101/api/ready",
@@ -92,7 +90,7 @@ test("sidebar navigation preserves the application shell", async ({ page }) => {
   const adminForm = page.locator("form", {
     has: page.getByText("dc.admin@local.test"),
   })
-  await adminForm.getByRole("button", { name: "Select identity" }).click()
+  await adminForm.getByRole("button").click()
 
   await page.evaluate(() => {
     const markedWindow = window as typeof window & {
@@ -126,7 +124,7 @@ test("protected modules are permission aware", async ({ page }) => {
   const adminForm = page.locator("form", {
     has: page.getByText("dc.admin@local.test"),
   })
-  await adminForm.getByRole("button", { name: "Select identity" }).click()
+  await adminForm.getByRole("button").click()
 
   const protectedLinks = [
     "Transmittals",
@@ -153,12 +151,11 @@ test("protected modules are permission aware", async ({ page }) => {
   ).toBeVisible()
 
   await page.goto("/local-acceptance")
+  await page.getByText("Choose another role (9)", { exact: true }).click()
   const projectViewerForm = page.locator("form", {
     has: page.getByText("project.viewer@local.test"),
   })
-  await projectViewerForm
-    .getByRole("button", { name: "Select identity" })
-    .click()
+  await projectViewerForm.getByRole("button").click()
 
   for (const linkName of protectedLinks) {
     await expect(
@@ -212,7 +209,7 @@ test("application shell matches the Nocturne design geometry", async ({
   const adminForm = page.locator("form", {
     has: page.getByText("dc.admin@local.test"),
   })
-  await adminForm.getByRole("button", { name: "Select identity" }).click()
+  await adminForm.getByRole("button").click()
   await expect(page).toHaveURL(/\/dashboard$/)
   await page.waitForLoadState("networkidle")
 
@@ -236,7 +233,5 @@ test("application shell matches the Nocturne design geometry", async ({
 
   // The switcher replaced the static portfolio link.
   await page.getByRole("button", { name: "Switch project" }).click()
-  await expect(
-    page.getByPlaceholder(/^Search \d+ projects/)
-  ).toBeVisible()
+  await expect(page.getByPlaceholder(/^Search \d+ projects/)).toBeVisible()
 })

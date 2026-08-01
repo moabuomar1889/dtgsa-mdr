@@ -21,9 +21,11 @@ export async function getCurrentAuthUser() {
       timezone: session.user.timezone,
     },
     provider:
-      session.authMode === "GOOGLE_WORKSPACE"
-        ? "google_workspace"
-        : "local_acceptance",
+      session.authMode === "CLOUDFLARE_ACCESS"
+        ? "cloudflare_access"
+        : session.authMode === "GOOGLE_WORKSPACE"
+          ? "google_workspace"
+          : "local_acceptance",
   }
 }
 

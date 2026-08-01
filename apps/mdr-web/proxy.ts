@@ -1,32 +1,9 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { routeAudience } from "@/lib/routing/route-audience"
 
 const INTERNAL_SESSION_COOKIE = "dtg_internal_session"
 const EXTERNAL_SESSION_COOKIE = "dtg_external_session"
-
-function routeAudience(pathname: string) {
-  if (
-    process.env.LOCAL_ACCEPTANCE_MODE === "true" &&
-    pathname.startsWith("/local-acceptance")
-  ) {
-    return "auth"
-  }
-  if (
-    pathname === "/sign-in" ||
-    pathname === "/portal/access" ||
-    pathname.startsWith("/api/auth/") ||
-    pathname === "/api/portal/magic-link"
-  ) {
-    return "auth"
-  }
-  if (pathname.startsWith("/portal") || pathname.startsWith("/api/portal/")) {
-    return "external"
-  }
-  if (pathname.startsWith("/verify") || pathname.startsWith("/api/verify/")) {
-    return "public"
-  }
-  return "internal"
-}
 
 export async function proxy(request: NextRequest) {
   const audience = routeAudience(request.nextUrl.pathname)

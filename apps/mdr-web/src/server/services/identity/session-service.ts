@@ -113,13 +113,17 @@ export async function createInternalSession(input: {
         userId: input.userId,
         internalSessionId: created.id,
         provider:
-          input.authMode === "GOOGLE_WORKSPACE"
-            ? "google_workspace"
-            : "local_acceptance",
+          input.authMode === "CLOUDFLARE_ACCESS"
+            ? "cloudflare_access"
+            : input.authMode === "GOOGLE_WORKSPACE"
+              ? "google_workspace"
+              : "local_acceptance",
         method:
-          input.authMode === "GOOGLE_WORKSPACE"
-            ? "oidc_authorization_code"
-            : "synthetic_identity_selector",
+          input.authMode === "CLOUDFLARE_ACCESS"
+            ? "edge_jwt_assertion"
+            : input.authMode === "GOOGLE_WORKSPACE"
+              ? "oidc_authorization_code"
+              : "synthetic_identity_selector",
         authenticatedAt,
         expiresAt: new Date(
           authenticatedAt.getTime() + config.recentAuthWindowMinutes * 60_000
