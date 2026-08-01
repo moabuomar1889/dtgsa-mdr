@@ -6,6 +6,12 @@ Project: DTG Signature Platform / DTGSA MDR
 
 Repository: `moabuomar1889/dtgsa-mdr`
 
+> **Superseded for current state.** Read `docs/CODEX_HANDOFF.md` first. It
+> carries the authoritative branch, commit, gate results, and the decisions
+> recorded on 2026-08-01. Sections below that name
+> `codex/dtg-signature-platform-merge` or commit `9e95cf7` describe an earlier
+> state; that branch no longer exists and `main` is now the deployment branch.
+
 ## 1. Purpose of This Handoff
 
 This document is the entry brief for a new Claude Code session. It describes
