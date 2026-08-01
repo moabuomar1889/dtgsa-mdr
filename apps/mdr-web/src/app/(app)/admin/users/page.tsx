@@ -1,5 +1,6 @@
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { getUserAdminOverview } from "@/server/services/admin/user-admin-service"
+import { RegisterWorkspace } from "@/components/app/register-workspace"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { Badge } from "@/components/dtg/badge"
@@ -37,131 +38,104 @@ export default async function AdminUsersPage() {
   ).length
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-line bg-panel">
-          <CardHeader className="border-line bg-head gap-2 border-b">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
-                Users & Roles
-              </Badge>
-              <Badge variant="outline">RBAC foundation</Badge>
-            </div>
-            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
-              Seeded RBAC is now visible with system-role and project-role
-              coverage.
-            </CardTitle>
-            <CardDescription className="max-w-3xl leading-6">
-              The role and permission matrix is loaded from the real database.
-              User creation flows and signature management will be added next,
-              but the access model, permission catalog, and project-scoped role
-              structure are already in place.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Users</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {overview.users.length}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Roles</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {overview.roles.length}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Project assignments</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {projectAssignments}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Signature profiles</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {signatureProfiles}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-line bg-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Permission catalog</CardTitle>
-            <CardDescription>
-              Permissions are grouped and then mapped into roles and project
-              assignments.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {overview.permissions.map((permission) => (
-              <div
-                key={permission.id}
-                className="border-line bg-raise rounded-[9px] border p-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">{permission.name}</p>
-                  <Badge variant="outline">{permission.group}</Badge>
+    <RegisterWorkspace
+      eyebrow="Access control"
+      title="Users & roles"
+      description="Review users first, then consult the role and permission model only when access needs investigation."
+      metrics={[
+        { label: "Users", value: overview.users.length },
+        { label: "Roles", value: overview.roles.length },
+        { label: "Assignments", value: projectAssignments },
+        { label: "Signatures", value: signatureProfiles },
+      ]}
+    >
+      <details className="order-3">
+        <summary className="border-line bg-panel hover:bg-raise cursor-pointer rounded-[10px] border px-4 py-3 text-sm font-semibold">
+          Permission catalog
+        </summary>
+        <section className="mt-3 grid gap-4">
+          <Card className="border-line bg-panel">
+            <CardHeader>
+              <CardTitle className="text-lg">Permission catalog</CardTitle>
+              <CardDescription>
+                Permissions are grouped and then mapped into roles and project
+                assignments.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {overview.permissions.map((permission) => (
+                <div
+                  key={permission.id}
+                  className="border-line bg-raise rounded-[9px] border p-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium">{permission.name}</p>
+                    <Badge variant="outline">{permission.group}</Badge>
+                  </div>
+                  <p className="text-soft mt-1 font-mono text-xs">
+                    {permission.code}
+                  </p>
+                  <p className="text-soft mt-2 text-sm">
+                    {permission.description}
+                  </p>
                 </div>
-                <p className="text-soft mt-1 font-mono text-xs">
-                  {permission.code}
-                </p>
-                <p className="text-soft mt-2 text-sm">
-                  {permission.description}
-                </p>
-              </div>
-            ))}
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+      </details>
+
+      <details className="order-2">
+        <summary className="border-line bg-panel hover:bg-raise cursor-pointer rounded-[10px] border px-4 py-3 text-sm font-semibold">
+          Role matrix
+        </summary>
+        <Card className="border-line bg-panel mt-3">
+          <CardHeader>
+            <CardTitle className="text-lg">Role matrix</CardTitle>
+            <CardDescription>
+              System roles and project roles are both supported. Each role
+              expands into a seeded permission set.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Assignments</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead>System</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {overview.roles.map((role) => (
+                  <TableRow key={role.id}>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{role.name}</span>
+                        <span className="text-soft font-mono text-xs">
+                          {role.code}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {role._count.userRoles + role._count.projectRoles}
+                    </TableCell>
+                    <TableCell>{role.rolePermissions.length}</TableCell>
+                    <TableCell>
+                      <Badge variant={role.isSystem ? "default" : "outline"}>
+                        {role.isSystem ? "System" : "Operational"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
-      </section>
+      </details>
 
-      <Card className="border-line bg-panel">
-        <CardHeader>
-          <CardTitle className="text-lg">Role matrix</CardTitle>
-          <CardDescription>
-            System roles and project roles are both supported. Each role expands
-            into a seeded permission set.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Role</TableHead>
-                <TableHead>Assignments</TableHead>
-                <TableHead>Permissions</TableHead>
-                <TableHead>System</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {overview.roles.map((role) => (
-                <TableRow key={role.id}>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium">{role.name}</span>
-                      <span className="text-soft font-mono text-xs">
-                        {role.code}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {role._count.userRoles + role._count.projectRoles}
-                  </TableCell>
-                  <TableCell>{role.rolePermissions.length}</TableCell>
-                  <TableCell>
-                    <Badge variant={role.isSystem ? "default" : "outline"}>
-                      {role.isSystem ? "System" : "Operational"}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card className="border-line bg-panel">
+      <Card className="border-line bg-panel order-1">
         <CardHeader>
           <CardTitle className="text-lg">User register</CardTitle>
           <CardDescription>
@@ -235,6 +209,6 @@ export default async function AdminUsersPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </RegisterWorkspace>
   )
 }

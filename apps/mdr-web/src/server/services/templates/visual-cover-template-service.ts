@@ -6,6 +6,7 @@ import {
 } from "@prisma/client"
 import {
   DEFAULT_COVER_TEMPLATE,
+  getCoverTemplatePreset,
   resolveCoverInheritance,
   validateCoverTemplate,
   type CoverTemplateDocument,
@@ -166,6 +167,7 @@ export async function createVisualCoverDraft(input: {
   scopeId?: string
   priority?: number
   cloneVersionId?: string
+  presetId?: string
 }) {
   assertTemplateAdministrator(
     input.actor,
@@ -187,9 +189,10 @@ export async function createVisualCoverDraft(input: {
           where: { id: input.cloneVersionId },
         })
       : null
+    const preset = getCoverTemplatePreset(input.presetId)
     const document = source?.snapshot
       ? parseSnapshot(source.snapshot)
-      : DEFAULT_COVER_TEMPLATE
+      : (preset?.template ?? DEFAULT_COVER_TEMPLATE)
     const version = await tx.coverTemplateVersion.create({
       data: {
         templateId: template.id,
@@ -235,6 +238,42 @@ export async function createVisualCoverDraft(input: {
       },
     })
     return result.saved
+  })
+}
+
+export async function createClientVisualCoverDraft(input: {
+  actor: CurrentAppUser
+  clientId: string
+  code: string
+  name: string
+  presetId?: string
+  cloneVersionId?: string
+}) {
+  const client = await prisma.client.findFirst({
+    where: { id: input.clientId, isActive: true, deletedAt: null },
+    select: { code: true },
+  })
+  if (!client) {
+    throw new Error("The selected client is not active.")
+  }
+
+  const localCode = input.code
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+  if (!localCode) {
+    throw new Error("A cover template code is required.")
+  }
+
+  return createVisualCoverDraft({
+    actor: input.actor,
+    code: `${client.code}_${localCode}`,
+    name: input.name,
+    scopeType: "CLIENT",
+    scopeId: input.clientId,
+    cloneVersionId: input.cloneVersionId,
+    presetId: input.presetId,
   })
 }
 
@@ -433,7 +472,13 @@ export async function getVisualCoverDesignerOverview() {
       }),
       prisma.client.findMany({
         where: { isActive: true, deletedAt: null },
-        select: { id: true, code: true, name: true },
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          logoBase64: true,
+          logoMimeType: true,
+        },
         orderBy: { code: "asc" },
       }),
       prisma.project.findMany({
@@ -481,5 +526,22 @@ export async function getVisualCoverDesignerOverview() {
       documentTypes,
       disciplines,
     },
+  }
+}
+
+export async function getClientVisualCoverDesignerOverview(clientId?: string) {
+  const overview = await getVisualCoverDesignerOverview()
+  const clientRules = overview.rules.filter(
+    (rule) =>
+      rule.scopeType === "CLIENT" && (!clientId || rule.scopeId === clientId)
+  )
+  const allowedTemplateIds = new Set(clientRules.map((rule) => rule.templateId))
+
+  return {
+    ...overview,
+    versions: overview.versions.filter((version) =>
+      allowedTemplateIds.has(version.templateId)
+    ),
+    rules: clientRules,
   }
 }

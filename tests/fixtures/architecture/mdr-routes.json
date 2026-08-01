@@ -21,6 +21,7 @@
   "/api/transmittals/[transmittalId]/pdf",
   "/audit",
   "/clients",
+  "/clients/[clientId]",
   "/dashboard",
   "/masters",
   "/mdr",

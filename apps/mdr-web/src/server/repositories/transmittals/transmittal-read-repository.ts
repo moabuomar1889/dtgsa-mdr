@@ -19,6 +19,12 @@ export async function loadTransmittalOverviewRecords() {
             id: true,
             code: true,
             name: true,
+            setting: {
+              select: {
+                defaultTransmittalMaxMb: true,
+                settings: true,
+              },
+            },
           },
         },
       },

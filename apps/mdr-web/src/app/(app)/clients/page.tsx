@@ -5,15 +5,10 @@ import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { listClients } from "@/server/services/clients/client-management"
 import { SubmitButton } from "@/components/app/submit-button"
+import { RegisterPanel } from "@/components/app/register-panel"
+import { RegisterWorkspace } from "@/components/app/register-workspace"
 import { Badge } from "@/components/dtg/badge"
 import { Button } from "@/components/dtg/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/dtg/card"
 import { Input } from "@/components/dtg/input"
 import { Label } from "@/components/dtg/label"
 import {
@@ -44,58 +39,23 @@ export default async function ClientsPage() {
   )
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-line bg-panel">
-          <CardHeader className="border-line bg-head gap-2 border-b">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
-                Client Management
-              </Badge>
-              <Badge variant="outline">Phase 1</Badge>
-            </div>
-            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
-              Client profiles define the inheritance starting point for
-              projects, numbering, review codes, templates, and contacts.
-            </CardTitle>
-            <CardDescription className="max-w-3xl leading-6">
-              This screen is now wired to the real database. Each client created
-              here becomes available immediately in project onboarding and can
-              later receive client-scoped settings, review codes, numbering
-              rules, cover templates, and contacts.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-4 sm:grid-cols-3">
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Total clients</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {formatCount(clients.length)}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Active clients</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {formatCount(activeClients)}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Linked projects</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {formatCount(totalProjects)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-line bg-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Create client</CardTitle>
-            <CardDescription>
-              Add the client once, then reuse it across project onboarding,
-              review codes, numbering logic, templates, and portal access.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+    <RegisterWorkspace
+      eyebrow="Client register"
+      title="Clients"
+      description="Choose a client to manage preferences, logo, projects, contacts, and browser-editable cover sheets."
+      metrics={[
+        { label: "Total clients", value: formatCount(clients.length) },
+        { label: "Active", value: formatCount(activeClients) },
+        { label: "Projects", value: formatCount(totalProjects) },
+      ]}
+      actions={[
+        {
+          label: "New client",
+          title: "Create a client",
+          description:
+            "Add the client once, then manage its preferences and cover sheets from the client workspace.",
+          intent: "create",
+          panel: (
             <form action={createClientAction} className="grid gap-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2">
@@ -147,64 +107,65 @@ export default async function ClientsPage() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-      </section>
-
-      <Card className="border-line bg-panel">
-        <CardHeader>
-          <CardTitle className="text-lg">Client register</CardTitle>
-          <CardDescription>
-            These are the client records currently stored in the platform.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {clients.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Timezone</TableHead>
-                  <TableHead>Projects</TableHead>
-                  <TableHead>Contacts</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clients.map((client) => (
-                  <TableRow key={client.id}>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium">
-                          {client.code} - {client.name}
+          ),
+        },
+      ]}
+    >
+      <RegisterPanel
+        title="Client register"
+        description="Open a client workspace to change preferences or manage its cover sheets."
+      >
+        {clients.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Client</TableHead>
+                <TableHead>Timezone</TableHead>
+                <TableHead>Projects</TableHead>
+                <TableHead>Cover sheets</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Workspace</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clients.map((client) => (
+                <TableRow key={client.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-medium">
+                        {client.code} - {client.name}
+                      </span>
+                      {client.description ? (
+                        <span className="text-soft text-xs">
+                          {client.description}
                         </span>
-                        {client.description ? (
-                          <span className="text-soft text-xs">
-                            {client.description}
-                          </span>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell>{client.defaultTimezone}</TableCell>
-                    <TableCell>{client._count.projects}</TableCell>
-                    <TableCell>{client._count.contacts}</TableCell>
-                    <TableCell>
-                      <Badge variant={client.isActive ? "default" : "outline"}>
-                        {client.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
-              No clients have been created yet. Start by adding the first
-              client, then move to project onboarding.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell>{client.defaultTimezone}</TableCell>
+                  <TableCell>{client._count.projects}</TableCell>
+                  <TableCell>{client._count.coverSheetTemplates}</TableCell>
+                  <TableCell>
+                    <Badge variant={client.isActive ? "default" : "outline"}>
+                      {client.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/clients/${client.id}`}>Open client</Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
+            No clients have been created yet. Start by adding the first client,
+            then move to project onboarding.
+          </div>
+        )}
+      </RegisterPanel>
+    </RegisterWorkspace>
   )
 }

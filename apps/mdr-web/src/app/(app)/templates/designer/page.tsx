@@ -1,5 +1,6 @@
 import Link from "next/link"
 import {
+  COVER_TEMPLATE_PRESETS,
   DEFAULT_COVER_TEMPLATE,
   type CoverTemplateDocument,
 } from "@dtg/cover-designer"
@@ -9,21 +10,29 @@ import { createVisualCoverDraftAction } from "@/server/actions/templates"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
-import { getVisualCoverDesignerOverview } from "@/server/services/templates/visual-cover-template-service"
+import { getClientVisualCoverDesignerOverview } from "@/server/services/templates/visual-cover-template-service"
 
 export const dynamic = "force-dynamic"
 
 export default async function CoverDesignerPage({
   searchParams,
 }: {
-  searchParams: Promise<{ version?: string }>
+  searchParams: Promise<{ client?: string; version?: string }>
 }) {
   const actor = await requireCurrentAppUser()
   requireUserHasAnyPermission(actor, PERMISSIONS.templatesManage)
-  const [overview, query] = await Promise.all([
-    getVisualCoverDesignerOverview(),
-    searchParams,
-  ])
+  const query = await searchParams
+  const overview = await getClientVisualCoverDesignerOverview(query.client)
+  const selectedClientId =
+    overview.options.clients.find((client) => client.id === query.client)?.id ??
+    overview.options.clients[0]?.id ??
+    ""
+  const selectedClient = overview.options.clients.find(
+    (client) => client.id === selectedClientId
+  )
+  const clientLogoUrl = selectedClient?.logoBase64
+    ? `data:${selectedClient.logoMimeType ?? "image/png"};base64,${selectedClient.logoBase64}`
+    : undefined
   const selected =
     overview.versions.find((version) => version.id === query.version) ??
     overview.versions.find((version) => version.status === "Draft") ??
@@ -32,13 +41,6 @@ export default async function CoverDesignerPage({
     selected?.snapshot && typeof selected.snapshot === "object"
       ? (selected.snapshot as unknown as CoverTemplateDocument)
       : DEFAULT_COVER_TEMPLATE
-  const scopeOptions = {
-    CLIENT: overview.options.clients,
-    PROJECT: overview.options.projects,
-    DOCUMENT_TYPE: overview.options.documentTypes,
-    DISCIPLINE: overview.options.disciplines,
-  }
-
   return (
     <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
       <header className="border-line bg-head overflow-hidden rounded-[9px] border p-5">
@@ -52,8 +54,9 @@ export default async function CoverDesignerPage({
             screenshots.
           </h1>
           <p className="text-soft mt-3 max-w-3xl text-[12px] leading-5">
-            Build client and project variants, bind workflow evidence, preview
-            real page dimensions, and publish immutable versions.
+            Every visual cover belongs to one client. Start from either supplied
+            reference layout, bind workflow evidence, preview real page
+            dimensions, and publish an immutable version.
           </p>
         </div>
       </header>
@@ -63,8 +66,7 @@ export default async function CoverDesignerPage({
           <div>
             <h2 className="font-semibold">Create or clone a draft</h2>
             <p className="text-soft mt-1 text-sm">
-              Inheritance order: organization, client, project, document type,
-              discipline.
+              Choose the client first. Templates created here are never global.
             </p>
           </div>
           <form action={createVisualCoverDraftAction} className="grid gap-3">
@@ -81,27 +83,30 @@ export default async function CoverDesignerPage({
               className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             />
             <select
-              name="scopeType"
+              name="clientId"
+              required
+              defaultValue={selectedClientId}
               className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             >
-              <option value="ORGANIZATION">Organization default</option>
-              <option value="CLIENT">Client override</option>
-              <option value="PROJECT">Project override</option>
-              <option value="DOCUMENT_TYPE">Document type override</option>
-              <option value="DISCIPLINE">Discipline override</option>
+              <option value="" disabled>
+                Choose client
+              </option>
+              {overview.options.clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.code} - {client.name}
+                </option>
+              ))}
             </select>
             <select
-              name="scopeId"
+              name="presetId"
               className="border-edge bg-raise h-9 rounded-[8px] border px-3 text-[12px]"
             >
-              <option value="">Organization / choose matching scope</option>
-              {Object.entries(scopeOptions).flatMap(([scope, options]) =>
-                options.map((option) => (
-                  <option key={`${scope}:${option.id}`} value={option.id}>
-                    {scope.replace("_", " ")} - {option.code} - {option.name}
-                  </option>
-                ))
-              )}
+              <option value="">Start from DTG default</option>
+              {COVER_TEMPLATE_PRESETS.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.label}
+                </option>
+              ))}
             </select>
             <select
               name="cloneVersionId"
@@ -127,7 +132,7 @@ export default async function CoverDesignerPage({
               {overview.versions.map((version) => (
                 <Link
                   key={version.id}
-                  href={`/templates/designer?version=${version.id}`}
+                  href={`/templates/designer?client=${selectedClientId}&version=${version.id}`}
                   className={`block rounded-[10px] border p-3 text-sm ${
                     selected?.id === version.id
                       ? "border-accent bg-accent-bg"
@@ -162,6 +167,7 @@ export default async function CoverDesignerPage({
           key={selected.id}
           versionId={selected.id}
           initialTemplate={initialTemplate}
+          clientLogoUrl={clientLogoUrl}
         />
       ) : (
         <div className="text-soft rounded-[9px] border border-dashed p-10 text-center">

@@ -190,8 +190,25 @@ async function renderCoverFromTemplate(input: {
       const responseLegend = await getProjectResponseLegend(
         input.revision.document.projectId
       )
+      const visualTemplate = visual.snapshot as unknown as CoverTemplateDocument
+      const clientLogo = input.revision.document.project.client.logoBase64
+        ? {
+            bytes: Buffer.from(
+              input.revision.document.project.client.logoBase64,
+              "base64"
+            ),
+            mimeType:
+              input.revision.document.project.client.logoMimeType ===
+              "image/png"
+                ? ("image/png" as const)
+                : input.revision.document.project.client.logoMimeType ===
+                    "image/jpeg"
+                  ? ("image/jpeg" as const)
+                  : null,
+          }
+        : null
       const rendered = await renderCoverTemplatePdf({
-        template: visual.snapshot as unknown as CoverTemplateDocument,
+        template: visualTemplate,
         values: {
           "client.name": data.client_name,
           "project.name": data.project_title,
@@ -226,6 +243,24 @@ async function renderCoverFromTemplate(input: {
           externalCode: code.externalCode,
           wording: code.exactWording,
         })),
+        images:
+          clientLogo?.mimeType && clientLogo.bytes.length > 0
+            ? Object.fromEntries(
+                visualTemplate.elements
+                  .filter(
+                    (element) =>
+                      element.type === "IMAGE" &&
+                      element.binding === "client.logo"
+                  )
+                  .map((element) => [
+                    element.id,
+                    {
+                      bytes: clientLogo.bytes,
+                      mimeType: clientLogo.mimeType!,
+                    },
+                  ])
+              )
+            : undefined,
       })
       return {
         bytes: rendered.bytes,

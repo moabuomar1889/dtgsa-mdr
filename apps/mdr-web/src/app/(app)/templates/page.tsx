@@ -9,6 +9,7 @@ import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-
 import { getTemplateManagementOverview } from "@/server/services/templates/template-management-service"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { SubmitButton } from "@/components/app/submit-button"
+import { RegisterWorkspace } from "@/components/app/register-workspace"
 import { Badge } from "@/components/dtg/badge"
 import {
   Card,
@@ -93,236 +94,240 @@ export default async function TemplatesPage() {
   const overview = await getTemplateManagementOverview()
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <Card className="border-line bg-panel">
-        <CardHeader className="border-line bg-head gap-2 border-b">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
-              Templates
-            </Badge>
-            <Badge variant="outline">
-              DOCX-driven cover and transmittal assets
-            </Badge>
-          </div>
-          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
-            Template management is now live for project, client, and global DOCX
-            assets.
-          </CardTitle>
-          <CardDescription className="max-w-3xl leading-6">
-            Upload versioned template files, mark defaults per scope, and keep
-            the cover and transmittal engine anchored to managed assets instead
-            of ad-hoc files.
-          </CardDescription>
-          <div>
-            <Link
-              href="/templates/designer"
-              className="text-on-accent inline-flex rounded-[10px] bg-[var(--accent)] px-4 py-2 text-sm font-semibold"
-            >
-              Open visual cover designer
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Cover templates</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.coverTemplates.length}
-            </p>
-          </div>
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Transmittal templates</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.transmittalTemplates.length}
-            </p>
-          </div>
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Clients</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.clients.length}
-            </p>
-          </div>
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Projects</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.projects.length}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-        <Card className="border-line bg-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Upload template</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="cover" className="grid gap-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="cover">Cover Sheet</TabsTrigger>
-                <TabsTrigger value="transmittal">Transmittal</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="cover">
-                <form action={createCoverTemplateAction} className="grid gap-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <ScopeFields
-                      clients={overview.clients}
-                      projects={overview.projects}
-                    />
-                    <div className="grid gap-2">
-                      <label htmlFor="kind" className="text-sm font-medium">
-                        Cover kind
-                      </label>
-                      <select
-                        id="kind"
-                        name="kind"
-                        className="border-edge bg-bg h-10 rounded-[7px] border px-3 text-sm"
-                        defaultValue={CoverSheetKind.DTGSA_COVER}
-                      >
-                        <option value={CoverSheetKind.DTGSA_COVER}>
-                          DTGSA cover
-                        </option>
-                        <option value={CoverSheetKind.CLIENT_COVER}>
-                          Client cover
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="grid gap-2">
-                      <label
-                        htmlFor="cover-name"
-                        className="text-sm font-medium"
-                      >
-                        Template name
-                      </label>
-                      <Input
-                        id="cover-name"
-                        name="name"
-                        placeholder="Air Products Cover v1"
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label
-                        htmlFor="cover-file"
-                        className="text-sm font-medium"
-                      >
-                        DOCX file
-                      </label>
-                      <Input
-                        id="cover-file"
-                        name="file"
-                        type="file"
-                        accept=".docx"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <label
-                      htmlFor="cover-description"
-                      className="text-sm font-medium"
-                    >
-                      Description
-                    </label>
-                    <Textarea
-                      id="cover-description"
-                      name="description"
-                      rows={4}
-                    />
-                  </div>
-                  <label className="text-soft flex items-center gap-2 text-sm">
-                    <input
-                      name="isDefault"
-                      type="checkbox"
-                      className="size-4"
-                    />
-                    Set as the default template for this scope
-                  </label>
-                  <SubmitButton
-                    label="Upload cover template"
-                    pendingLabel="Uploading"
-                    className="w-full"
-                  />
-                </form>
-              </TabsContent>
-
-              <TabsContent value="transmittal">
-                <form
-                  action={createTransmittalTemplateAction}
-                  className="grid gap-4"
+    <RegisterWorkspace
+      eyebrow="Controlled assets"
+      title="Templates"
+      description="Browser-editable covers are owned by clients. File templates remain available for controlled DOCX and transmittal compatibility."
+      metrics={[
+        { label: "Cover files", value: overview.coverTemplates.length },
+        { label: "Transmittals", value: overview.transmittalTemplates.length },
+        { label: "Clients", value: overview.clients.length },
+        { label: "Projects", value: overview.projects.length },
+      ]}
+      actions={[
+        {
+          label: "Editable covers",
+          title: "Choose a client",
+          description:
+            "Every browser-editable cover is created and managed inside one client workspace.",
+          intent: "configure",
+          panel: (
+            <div className="grid gap-2">
+              {overview.clients.map((client) => (
+                <Link
+                  key={client.id}
+                  href={`/clients/${client.id}`}
+                  className="border-line hover:bg-raise rounded-[9px] border px-3 py-3 text-sm font-medium"
                 >
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <ScopeFields
-                      clients={overview.clients}
-                      projects={overview.projects}
-                    />
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="grid gap-2">
-                      <label
-                        htmlFor="transmittal-name"
-                        className="text-sm font-medium"
-                      >
-                        Template name
-                      </label>
-                      <Input
-                        id="transmittal-name"
-                        name="name"
-                        placeholder="Client transmittal page"
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label
-                        htmlFor="transmittal-file"
-                        className="text-sm font-medium"
-                      >
-                        DOCX file
-                      </label>
-                      <Input
-                        id="transmittal-file"
-                        name="file"
-                        type="file"
-                        accept=".docx"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <label
-                      htmlFor="transmittal-description"
-                      className="text-sm font-medium"
-                    >
-                      Description
-                    </label>
-                    <Textarea
-                      id="transmittal-description"
-                      name="description"
-                      rows={4}
-                    />
-                  </div>
-                  <label className="text-soft flex items-center gap-2 text-sm">
-                    <input
-                      name="isDefault"
-                      type="checkbox"
-                      className="size-4"
-                    />
-                    Set as the default transmittal template for this scope
-                  </label>
-                  <SubmitButton
-                    label="Upload transmittal template"
-                    pendingLabel="Uploading"
-                    className="w-full"
-                  />
-                </form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                  {client.code} - {client.name}
+                </Link>
+              ))}
+            </div>
+          ),
+        },
+      ]}
+    >
+      <section className="grid gap-4">
+        <details className="order-2">
+          <summary className="border-line bg-panel hover:bg-raise cursor-pointer rounded-[10px] border px-4 py-3 text-sm font-semibold">
+            Upload a controlled file template
+          </summary>
+          <Card className="border-line bg-panel mt-3">
+            <CardHeader>
+              <CardTitle className="text-lg">Upload template</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="cover" className="grid gap-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="cover">Cover Sheet</TabsTrigger>
+                  <TabsTrigger value="transmittal">Transmittal</TabsTrigger>
+                </TabsList>
 
-        <Card className="border-line bg-panel">
+                <TabsContent value="cover">
+                  <form
+                    action={createCoverTemplateAction}
+                    className="grid gap-4"
+                  >
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="grid gap-2">
+                        <label
+                          htmlFor="cover-client"
+                          className="text-sm font-medium"
+                        >
+                          Client
+                        </label>
+                        <select
+                          id="cover-client"
+                          name="clientId"
+                          required
+                          className="border-edge bg-bg h-10 rounded-[7px] border px-3 text-sm"
+                          defaultValue=""
+                        >
+                          <option value="" disabled>
+                            Choose client
+                          </option>
+                          {overview.clients.map((client) => (
+                            <option key={client.id} value={client.id}>
+                              {client.code} - {client.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="kind" className="text-sm font-medium">
+                          Cover kind
+                        </label>
+                        <select
+                          id="kind"
+                          name="kind"
+                          className="border-edge bg-bg h-10 rounded-[7px] border px-3 text-sm"
+                          defaultValue={CoverSheetKind.DTGSA_COVER}
+                        >
+                          <option value={CoverSheetKind.DTGSA_COVER}>
+                            DTGSA cover
+                          </option>
+                          <option value={CoverSheetKind.CLIENT_COVER}>
+                            Client cover
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="grid gap-2">
+                        <label
+                          htmlFor="cover-name"
+                          className="text-sm font-medium"
+                        >
+                          Template name
+                        </label>
+                        <Input
+                          id="cover-name"
+                          name="name"
+                          placeholder="Air Products Cover v1"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label
+                          htmlFor="cover-file"
+                          className="text-sm font-medium"
+                        >
+                          DOCX file
+                        </label>
+                        <Input
+                          id="cover-file"
+                          name="file"
+                          type="file"
+                          accept=".docx"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="cover-description"
+                        className="text-sm font-medium"
+                      >
+                        Description
+                      </label>
+                      <Textarea
+                        id="cover-description"
+                        name="description"
+                        rows={4}
+                      />
+                    </div>
+                    <label className="text-soft flex items-center gap-2 text-sm">
+                      <input
+                        name="isDefault"
+                        type="checkbox"
+                        className="size-4"
+                      />
+                      Set as the default template for this scope
+                    </label>
+                    <SubmitButton
+                      label="Upload cover template"
+                      pendingLabel="Uploading"
+                      className="w-full"
+                    />
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="transmittal">
+                  <form
+                    action={createTransmittalTemplateAction}
+                    className="grid gap-4"
+                  >
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <ScopeFields
+                        clients={overview.clients}
+                        projects={overview.projects}
+                      />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="grid gap-2">
+                        <label
+                          htmlFor="transmittal-name"
+                          className="text-sm font-medium"
+                        >
+                          Template name
+                        </label>
+                        <Input
+                          id="transmittal-name"
+                          name="name"
+                          placeholder="Client transmittal page"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label
+                          htmlFor="transmittal-file"
+                          className="text-sm font-medium"
+                        >
+                          DOCX file
+                        </label>
+                        <Input
+                          id="transmittal-file"
+                          name="file"
+                          type="file"
+                          accept=".docx"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="transmittal-description"
+                        className="text-sm font-medium"
+                      >
+                        Description
+                      </label>
+                      <Textarea
+                        id="transmittal-description"
+                        name="description"
+                        rows={4}
+                      />
+                    </div>
+                    <label className="text-soft flex items-center gap-2 text-sm">
+                      <input
+                        name="isDefault"
+                        type="checkbox"
+                        className="size-4"
+                      />
+                      Set as the default transmittal template for this scope
+                    </label>
+                    <SubmitButton
+                      label="Upload transmittal template"
+                      pendingLabel="Uploading"
+                      className="w-full"
+                    />
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </details>
+
+        <Card className="border-line bg-panel order-1">
           <CardHeader>
             <CardTitle className="text-lg">Current templates</CardTitle>
           </CardHeader>
@@ -408,6 +413,6 @@ export default async function TemplatesPage() {
           </CardContent>
         </Card>
       </section>
-    </div>
+    </RegisterWorkspace>
   )
 }

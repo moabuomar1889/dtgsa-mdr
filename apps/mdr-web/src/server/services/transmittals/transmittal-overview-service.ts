@@ -33,8 +33,37 @@ export async function getTransmittalOverview(user: CurrentAppUser) {
     }
   })
 
+  const mappedProjects = projects.map((project) => {
+    const settings =
+      project.client.setting?.settings &&
+      typeof project.client.setting.settings === "object" &&
+      !Array.isArray(project.client.setting.settings)
+        ? (project.client.setting.settings as Record<string, unknown>)
+        : {}
+    const configuredResponseDays = Number(settings.defaultResponseDays ?? 14)
+    return {
+      id: project.id,
+      code: project.code,
+      name: project.name,
+      client: {
+        id: project.client.id,
+        code: project.client.code,
+        name: project.client.name,
+        defaultTransmittalMaxMb:
+          project.client.setting?.defaultTransmittalMaxMb ?? 500,
+        defaultResponseDays:
+          Number.isInteger(configuredResponseDays) && configuredResponseDays > 0
+            ? configuredResponseDays
+            : 14,
+        defaultTransmittalPurpose: String(
+          settings.defaultTransmittalPurpose ?? "Issued for review"
+        ),
+      },
+    }
+  })
+
   return {
-    projects,
+    projects: mappedProjects,
     eligibleRevisions: mappedEligibleRevisions,
     transmittals: await Promise.all(
       transmittals.map(async (transmittal) => ({

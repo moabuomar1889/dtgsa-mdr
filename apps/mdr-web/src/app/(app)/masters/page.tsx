@@ -9,6 +9,7 @@ import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import { getGlobalMasterData } from "@/server/services/masters/master-data-service"
 import { ReviewCodeForm } from "@/components/app/review-code-form"
+import { RegisterWorkspace } from "@/components/app/register-workspace"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/dtg/badge"
 import {
@@ -107,55 +108,64 @@ export default async function MastersPage() {
   const masters = await getGlobalMasterData()
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="border-line bg-panel">
-          <CardHeader className="border-line bg-head gap-2 border-b">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
-                Master Data
-              </Badge>
-              <Badge variant="outline">Config driven</Badge>
+    <RegisterWorkspace
+      eyebrow="Platform configuration"
+      title="Masters"
+      description="Maintain the shared coding tables used by projects, documents, numbering, and client workflows."
+      metrics={[
+        { label: "Disciplines", value: masters.disciplines.length },
+        { label: "Document types", value: masters.documentTypes.length },
+        { label: "Release purposes", value: masters.releasePurposes.length },
+        { label: "Review codes", value: masters.reviewCodes.length },
+      ]}
+      actions={[
+        {
+          label: "Add master data",
+          title: "Add a master record",
+          description:
+            "Choose the record type below. Existing registers remain visible behind this panel.",
+          intent: "create",
+          width: "xl",
+          panel: (
+            <div className="grid gap-4">
+              <SimpleMasterForm
+                title="Discipline"
+                description="Create a system-level discipline."
+                codePlaceholder="HSE"
+                namePlaceholder="Health, Safety & Environment"
+                action={createDisciplineAction}
+              />
+              <SimpleMasterForm
+                title="Document Type"
+                description="Define a document type used by PDI and MDR."
+                codePlaceholder="ITP"
+                namePlaceholder="Inspection & Test Plan"
+                action={createDocumentTypeAction}
+              />
+              <SimpleMasterForm
+                title="Release Purpose"
+                description="Define a release-purpose code for covers and transmittals."
+                codePlaceholder="IFR"
+                namePlaceholder="Issued for Review"
+                action={createReleasePurposeAction}
+              />
+              <Card className="border-line bg-panel">
+                <CardHeader>
+                  <CardTitle className="text-lg">Review code</CardTitle>
+                  <CardDescription>
+                    Add a global default review code.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ReviewCodeForm action={createReviewCodeAction} />
+                </CardContent>
+              </Card>
             </div>
-            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
-              Global coding tables are now backed by real data instead of page
-              placeholders.
-            </CardTitle>
-            <CardDescription className="max-w-3xl leading-6">
-              These global masters seed the inheritance chain for clients and
-              projects. Later phases will add import flows and scoped overrides,
-              but the platform can already create and list the core system-wide
-              records from this screen.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Disciplines</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {masters.disciplines.length}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Document types</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {masters.documentTypes.length}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Release purposes</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {masters.releasePurposes.length}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Review codes</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {masters.reviewCodes.length}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
+          ),
+        },
+      ]}
+    >
+      <section className="grid gap-4">
         <Card className="border-line bg-panel">
           <CardHeader>
             <CardTitle className="text-lg">Numbering rules</CardTitle>
@@ -187,42 +197,6 @@ export default async function MastersPage() {
                 </p>
               </div>
             ))}
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-2">
-        <SimpleMasterForm
-          title="Discipline"
-          description="Create system-level disciplines that clients and projects can inherit or override."
-          codePlaceholder="HSE"
-          namePlaceholder="Health, Safety & Environment"
-          action={createDisciplineAction}
-        />
-        <SimpleMasterForm
-          title="Document Type"
-          description="Define document type categories used by numbering, PDI, MDR, and cover templates."
-          codePlaceholder="ITP"
-          namePlaceholder="Inspection & Test Plan"
-          action={createDocumentTypeAction}
-        />
-        <SimpleMasterForm
-          title="Release Purpose"
-          description="Define the release-purpose coding table that feeds cover sheets and transmittals."
-          codePlaceholder="IFR"
-          namePlaceholder="Issued for Review"
-          action={createReleasePurposeAction}
-        />
-        <Card className="border-line bg-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Review code</CardTitle>
-            <CardDescription>
-              Add a global default review code. Client-specific overrides will
-              layer on top later.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ReviewCodeForm action={createReviewCodeAction} />
           </CardContent>
         </Card>
       </section>
@@ -344,6 +318,6 @@ export default async function MastersPage() {
           </CardContent>
         </Card>
       </section>
-    </div>
+    </RegisterWorkspace>
   )
 }

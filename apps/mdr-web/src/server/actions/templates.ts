@@ -10,7 +10,7 @@ import {
   createTransmittalTemplate,
 } from "@/server/services/templates/template-management-service"
 import {
-  createVisualCoverDraft,
+  createClientVisualCoverDraft,
   publishVisualCoverVersion,
   saveVisualCoverDraft,
 } from "@/server/services/templates/visual-cover-template-service"
@@ -41,11 +41,16 @@ export async function createCoverTemplateAction(formData: FormData) {
     throw new Error("A DOCX cover template file is required.")
   }
 
+  const clientId = toOptionalString(formData.get("clientId"))
+  if (!clientId) {
+    throw new Error("A client is required for every cover sheet template.")
+  }
+
   await createCoverSheetTemplate({
     actor,
-    scope: toScope(formData.get("scope")),
-    clientId: toOptionalString(formData.get("clientId")),
-    projectId: toOptionalString(formData.get("projectId")),
+    scope: "client",
+    clientId,
+    projectId: undefined,
     kind:
       formData.get("kind") === CoverSheetKind.CLIENT_COVER
         ? CoverSheetKind.CLIENT_COVER
@@ -88,31 +93,21 @@ export async function createTransmittalTemplateAction(formData: FormData) {
 export async function createVisualCoverDraftAction(formData: FormData) {
   const actor = await requireCurrentAppUser()
   assertUserHasAnyPermission(actor, PERMISSIONS.templatesManage)
-  const scopeType = String(formData.get("scopeType") ?? "ORGANIZATION")
-  const allowedScopes = new Set([
-    "ORGANIZATION",
-    "CLIENT",
-    "PROJECT",
-    "DOCUMENT_TYPE",
-    "DISCIPLINE",
-  ])
-  if (!allowedScopes.has(scopeType)) throw new Error("Invalid cover scope.")
-  const draft = await createVisualCoverDraft({
+  const clientId = toOptionalString(formData.get("clientId"))
+  if (!clientId)
+    throw new Error("A client is required for every cover template.")
+  const draft = await createClientVisualCoverDraft({
     actor,
+    clientId,
     code: String(formData.get("code") ?? ""),
     name: String(formData.get("name") ?? ""),
-    scopeType: scopeType as
-      | "ORGANIZATION"
-      | "CLIENT"
-      | "PROJECT"
-      | "DOCUMENT_TYPE"
-      | "DISCIPLINE",
-    scopeId: toOptionalString(formData.get("scopeId")),
     cloneVersionId: toOptionalString(formData.get("cloneVersionId")),
+    presetId: toOptionalString(formData.get("presetId")),
   })
   revalidatePath("/templates")
   revalidatePath("/templates/designer")
-  redirect(`/templates/designer?version=${draft.id}`)
+  revalidatePath(`/clients/${clientId}`)
+  redirect(`/templates/designer?client=${clientId}&version=${draft.id}`)
 }
 
 export async function saveVisualCoverDraftAction(

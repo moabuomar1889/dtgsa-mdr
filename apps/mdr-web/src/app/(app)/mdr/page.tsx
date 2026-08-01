@@ -16,6 +16,7 @@ import {
 } from "@/server/actions/mdr"
 import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { RegisterPagination } from "@/components/app/register-pagination"
+import { RegisterWorkspace } from "@/components/app/register-workspace"
 import { requireUserHasAnyPermission } from "@/server/services/auth/page-access-service"
 import {
   getMdrOverview,
@@ -179,61 +180,25 @@ export default async function MdrPage({
   const overview = await getMdrOverview(user, page, revisionId)
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <Card className="border-line bg-panel">
-        <CardHeader className="border-line bg-head gap-2 border-b">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
-              MDR Register
-            </Badge>
-            <Badge variant="outline">Operational register</Badge>
-            {overview.focusedRevisionId ? (
-              <>
-                <Badge variant="outline">Focused task</Badge>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/mdr">Clear focus</Link>
-                </Button>
-              </>
-            ) : null}
-          </div>
-          <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
-            MDR records are now visible as the operational destination for
-            promoted PDI items.
-          </CardTitle>
-          <CardDescription className="max-w-3xl leading-6">
-            This screen currently focuses on the active document register and
-            revision state. Workflow actions, uploads, signatures, and cover
-            generation will build on top of these MDR records next.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Documents</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.counts.total}
-            </p>
-          </div>
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Draft workflow</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.counts.readyForWorkflow}
-            </p>
-          </div>
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Submitted</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.counts.submittedToClient}
-            </p>
-          </div>
-          <div className="border-line bg-raise rounded-[9px] border p-4">
-            <p className="text-soft text-sm">Waiting reply</p>
-            <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-              {overview.counts.awaitingReply}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
+    <RegisterWorkspace
+      eyebrow="Controlled document register"
+      title="MDR"
+      description="Find the document, understand its current revision, and take the next available workflow action without leaving the register."
+      metrics={[
+        { label: "Documents", value: overview.counts.total },
+        { label: "Draft", value: overview.counts.readyForWorkflow },
+        { label: "Submitted", value: overview.counts.submittedToClient },
+        { label: "Waiting reply", value: overview.counts.awaitingReply },
+      ]}
+    >
+      {overview.focusedRevisionId ? (
+        <div className="border-accent bg-accent-bg flex items-center justify-between rounded-[10px] border px-3 py-2 text-xs">
+          <span>Showing the revision selected from your task queue.</span>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/mdr">Clear focus</Link>
+          </Button>
+        </div>
+      ) : null}
       <Card className="border-line bg-panel">
         <CardHeader>
           <CardTitle className="text-lg">MDR documents</CardTitle>
@@ -481,6 +446,6 @@ export default async function MdrPage({
         </CardContent>
         <RegisterPagination basePath="/mdr" {...overview.pagination} />
       </Card>
-    </div>
+    </RegisterWorkspace>
   )
 }

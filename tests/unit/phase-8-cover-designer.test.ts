@@ -2,6 +2,9 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   DEFAULT_COVER_TEMPLATE,
+  AIR_PRODUCTS_DOCUMENT_COVER,
+  COVER_TEMPLATE_PRESETS,
+  JIGPC_DOCUMENT_DETAILS_COVER,
   coverDesignerReducer,
   pageDimensions,
   resolveCoverInheritance,
@@ -99,6 +102,22 @@ test("publish validation requires allowlisted fields and formal Prepared By box"
   assert.ok(
     validateCoverTemplate(invalid).some(
       (issue) => issue.code === "INVALID_BINDING"
+    )
+  )
+})
+
+test("supplied client cover presets remain editable and publishable", () => {
+  assert.equal(COVER_TEMPLATE_PRESETS.length, 2)
+  assert.deepEqual(validateCoverTemplate(JIGPC_DOCUMENT_DETAILS_COVER), [])
+  assert.deepEqual(validateCoverTemplate(AIR_PRODUCTS_DOCUMENT_COVER), [])
+  assert.ok(
+    JIGPC_DOCUMENT_DETAILS_COVER.elements.some(
+      (element) => element.type === "IMAGE" && element.binding === "client.logo"
+    )
+  )
+  assert.ok(
+    AIR_PRODUCTS_DOCUMENT_COVER.elements.some(
+      (element) => element.type === "CLIENT_RESPONSE_LEGEND"
     )
   )
 })

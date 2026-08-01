@@ -22,8 +22,12 @@ type ProjectOption = {
   code: string
   name: string
   client: {
+    id: string
     code: string
     name: string
+    defaultTransmittalMaxMb: number
+    defaultResponseDays: number
+    defaultTransmittalPurpose: string
   }
 }
 
@@ -66,6 +70,12 @@ export function TransmittalCreateForm({
 }: TransmittalCreateFormProps) {
   const [projectId, setProjectId] = useState(projects[0]?.id ?? "")
   const [selectedRevisionIds, setSelectedRevisionIds] = useState<string[]>([])
+  const selectedProject = projects.find((project) => project.id === projectId)
+  const respondByDate = new Date()
+  respondByDate.setDate(
+    respondByDate.getDate() +
+      Math.max(1, selectedProject?.client.defaultResponseDays ?? 14)
+  )
 
   const filteredRevisions = useMemo(
     () =>
@@ -206,9 +216,14 @@ export function TransmittalCreateForm({
         <div className="grid gap-2">
           <Label htmlFor="transmittal-purpose">Purpose</Label>
           <Input
+            key={`purpose-${projectId}`}
             id="transmittal-purpose"
             name="purpose"
             placeholder="Issued for review"
+            defaultValue={
+              selectedProject?.client.defaultTransmittalPurpose ??
+              "Issued for review"
+            }
           />
         </div>
       </div>
@@ -251,9 +266,22 @@ export function TransmittalCreateForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="transmittal-respond-by">Respond by</Label>
-          <Input id="transmittal-respond-by" name="respondByDate" type="date" />
+          <Input
+            key={`respond-${projectId}`}
+            id="transmittal-respond-by"
+            name="respondByDate"
+            type="date"
+            defaultValue={respondByDate.toISOString().slice(0, 10)}
+          />
         </div>
       </div>
+
+      <p className="text-soft text-xs">
+        Client defaults: {selectedProject?.client.defaultResponseDays ?? 14} day
+        response target /{" "}
+        {selectedProject?.client.defaultTransmittalMaxMb ?? 500}
+        MB package limit.
+      </p>
 
       <SubmitButton
         label="Create transmittal draft"

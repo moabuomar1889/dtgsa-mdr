@@ -9,6 +9,7 @@ import { requireCurrentAppUser } from "@/server/services/auth/auth-service"
 import { getClientRepliesOverview } from "@/server/services/replies/client-reply-overview-service"
 import { getConfigurableClientResponseOverview } from "@/server/services/replies/client-response-service"
 import { ClientResponseForm } from "@/components/app/client-response-form"
+import { RegisterWorkspace } from "@/components/app/register-workspace"
 import { SubmitButton } from "@/components/app/submit-button"
 import { Badge } from "@/components/dtg/badge"
 import {
@@ -63,64 +64,26 @@ export default async function RepliesPage({
   ])
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-line bg-panel">
-          <CardHeader className="border-line bg-head gap-2 border-b">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="bg-accent-bg text-accent-txt hover:bg-accent-bg rounded-[4px] px-1.5 py-0.5">
-                Client Replies
-              </Badge>
-              <Badge variant="outline">Inbound review processing</Badge>
-            </div>
-            <CardTitle className="text-[22px] font-medium tracking-[-0.02em]">
-              Submitted documents can now receive client review codes and branch
-              directly into revision or new-number follow-up.
-            </CardTitle>
-            <CardDescription className="max-w-3xl leading-6">
-              This slice records reply metadata, applies client-specific review
-              codes, enforces rejected-file naming metadata, and opens the next
-              revision path from the same page.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-4 sm:grid-cols-4">
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Waiting reply</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {overview.counts.pendingReply}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Replies recorded</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {overview.counts.totalReplies}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">Revision required</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {overview.counts.revisionRequired}
-              </p>
-            </div>
-            <div className="border-line bg-raise rounded-[9px] border p-4">
-              <p className="text-soft text-sm">No further submittal</p>
-              <p className="mt-2 font-mono text-[24px] font-semibold tracking-[-0.03em]">
-                {overview.counts.noFurtherSubmittal}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-line bg-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Record client reply</CardTitle>
-            <CardDescription>
-              Select a submitted document, apply the client review code, and
-              trigger the required follow-up path.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {configured.submissions.length > 0 ? (
+    <RegisterWorkspace
+      eyebrow="Inbound review"
+      title="Client replies"
+      description="Record the response once, then follow the resulting revision or close-out action from the evidence register."
+      metrics={[
+        { label: "Waiting", value: overview.counts.pendingReply },
+        { label: "Recorded", value: overview.counts.totalReplies },
+        { label: "Revision", value: overview.counts.revisionRequired },
+        { label: "Closed", value: overview.counts.noFurtherSubmittal },
+      ]}
+      actions={[
+        {
+          label: "Record reply",
+          title: "Record a client reply",
+          description:
+            "Select a submitted document, apply the client code, and create the required follow-up.",
+          intent: "create",
+          width: "xl",
+          panel:
+            configured.submissions.length > 0 ? (
               <ClientResponseForm
                 submissions={configured.submissions}
                 action={registerConfiguredClientResponseAction}
@@ -129,19 +92,15 @@ export default async function RepliesPage({
               <div className="border-line bg-raise text-soft rounded-[9px] border border-dashed p-6 text-sm leading-6">
                 No durable client submissions are waiting for a response.
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
+            ),
+        },
+      ]}
+    >
       <div className="flex justify-end">
-        <Button asChild variant="outline">
-          <Link href="/settings/response-codes">
-            Manage response-code policies
-          </Link>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/settings/response-codes">Response-code policies</Link>
         </Button>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Configured response evidence</CardTitle>
@@ -392,6 +351,6 @@ export default async function RepliesPage({
           )}
         </CardContent>
       </Card>
-    </div>
+    </RegisterWorkspace>
   )
 }

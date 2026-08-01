@@ -1,62 +1,59 @@
-# PDI Register Simplification Design QA
+# MDR Workspace Simplification and Client Cover Design QA
 
 ## Evidence
 
-- Source screen: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-before-refactor.png`
-- Final register: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-after-refactor.png`
-- Final creation panel: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-create-panel-final.png`
-- Final transfer panel: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\screenshots\pdi-transfer-panel.png`
-- Viewport and implementation pixels: 1280 x 720 at device density 1.
-- State: authenticated Document Control administrator, dark Nocturne theme, three real PDI lines.
-- Normalization: source and final register were captured from the same browser, route, viewport, data, theme, and identity.
+- Baseline screenshots: `.local-runtime/screenshots/audit-before-*.png`
+- Final screenshots: `.local-runtime/screenshots/audit-after-*.png`
+- Client workspace: `.local-runtime/screenshots/client-workspace-after.png`
+- Spreadsheet cover reference: `.local-runtime/reference-analysis/source-cover-xlsx-page1.png`
+- PDF cover reference: `.local-runtime/reference-analysis/source-cover-pdf-page1.png`
+- Viewport: 1280 x 720 at device density 1.
+- State: authenticated Document Control administrator, dark Nocturne theme, local acceptance data.
+- Normalization: each baseline and final route was captured in the same browser, viewport, theme, identity, and database state.
 
 ## Full-View Comparison
 
-The source placed the introduction, metrics, creation form, spreadsheet controls, and register into one competing layout. The register was below the fold and unavailable in the captured viewport. The final screen makes the operational register primary: all three documents, their stage, and one valid next action fit above the fold. Creation and spreadsheet exchange are available through two focused controls rather than persistent forms.
+The baseline pages mixed introductions, metrics, creation forms, configuration forms, and registers in one reading path. The final pages use one shared register-first shell: a compact heading, a responsive metric strip, the primary register or queue, and one focused side panel for creation. Lower-frequency administration is collapsed or moved behind a named action.
 
-## Fidelity Review
+## Route Review
 
-- Typography: existing project heading, body, label, and monospace number styles are preserved with a clearer hierarchy and less long-form copy.
-- Spacing and layout: the final screen uses one compact header, one metric strip, and one register surface. Row rhythm is consistent and the main content has no horizontal overflow.
-- Colors and tokens: the implementation uses existing Nocturne panel, border, text, accent, and semantic badge tokens.
-- Assets: all visible icons come from the project's Lucide library. No placeholder or handcrafted image asset was introduced.
-- Copy and content: counts, projects, documents, client numbers, statuses, MDR links, and permissions come from current application data. Only stable workflow labels are presentation configuration.
+- Transmittals: the ten-input creation workflow moved into `New transmittal`; the transmittal register is now the first operational surface.
+- MDR: the long explanatory hero was removed while document and revision workflow actions remain unchanged.
+- Replies: reply capture moved into `Record reply`; evidence, filters, policy access, and reply history remain available.
+- Tasks: four workflow queues now link directly to the exact MDR revision and share one action surface.
+- Clients: creation moved into `New client`; every row now opens a dedicated client workspace.
+- Masters: four creation forms moved into one reusable side panel; numbering and coding registers are primary.
+- Identity: account-link reviews remain primary; directory, mapping, and invitation controls are collapsed by workflow.
+- Users: the user register is primary; role and permission reference data are collapsed.
+- Templates: current assets are primary; file upload is collapsed and browser-editable covers route through a client.
 
-## Focused Comparisons
+## Client Covers
 
-- Register: six table columns and several simultaneous forms were replaced with a responsive three-zone row containing document context, project context, and one next action.
-- Creation: required fields remain immediately available; tags and remarks are collapsed under Optional details.
-- Import and export: four separate project export buttons were replaced by one project selector and one export action. Import remains a separate focused operation.
-- Permissions: project rows, totals, available projects, creation actions, collaboration actions, and MDR promotion actions are scoped to accessible projects and role capabilities.
+- The JIGPC spreadsheet and Air Products PDF were visually inspected and converted into structured A4 preset documents.
+- Both presets use real editable layout elements, allowlisted data bindings, client logo elements, signature boxes, review legends, and QR verification.
+- A visual-cover draft can only be created from the application UI with a required client ID.
+- Internal template codes are prefixed with the unique client code, and designer listings are filtered through active `CLIENT` inheritance rules.
+- Client logos render from the client record in both the browser designer and generated PDF.
+- Published cover versions remain immutable and continue through the existing audit and generation services.
 
-## Comparison History
+## Client Preferences
 
-### Iteration 1
-
-- Finding: P1 - the operational register was hidden below a large introduction, creation form, and spreadsheet administration area.
-- Fix: promoted the register to the primary workspace and moved secondary workflows into side panels.
-- Post-fix evidence: `pdi-after-refactor.png` shows the complete register above the fold with one next action per row.
-
-### Iteration 2
-
-- Finding: P2 - the initial creation drawer inherited the narrow default sheet width, compressing the project selector and creating horizontal overflow.
-- Fix: applied a dedicated 560 px desktop maximum width to the creation panel while retaining full-width mobile behavior.
-- Post-fix evidence: `pdi-create-panel-final.png` shows two aligned field columns, a collapsed optional section, and no horizontal overflow.
-
-### Iteration 3
-
-- No actionable P0, P1, or P2 differences remain.
+- Preferences are managed at `/clients/[clientId]` and stored in the existing `ClientSetting` record.
+- Editable defaults include timezone, upload size, transmittal size, response target, transmittal purpose, and cover inclusion rules.
+- Transmittal creation now reads the selected client's response target, purpose, and package limit.
+- Existing JSON preference keys are preserved when these controlled fields are updated.
 
 ## Interaction Evidence
 
-- New PDI item opens the focused creation panel.
-- Optional details are collapsed by default and can be expanded.
-- Import / export opens a separate focused transfer panel.
-- Converted documents link to their exact MDR revision.
-- The browser render contains no visible runtime or module error.
+- All nine requested routes rendered without a runtime, module, or server error.
+- Main-screen input counts dropped to zero for Transmittals, Clients, Masters, Templates, Identity, and Users.
+- The client workspace rendered preferences, logo management, and editable cover versions.
+- `Open cover designer` displayed both supplied cover presets and two working draft actions.
+- TypeScript, architecture, provider-retirement, and all 157 unit tests passed.
 
-## Follow-Up Polish
+## Residual Polish
 
-- P3: add server-side text and status filtering when real project registers consistently exceed one 20-line page.
+- P3: add server-side search to Clients and Masters when production registers exceed the current local data volume.
+- P3: a client with a WebP or SVG logo should also store a raster rendering variant before PDF generation; the browser accepts those formats, while the deterministic PDF path currently embeds PNG and JPEG.
 
 final result: passed

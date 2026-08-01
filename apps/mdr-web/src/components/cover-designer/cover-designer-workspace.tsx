@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { startTransition, useId, useReducer, useRef, useState } from "react"
 import {
   COVER_BINDINGS,
@@ -44,6 +45,7 @@ const sampleValues: Record<string, string> = {
   "document.number": "DTG-ARC-DWG-00124",
   "document.revision": "Rev 02",
   "client.name": "Sample Client",
+  "client.logo": "Client logo",
   "project.name": "North Utilities Expansion",
   "workflow.preparedBy": "Amina Saleh",
   "verification.packageHash": "7e1f...a42c",
@@ -58,6 +60,8 @@ function elementLabel(element: CoverElement, preview: boolean) {
     }`
   }
   if (element.type === "QR_CODE") return "[QR]\nVerification"
+  if (element.type === "IMAGE") return "Client logo"
+  if (element.type === "RECTANGLE" || element.type === "LINE") return ""
   if (element.type === "CLIENT_RESPONSE_LEGEND") {
     return "Client response legend\nA - Approved\nB - Revise and resubmit"
   }
@@ -69,9 +73,11 @@ function elementLabel(element: CoverElement, preview: boolean) {
 export function CoverDesignerWorkspace({
   versionId,
   initialTemplate,
+  clientLogoUrl,
 }: {
   versionId: string
   initialTemplate: CoverTemplateDocument
+  clientLogoUrl?: string
 }) {
   const [state, dispatch] = useReducer(coverDesignerReducer, {
     present: initialTemplate,
@@ -112,6 +118,7 @@ export function CoverDesignerWorkspace({
         zIndex:
           Math.max(...state.present.elements.map((item) => item.zIndex), 0) + 1,
         text: type === "STATIC_TEXT" ? "New text" : undefined,
+        binding: type === "IMAGE" ? "client.logo" : undefined,
         workflowStepKey: isSignature ? "reviewed" : undefined,
         roleLabel: isSignature ? "Reviewer" : undefined,
       },
@@ -204,6 +211,7 @@ export function CoverDesignerWorkspace({
           {[
             ["STATIC_TEXT", "Static text"],
             ["BOUND_TEXT", "Bound field"],
+            ["IMAGE", "Client logo"],
             ["RECTANGLE", "Rectangle"],
             ["LINE", "Line"],
             ["SIGNATURE_BOX", "Signature box"],
@@ -404,10 +412,14 @@ export function CoverDesignerWorkspace({
               <div
                 key={element.id}
                 onPointerDown={(event) => beginDrag(event, element)}
-                className={`absolute cursor-move overflow-hidden border p-1 text-[10px] leading-tight whitespace-pre-line ${
+                className={`absolute cursor-move overflow-hidden p-1 text-[10px] leading-tight whitespace-pre-line ${
                   state.selectedIds.includes(element.id)
-                    ? "border-accent ring-accent-line ring-2"
-                    : "border-edge"
+                    ? "border-accent ring-accent-line border ring-2"
+                    : element.type === "RECTANGLE"
+                      ? "border-edge border"
+                      : element.type === "LINE"
+                        ? "border-edge border-t"
+                        : "border border-transparent"
                 } ${element.locked ? "cursor-not-allowed opacity-80" : ""}`}
                 style={{
                   left: `${element.x * 100}%`,
@@ -417,7 +429,18 @@ export function CoverDesignerWorkspace({
                   zIndex: element.zIndex,
                 }}
               >
-                {elementLabel(element, preview)}
+                {element.type === "IMAGE" && clientLogoUrl ? (
+                  <Image
+                    src={clientLogoUrl}
+                    alt="Client logo"
+                    fill
+                    unoptimized
+                    sizes="240px"
+                    className="object-contain"
+                  />
+                ) : (
+                  elementLabel(element, preview)
+                )}
               </div>
             ))}
           </div>
@@ -473,6 +496,7 @@ export function CoverDesignerWorkspace({
               </label>
             ) : null}
             {primary.type === "BOUND_TEXT" ||
+            primary.type === "IMAGE" ||
             primary.type === "PACKAGE_HASH" ? (
               <label className="text-soft block">
                 Binding
@@ -497,6 +521,52 @@ export function CoverDesignerWorkspace({
                   ))}
                 </select>
               </label>
+            ) : null}
+            {primary.type === "STATIC_TEXT" || primary.type === "BOUND_TEXT" ? (
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-soft block">
+                  Font size
+                  <input
+                    type="number"
+                    min="6"
+                    max="36"
+                    step="1"
+                    value={Number(primary.properties?.fontSize ?? 10)}
+                    onChange={(event) =>
+                      dispatch({
+                        type: "UPDATE",
+                        ids: state.selectedIds,
+                        changes: {
+                          properties: {
+                            ...primary.properties,
+                            fontSize: Number(event.target.value),
+                          },
+                        },
+                      })
+                    }
+                    className="border-edge bg-raise text-text mt-1 w-full rounded-[9px] border p-2"
+                  />
+                </label>
+                <label className="text-soft flex items-end gap-2 pb-2">
+                  <input
+                    type="checkbox"
+                    checked={primary.properties?.bold === true}
+                    onChange={(event) =>
+                      dispatch({
+                        type: "UPDATE",
+                        ids: state.selectedIds,
+                        changes: {
+                          properties: {
+                            ...primary.properties,
+                            bold: event.target.checked,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  Bold
+                </label>
+              </div>
             ) : null}
             {primary.type === "SIGNATURE_BOX" ? (
               <>
