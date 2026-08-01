@@ -8,8 +8,9 @@ const globalForPrisma = globalThis as typeof globalThis & {
 
 export const prisma =
   globalForPrisma.prisma ??
-  createPrismaClient(env.DATABASE_URL).client
+  createPrismaClient(env.DATABASE_URL, { maxConnections: 3 }).client
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma
-}
+// Next.js can evaluate server modules in more than one production bundle.
+// Keep one process-wide pool in every environment so those bundles cannot
+// independently consume the runtime role's connection allowance.
+globalForPrisma.prisma = prisma

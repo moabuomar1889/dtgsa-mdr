@@ -19,6 +19,14 @@ five image digests, health/readiness, workflow smoke, queue health, and report.
 Use only `prisma migrate deploy`; never use `migrate dev`, reset, truncate, or
 public database access in production.
 
+Run production migrations from a dedicated one-off job rather than the web
+container. Capture and verify a logical backup first. On a clean installation,
+run `pnpm db:migrate:deploy`, `pnpm db:seed`, and then
+`pnpm db:bootstrap:production-admin`. Do not run the synthetic local-acceptance
+seed in staging or production. Confirm the migration count, the exact owner
+email, one `super_admin` assignment, application health, and an authenticated
+sign-in before declaring success.
+
 ## Incident
 
 Preserve correlation IDs and append-only audit evidence. Contain affected

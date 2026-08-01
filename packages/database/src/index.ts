@@ -7,13 +7,20 @@ export type DatabaseDiagnostics = {
   database: string
 }
 
-export function createPrismaClient(connectionString: string) {
-  const adapter = new PrismaPg({ connectionString })
+export function createPrismaClient(
+  connectionString: string,
+  options: { maxConnections?: number } = {}
+) {
+  const adapter = new PrismaPg({
+    connectionString,
+    ...(options.maxConnections ? { max: options.maxConnections } : {}),
+  })
   return {
     adapter,
     client: new PrismaClient({
       adapter,
-      log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+      log:
+        process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
     }),
   }
 }

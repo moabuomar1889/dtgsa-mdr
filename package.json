@@ -50,7 +50,9 @@
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx scripts/seed-foundation.ts",
+    "db:bootstrap:production-admin": "tsx scripts/bootstrap-production-admin.ts",
     "docs:validate:phase1": "node scripts/validate-phase-1-docs.mjs",
     "docs:validate:phase1.5": "node scripts/validate-phase-1-5-docs.mjs",
     "check:libreoffice": "node scripts/check-libreoffice.mjs"
