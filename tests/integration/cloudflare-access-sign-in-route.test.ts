@@ -8,6 +8,7 @@ import {
 } from "../../apps/mdr-web/src/server/services/identity/workforce-sign-in-route"
 import { isLocalAcceptanceEnabled } from "../../apps/mdr-web/src/server/services/local/local-acceptance-access"
 import { routeAudience } from "../../apps/mdr-web/src/lib/routing/route-audience"
+import { deriveInternalSessionTiming } from "../../apps/mdr-web/src/server/services/identity/session-timing"
 
 const identity: CloudflareAccessIdentity = {
   email: "document.controller@dtgsa.com",
@@ -67,6 +68,30 @@ test("Cloudflare Access sign-in verifies the assertion and completes an internal
   assert.equal(response.completed.rawToken, "internal-session-token")
   assert.equal(response.completed.csrfToken, "internal-csrf-token")
   assert.doesNotMatch(response.redirectTo, /local-acceptance/i)
+})
+
+test("an older Access assertion starts a fresh internal session without refreshing recent-auth evidence", () => {
+  const authenticatedAt = new Date("2026-08-01T08:00:00.000Z")
+  const startedAt = new Date("2026-08-02T08:00:00.000Z")
+  const timing = deriveInternalSessionTiming({
+    authenticatedAt,
+    startedAt,
+    internalSessionTtlMinutes: 480,
+    recentAuthWindowMinutes: 15,
+  })
+
+  assert.equal(timing.authenticatedAt, authenticatedAt)
+  assert.equal(timing.startedAt, startedAt)
+  assert.equal(
+    timing.expiresAt.toISOString(),
+    "2026-08-02T16:00:00.000Z"
+  )
+  assert.equal(
+    timing.recentAuthExpiresAt.toISOString(),
+    "2026-08-01T08:15:00.000Z"
+  )
+  assert.ok(timing.expiresAt > timing.startedAt)
+  assert.ok(timing.recentAuthExpiresAt < timing.startedAt)
 })
 
 test("Cloudflare Access denial never renders or links to local acceptance", async () => {

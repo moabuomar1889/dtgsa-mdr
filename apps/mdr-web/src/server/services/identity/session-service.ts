@@ -9,6 +9,7 @@ import {
 } from "@dtg/identity-domain"
 import { prisma } from "@/lib/prisma/client"
 import { getIdentityConfig } from "./identity-config"
+import { deriveInternalSessionTiming } from "./session-timing"
 
 export const INTERNAL_SESSION_COOKIE = "dtg_internal_session"
 export const INTERNAL_CSRF_COOKIE = "dtg_internal_csrf"
@@ -72,10 +73,16 @@ export async function createInternalSession(input: {
   const config = getIdentityConfig()
   const rawToken = issueOpaqueToken()
   const csrfToken = issueOpaqueToken()
-  const authenticatedAt = input.authenticatedAt ?? new Date()
-  const expiresAt = new Date(
-    authenticatedAt.getTime() + config.internalSessionTtlMinutes * 60_000
-  )
+  const {
+    startedAt,
+    authenticatedAt,
+    expiresAt,
+    recentAuthExpiresAt,
+  } = deriveInternalSessionTiming({
+    authenticatedAt: input.authenticatedAt,
+    internalSessionTtlMinutes: config.internalSessionTtlMinutes,
+    recentAuthWindowMinutes: config.recentAuthWindowMinutes,
+  })
   const currentTokenHash = input.currentToken
     ? hashOpaqueToken(input.currentToken)
     : null
@@ -90,7 +97,7 @@ export async function createInternalSession(input: {
     if (currentSession && !currentSession.revokedAt) {
       await tx.internalAuthSession.update({
         where: { id: currentSession.id },
-        data: { revokedAt: authenticatedAt },
+        data: { revokedAt: startedAt },
       })
     }
 
@@ -125,9 +132,7 @@ export async function createInternalSession(input: {
               ? "oidc_authorization_code"
               : "synthetic_identity_selector",
         authenticatedAt,
-        expiresAt: new Date(
-          authenticatedAt.getTime() + config.recentAuthWindowMinutes * 60_000
-        ),
+        expiresAt: recentAuthExpiresAt,
         sessionHash: created.tokenHash,
       },
     })
