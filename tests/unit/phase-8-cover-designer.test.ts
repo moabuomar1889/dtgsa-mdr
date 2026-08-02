@@ -2,9 +2,6 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   DEFAULT_COVER_TEMPLATE,
-  AIR_PRODUCTS_DOCUMENT_COVER,
-  COVER_TEMPLATE_PRESETS,
-  JIGPC_DOCUMENT_DETAILS_COVER,
   coverDesignerReducer,
   pageDimensions,
   resolveCoverInheritance,
@@ -13,6 +10,11 @@ import {
   validateImageInput,
   type CoverTemplateDocument,
 } from "../../packages/cover-designer/src/index"
+import {
+  AIR_PRODUCTS_DOCUMENT_COVER,
+  COVER_TEMPLATE_PRESETS,
+  JIGPC_DOCUMENT_DETAILS_COVER,
+} from "../../packages/cover-designer/src/presets"
 import { stableCoverSnapshot } from "../../packages/cover-designer/src/server"
 import { renderCoverTemplatePdf } from "../../packages/pdf-engine/src/index"
 

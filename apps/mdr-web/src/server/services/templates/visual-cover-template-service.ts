@@ -6,11 +6,11 @@ import {
 } from "@prisma/client"
 import {
   DEFAULT_COVER_TEMPLATE,
-  getCoverTemplatePreset,
   resolveCoverInheritance,
   validateCoverTemplate,
   type CoverTemplateDocument,
 } from "@dtg/cover-designer"
+import { getCoverTemplatePreset } from "@dtg/cover-designer/presets"
 import { stableCoverSnapshot } from "@dtg/cover-designer/server"
 import { renderCoverTemplatePdf } from "@dtg/pdf-engine"
 import { PERMISSIONS, hasAnyPermission } from "@/lib/permissions/rbac"

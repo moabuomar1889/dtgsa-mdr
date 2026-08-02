@@ -1,7 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { COVER_TEMPLATE_PRESETS } from "@dtg/cover-designer"
+import { COVER_TEMPLATE_PRESETS } from "@dtg/cover-designer/presets"
 import { PERMISSIONS } from "@/lib/permissions/rbac"
 import { RegisterPanel } from "@/components/app/register-panel"
 import { RegisterWorkspace } from "@/components/app/register-workspace"

@@ -514,11 +514,3 @@ export const DEFAULT_COVER_TEMPLATE: CoverTemplateDocument = {
     },
   ],
 }
-
-export {
-  AIR_PRODUCTS_DOCUMENT_COVER,
-  COVER_TEMPLATE_PRESETS,
-  JIGPC_DOCUMENT_DETAILS_COVER,
-  getCoverTemplatePreset,
-  type CoverTemplatePresetId,
-} from "./presets"

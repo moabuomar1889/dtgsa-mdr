@@ -1,9 +1,9 @@
 import Link from "next/link"
 import {
-  COVER_TEMPLATE_PRESETS,
   DEFAULT_COVER_TEMPLATE,
   type CoverTemplateDocument,
 } from "@dtg/cover-designer"
+import { COVER_TEMPLATE_PRESETS } from "@dtg/cover-designer/presets"
 import { Badge } from "@/components/dtg/badge"
 import { CoverDesignerWorkspace } from "@/components/cover-designer/cover-designer-workspace"
 import { createVisualCoverDraftAction } from "@/server/actions/templates"
