@@ -67,6 +67,7 @@ export type CommandWorkspaceOverview = {
     fullName: string
     roleLabel: string
   }
+  todayLabel: string
   projects: CommandProjectOption[]
   selectedProject: CommandProjectOption | null
   projectStages: CommandProjectStage[]

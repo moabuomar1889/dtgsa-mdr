@@ -235,6 +235,13 @@ export async function getCommandWorkspaceOverview(
 ): Promise<CommandWorkspaceOverview> {
   assertUserHasAnyPermission(user, PERMISSIONS.dashboardView)
 
+  const todayLabel = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Amman",
+  }).format(new Date())
+
   const accessibleProjectIds = await resolveAccessibleProjectIds(user)
   if (accessibleProjectIds.length === 0) {
     return {
@@ -243,6 +250,7 @@ export async function getCommandWorkspaceOverview(
         roleLabel:
           user.jobTitle ?? user.userRoles[0]?.role.name ?? "Project team",
       },
+      todayLabel,
       projects: [],
       selectedProject: null,
       projectStages: [],
@@ -434,16 +442,12 @@ export async function getCommandWorkspaceOverview(
   const requestedProject = projects.find(
     (project) => project.id === requestedProjectId
   )
-  const selectedProject =
-    requestedProject ??
-    projects.find((project) => project.id === tasks[0]?.project.id) ??
-    projects[0] ??
-    null
+  const selectedProject = requestedProject ?? null
 
-  const selectedProjectTasks = selectedProject
+  const visibleTasks = selectedProject
     ? tasks.filter((task) => task.project.id === selectedProject.id)
     : tasks
-  const nextTask = selectedProjectTasks[0] ?? tasks[0] ?? null
+  const nextTask = visibleTasks[0] ?? null
 
   const pdiCount = selectedProject
     ? (pdiGroups.find((group) => group.projectId === selectedProject.id)?._count
@@ -579,15 +583,17 @@ export async function getCommandWorkspaceOverview(
       roleLabel:
         user.jobTitle ?? user.userRoles[0]?.role.name ?? "Project team",
     },
+    todayLabel,
     projects,
     selectedProject,
     projectStages,
-    tasks,
+    tasks: visibleTasks,
     nextTask,
     attention: {
-      highPriority: tasks.filter((task) => task.priority === "High").length,
-      readyNow: tasks.filter((task) => task.readiness.ready).length,
-      decisions: tasks.filter((task) =>
+      highPriority: visibleTasks.filter((task) => task.priority === "High")
+        .length,
+      readyNow: visibleTasks.filter((task) => task.readiness.ready).length,
+      decisions: visibleTasks.filter((task) =>
         ["Review", "Approve", "DC check"].includes(task.kind)
       ).length,
       awaitingClient,

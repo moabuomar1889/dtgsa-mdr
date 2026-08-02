@@ -36,22 +36,18 @@ export function ProjectSwitcher({
     )
   }, [projects, query])
 
-  const current = projects[0]
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label="Switch project"
+          aria-label="Choose project scope"
           className="border-edge bg-raise flex shrink-0 items-center gap-2 rounded-[7px] border px-2.5 py-[5px] whitespace-nowrap"
           data-b
         >
-          <span className="text-accent font-mono text-[10.5px]">
-            {current ? current.code : "ALL"}
-          </span>
+          <LayoutGridIcon className="text-soft size-3.5" />
           <span className="max-w-[230px] truncate text-[11.5px]">
-            {current ? current.name : "Project portfolio"}
+            All projects
           </span>
           <ChevronsUpDownIcon className="text-dim size-3" />
         </button>
@@ -71,11 +67,22 @@ export function ProjectSwitcher({
           />
         </label>
         <div className="max-h-[300px] overflow-auto">
+          <Link
+            href="/dashboard"
+            onClick={() => setOpen(false)}
+            className="bg-accent-bg text-accent-txt mb-1 flex items-center gap-[9px] rounded-[7px] px-2 py-[7px]"
+          >
+            <LayoutGridIcon className="size-3.5" />
+            <span className="text-[11.5px]">All projects</span>
+            <span className="text-dim ml-auto text-[9.5px]">
+              {projectCount}
+            </span>
+          </Link>
           {filtered.length > 0 ? (
             filtered.map((project) => (
               <Link
                 key={project.id}
-                href={`/projects/${project.id}`}
+                href={`/dashboard?project=${project.id}`}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-[9px] rounded-[7px] px-2 py-[7px]"
                 data-h

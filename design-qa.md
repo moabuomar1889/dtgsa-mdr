@@ -1,59 +1,60 @@
-# MDR Workspace Simplification and Client Cover Design QA
+# DTGSA MDR Dashboard Design QA
 
-## Evidence
+## Comparison Target
 
-- Baseline screenshots: `.local-runtime/screenshots/audit-before-*.png`
-- Final screenshots: `.local-runtime/screenshots/audit-after-*.png`
-- Client workspace: `.local-runtime/screenshots/client-workspace-after.png`
-- Spreadsheet cover reference: `.local-runtime/reference-analysis/source-cover-xlsx-page1.png`
-- PDF cover reference: `.local-runtime/reference-analysis/source-cover-pdf-page1.png`
-- Viewport: 1280 x 720 at device density 1.
-- State: authenticated Document Control administrator, dark Nocturne theme, local acceptance data.
-- Normalization: each baseline and final route was captured in the same browser, viewport, theme, identity, and database state.
+- Source visual truth: `C:\Users\moabu\AppData\Local\Temp\codex-clipboard-f65d159e-4a5a-4fc0-bce7-c693a609613e.png`
+- Final implementation: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\ux-redesign\dashboard-final.png`
+- Responsive implementation: `C:\Users\moabu\Documents\Codex\Projects\dtgsa-mdr\.local-runtime\ux-redesign\dashboard-mobile.png`
+- Route: `http://127.0.0.1:3200/dashboard`
+- State: dark theme, all-project scope, Amina Rahman local acceptance identity, first actionable task selected
+- Source pixels: 1440 x 1024
+- Implementation pixels: 1440 x 1024
+- CSS viewport: 1440 x 1024
+- Device pixel ratio: 1
+- Density normalization: none required; source and final implementation use equal pixel dimensions
 
 ## Full-View Comparison
 
-The baseline pages mixed introductions, metrics, creation forms, configuration forms, and registers in one reading path. The final pages use one shared register-first shell: a compact heading, a responsive metric strip, the primary register or queue, and one focused side panel for creation. Lower-frequency administration is collapsed or moved behind a named action.
+The final implementation preserves the reference composition: compact five-item navigation rail, right-weighted project and search controls, greeting and project-health band, one emphasized next action, a full-width action queue, and a flush contextual task panel. The main/panel split, 112px navigation rail, 304px context panel, lavender action emphasis, and vertical section order align with the source. The queue intentionally renders the one real actionable local record instead of inventing the eight example records shown in the mockup.
 
-## Route Review
+## Focused Comparison
 
-- Transmittals: the ten-input creation workflow moved into `New transmittal`; the transmittal register is now the first operational surface.
-- MDR: the long explanatory hero was removed while document and revision workflow actions remain unchanged.
-- Replies: reply capture moved into `Record reply`; evidence, filters, policy access, and reply history remain available.
-- Tasks: four workflow queues now link directly to the exact MDR revision and share one action surface.
-- Clients: creation moved into `New client`; every row now opens a dedicated client workspace.
-- Masters: four creation forms moved into one reusable side panel; numbering and coding registers are primary.
-- Identity: account-link reviews remain primary; directory, mapping, and invitation controls are collapsed by workflow.
-- Users: the user register is primary; role and permission reference data are collapsed.
-- Templates: current assets are primary; file upload is collapsed and browser-editable covers route through a client.
+- Navigation: the final rail contains Home, Projects, Documents, Tasks, and a functional More menu. New Project and secondary modules remain available inside More without crowding the primary path.
+- Next action: the final card matches the source's horizontal document/action/CTA hierarchy and 126px visual height.
+- Queue: priority, project, document/revision, workflow action, attention, and direct action retain the source's table rhythm while becoming a stacked card at the mobile breakpoint.
+- Context panel: workflow progress, readiness, document details, history, and primary/secondary actions match the source structure and remain sticky on desktop.
 
-## Client Covers
+## Required Fidelity Surfaces
 
-- The JIGPC spreadsheet and Air Products PDF were visually inspected and converted into structured A4 preset documents.
-- Both presets use real editable layout elements, allowlisted data bindings, client logo elements, signature boxes, review legends, and QR verification.
-- A visual-cover draft can only be created from the application UI with a required client ID.
-- Internal template codes are prefixed with the unique client code, and designer listings are filtered through active `CLIENT` inheritance rules.
-- Client logos render from the client record in both the browser designer and generated PDF.
-- Published cover versions remain immutable and continue through the existing audit and generation services.
+- Fonts and typography: existing Inter and IBM Plex Mono product fonts are retained; heading, metadata, and register hierarchy closely match the reference. No actionable typography mismatch remains.
+- Spacing and layout rhythm: desktop region proportions, navigation width, context-panel width, card height, and section order match. Mobile has no horizontal page overflow.
+- Colors and visual tokens: the existing Nocturne navy, lavender, green, amber, and red semantic tokens map directly to the source palette.
+- Image quality and assets: the reference contains no raster imagery. Existing library icons are sharp and consistent with the product icon language; no placeholder or handcrafted visual assets were introduced.
+- Copy and content: user, projects, document, workflow state, readiness, and history are populated from real application data. Mock-only due dates and extra tasks were not fabricated.
 
-## Client Preferences
+## Comparison History
 
-- Preferences are managed at `/clients/[clientId]` and stored in the existing `ClientSetting` record.
-- Editable defaults include timezone, upload size, transmittal size, response target, transmittal purpose, and cover inclusion rules.
-- Transmittal creation now reads the selected client's response target, purpose, and package limit.
-- Existing JSON preference keys are preserved when these controlled fields are updated.
+1. Iteration 1 was captured at 1280 x 720 and was not used for fidelity judgment because it did not match the source viewport.
+2. Iteration 2 at 1440 x 1024 found P2 proportion drift: the rail was too narrow, New Project displaced primary navigation, the detail panel was inset too far, and the next-action card was too short. The rail was changed to 112px, New Project moved into More, the panel was aligned flush right, the project-health strip was simplified, and the next-action card was raised to 126px.
+3. Iteration 3 matched the desktop target, but mobile interaction testing found a P1 task-row issue: a display-contents button had no reliable clickable box. The row was changed to a real subgrid button, then verified to open the mobile task-details sheet.
+4. Final desktop and mobile captures show the earlier P1/P2 issues resolved, no horizontal overflow, and no browser console errors.
 
 ## Interaction Evidence
 
-- All nine requested routes rendered without a runtime, module, or server error.
-- Main-screen input counts dropped to zero for Transmittals, Clients, Masters, Templates, Identity, and Users.
-- The client workspace rendered preferences, logo management, and editable cover versions.
-- `Open cover designer` displayed both supplied cover presets and two working draft actions.
-- TypeScript, architecture, provider-retirement, and all 157 unit tests passed.
+- Local acceptance sign-in redirected to the dashboard.
+- Workflow filter opened and applied the Prepare filter.
+- Project-health selection changed the dashboard to a real project-scoped queue, and All Projects restored the portfolio queue.
+- Mobile task-row selection opened the contextual details sheet.
+- More navigation opened and exposed all permission-allowed secondary modules.
+- Desktop and mobile browser logs were checked after the final render: no errors or warnings.
 
-## Residual Polish
+## Findings
 
-- P3: add server-side search to Clients and Masters when production registers exceed the current local data volume.
-- P3: a client with a WebP or SVG logo should also store a raster rendering variant before PDF generation; the browser accepts those formats, while the deterministic PDF path currently embeds PNG and JPEG.
+No actionable P0, P1, or P2 findings remain.
+
+## Follow-up Polish
+
+- P3: with only one actionable local record, the queue naturally leaves more empty vertical space than the eight-row source mockup.
+- P3: header controls are slightly farther right than the source, but remain balanced and responsive.
 
 final result: passed

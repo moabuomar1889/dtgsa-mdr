@@ -23,7 +23,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       className="bg-bg block min-h-0"
       style={
         {
-          "--sidebar-width": "208px",
+          "--sidebar-width": "112px",
           "--header-height": "50px",
         } as CSSProperties
       }
